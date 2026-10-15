@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "problem": "sat_attempt",
+  "title": "SAT encoding of K43, k=5, symmetry=3: unknown",
+  "payload": {
+    "n": 43,
+    "k": 5,
+    "symmetry": 3,
+    "encoding": {
+      "num_vars": 115709,
+      "num_clauses": 2187307,
+      "edge_vars": 903,
+      "subset_clauses_match_formula": 1925196
+    },
+    "backend": "z3",
+    "seconds_budget": 90.0,
+    "status": "unknown",
+    "seconds": 90.30065059661865,
+    "stats": {
+      "memory": 890.6
+    }
+  },
+  "claims": {
+    "n": 43,
+    "k": 5,
+    "status": "unknown",
+    "encoding": {
+      "num_vars": 115709,
+      "num_clauses": 2187307,
+      "edge_vars": 903,
+      "subset_clauses_match_formula": 1925196
+    }
+  },
+  "provenance": {
+    "generator": "oplab sat --n 43 --k 5 --symmetry 3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 90.30065059661865,
+    "solver_stats": {
+      "memory": 890.6
+    }
+  },
+  "payload_sha256": "47b675a0e8af1ecd908909fb0c767412db97e0c9756dd95f00860e62f0acb0e5"
+}

@@ -1,0 +1,33 @@
+# DIMACS exports of the large Ramsey instances (regenerate with scripts/run_sat.sh)
+dimacs/
+*.cnf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local run logs; runs/full_run.log is the raw evidence quoted by RESULTS.md
+# and is deliberately committed.
+*.log
+!runs/full_run.log
+
+# Lean build artifacts; the Lean sources live in lean/ and their toolchain is
+# pinned by lean/lean-toolchain
+lean/.lake/
+lean/build/

@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "problem": "unitdist_search",
+  "title": "unit-distance graphs grown from the moser seed up to 12 vertices: best chromatic number 4",
+  "payload": {
+    "best_chromatic_number": 4,
+    "best_points": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        1.7320508075688772,
+        0.0
+      ],
+      [
+        1.4433756729740643,
+        0.957427107756338
+      ],
+      [
+        0.8660254037844386,
+        0.5
+      ],
+      [
+        0.8660254037844386,
+        -0.5
+      ],
+      [
+        0.44530243729074886,
+        0.8953802205448357
+      ],
+      [
+        0.9980732356833155,
+        0.06204688721150231
+      ],
+      [
+        1.5330385845349215,
+        -0.9799970076908822
+      ],
+      [
+        -0.5527707983925667,
+        0.8333333333333333
+      ],
+      [
+        1.2867483702781286,
+        -0.8953802205448358
+      ],
+      [
+        1.9143114280322593,
+        0.9832502561547101
+      ],
+      [
+        1.7716670063641236,
+        -0.020820950754332435
+      ]
+    ],
+    "best_edges": [
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        0,
+        8
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        1,
+        10
+      ],
+      [
+        2,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        5,
+        6
+      ],
+      [
+        5,
+        8
+      ],
+      [
+        6,
+        9
+      ],
+      [
+        9,
+        11
+      ]
+    ],
+    "samples": 94148,
+    "seconds": 60.0,
+    "max_vertices": 12,
+    "seed": 0,
+    "start_vertices": 7,
+    "best_per_vertex_count": {
+      "12": 4
+    }
+  },
+  "claims": {
+    "best_chromatic_number": 4
+  },
+  "provenance": {
+    "generator": "oplab search --target unitdist --n 12 --start moser",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "seed": 0,
+    "start": "moser"
+  },
+  "payload_sha256": "eecf7e52abc735a310519af00a3ae4e44ba7a571c4707aa1e345e9e18b78f5dd",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "max_vertices": 12,
+      "samples": 94148,
+      "chromatic_number": 4
+    },
+    "establishes": "the chromatic number of the plane is >= 4",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

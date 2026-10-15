@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "problem": "circulant",
+  "title": "exhaustive circulant sweep of K6 for monochromatic K3: 0 witness(es) among 8 colourings",
+  "payload": {
+    "n": 6,
+    "k": 3,
+    "colourings_tested": 8,
+    "witnesses": [],
+    "seconds": 3.4332275390625e-05,
+    "workers": 1
+  },
+  "claims": {
+    "colourings_tested": 8,
+    "witnesses": 0
+  },
+  "provenance": {
+    "generator": "oplab circulant --n 6 --k 3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "workers": 1
+  },
+  "payload_sha256": "435270e0e8e1e7cb500c61e807150b6cab4a80ac6149a21ab4a7045a07cf2dca",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n": 6,
+      "k": 3,
+      "colourings_tested": 8
+    },
+    "establishes": "no circulant 2-colouring of K6 avoids a monochromatic K3",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

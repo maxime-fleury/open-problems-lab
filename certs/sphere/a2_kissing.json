@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "problem": "kissing",
+  "title": "A2 root system: 6 kissing points in dimension 2",
+  "payload": {
+    "dim": 2,
+    "points": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.866025403784439
+      ],
+      [
+        -0.5,
+        0.866025403784439
+      ],
+      [
+        -1.0,
+        0.0
+      ],
+      [
+        -0.5,
+        -0.866025403784438
+      ],
+      [
+        0.5,
+        -0.866025403784439
+      ]
+    ]
+  },
+  "claims": {
+    "n_points": 6,
+    "dim": 2,
+    "max_dot": 0.5000000000000003
+  },
+  "provenance": {
+    "generator": "oplab build --kind sphere --system a2",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81"
+  },
+  "payload_sha256": "b54fb130521b44bcaff01c1630e13f7110f7f8b02b5e39091571f9ab076f7e15",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n_points": 6,
+      "dim": 2,
+      "unit_norms": true,
+      "max_dot": 0.5000000000000007,
+      "max_dot_le_half": true
+    },
+    "establishes": "tau(2) >= 6",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "problem": "circulant",
+  "title": "exhaustive circulant sweep of K42 for monochromatic K5: 0 witness(es) among 2097152 colourings",
+  "payload": {
+    "n": 42,
+    "k": 5,
+    "colourings_tested": 2097152,
+    "witnesses": [],
+    "seconds": 8.642170190811157,
+    "workers": 16
+  },
+  "claims": {
+    "colourings_tested": 2097152,
+    "witnesses": 0
+  },
+  "provenance": {
+    "generator": "oplab circulant --n 42 --k 5",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "workers": 16
+  },
+  "payload_sha256": "ecb73a65f1fbe970e292b9ff5dbcf677e1d2800f1d2a5c7502892f35fde62b13",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n": 42,
+      "k": 5,
+      "colourings_tested": 2097152
+    },
+    "establishes": "no circulant 2-colouring of K42 avoids a monochromatic K5",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

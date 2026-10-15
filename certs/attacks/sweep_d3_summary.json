@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "target": "tammes",
+  "dim": 3,
+  "runs": [
+    {
+      "n": 15,
+      "dim": 3,
+      "min_angle_deg": 53.58410045173063,
+      "max_dot": 0.5936422213521027,
+      "best_known_min_angle_deg": 53.6578501,
+      "gap_deg": -0.07374964826937003,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 16,
+      "dim": 3,
+      "min_angle_deg": 52.18915934047879,
+      "max_dot": 0.6130565441199916,
+      "best_known_min_angle_deg": 52.2443957,
+      "gap_deg": -0.05523635952120998,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 17,
+      "dim": 3,
+      "min_angle_deg": 51.057659447153895,
+      "max_dot": 0.6285379938540497,
+      "best_known_min_angle_deg": 51.0903285,
+      "gap_deg": -0.032669052846102886,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 18,
+      "dim": 3,
+      "min_angle_deg": 49.491810602232476,
+      "max_dot": 0.6495567280069539,
+      "best_known_min_angle_deg": 49.5566548,
+      "gap_deg": -0.06484419776752048,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 19,
+      "dim": 3,
+      "min_angle_deg": 47.61483593220172,
+      "max_dot": 0.6741111524085842,
+      "best_known_min_angle_deg": 47.6919141,
+      "gap_deg": -0.07707816779827681,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 20,
+      "dim": 3,
+      "min_angle_deg": 47.40481220392747,
+      "max_dot": 0.6768141433822512,
+      "best_known_min_angle_deg": 47.4310362,
+      "gap_deg": -0.02622399607253101,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 21,
+      "dim": 3,
+      "min_angle_deg": 45.52215155285307,
+      "max_dot": 0.7006334567950284,
+      "best_known_min_angle_deg": 45.6132231,
+      "gap_deg": -0.09107154714693166,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 22,
+      "dim": 3,
+      "min_angle_deg": 44.67538821322245,
+      "max_dot": 0.7111015562029394,
+      "best_known_min_angle_deg": 44.7401612,
+      "gap_deg": -0.06477298677755527,
+      "seconds": 45.0,
+      "workers": 16
+    },
+    {
+      "n": 23,
+      "dim": 3,
+      "min_angle_deg": 43.583123662523654,
+      "max_dot": 0.7243749558397644,
+      "best_known_min_angle_deg": 43.7099642,
+      "gap_deg": -0.1268405374763475,
+      "seconds": 45.0,
+      "workers": 16
+    }
+  ]
+}

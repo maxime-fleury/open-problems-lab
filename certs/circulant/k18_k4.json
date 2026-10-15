@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "problem": "circulant",
+  "title": "exhaustive circulant sweep of K18 for monochromatic K4: 0 witness(es) among 512 colourings",
+  "payload": {
+    "n": 18,
+    "k": 4,
+    "colourings_tested": 512,
+    "witnesses": [],
+    "seconds": 0.0031049251556396484,
+    "workers": 1
+  },
+  "claims": {
+    "colourings_tested": 512,
+    "witnesses": 0
+  },
+  "provenance": {
+    "generator": "oplab circulant --n 18 --k 4",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "workers": 1
+  },
+  "payload_sha256": "daeeb0d421634f1755538c2f67dfc2591d9a60e3e3c07e974b74b7023d85f200",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n": 18,
+      "k": 4,
+      "colourings_tested": 512
+    },
+    "establishes": "no circulant 2-colouring of K18 avoids a monochromatic K4",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

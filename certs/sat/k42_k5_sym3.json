@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "problem": "sat_attempt",
+  "title": "SAT encoding of K42, k=5, symmetry=3: unknown",
+  "payload": {
+    "n": 42,
+    "k": 5,
+    "symmetry": 3,
+    "encoding": {
+      "num_vars": 107747,
+      "num_clauses": 1946095,
+      "edge_vars": 861,
+      "subset_clauses_match_formula": 1701336
+    },
+    "backend": "z3",
+    "seconds_budget": 90.0,
+    "status": "unknown",
+    "seconds": 90.31925177574158,
+    "stats": {
+      "memory": 858.03
+    }
+  },
+  "claims": {
+    "n": 42,
+    "k": 5,
+    "status": "unknown",
+    "encoding": {
+      "num_vars": 107747,
+      "num_clauses": 1946095,
+      "edge_vars": 861,
+      "subset_clauses_match_formula": 1701336
+    }
+  },
+  "provenance": {
+    "generator": "oplab sat --n 42 --k 5 --symmetry 3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 90.31925177574158,
+    "solver_stats": {
+      "memory": 858.03
+    }
+  },
+  "payload_sha256": "39e3e68087eae4ac585fec3bd5572bea1d84381d8cdbc6c8742b2079cbc19cdd"
+}

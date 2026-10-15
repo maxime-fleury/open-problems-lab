@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "problem": "unit_distance",
+  "title": "regular hexagon (6 vertices, 6 edges, 2-chromatic)",
+  "payload": {
+    "points": [
+      [
+        1.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.866025403784439
+      ],
+      [
+        -0.5,
+        0.866025403784439
+      ],
+      [
+        -1.0,
+        0.0
+      ],
+      [
+        -0.5,
+        -0.866025403784438
+      ],
+      [
+        0.5,
+        -0.866025403784439
+      ]
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        5
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        4
+      ],
+      [
+        4,
+        5
+      ]
+    ]
+  },
+  "claims": {
+    "n_vertices": 6,
+    "n_edges": 6,
+    "chromatic_number": 2
+  },
+  "provenance": {
+    "generator": "oplab build --kind unit-distance --name hexagon",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81"
+  },
+  "payload_sha256": "c8f7dd1975f88edda8294d2da5a6384533f062d50536895eb04f0ba97123afad",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n_vertices": 6,
+      "n_edges": 6,
+      "chromatic_number": 2
+    },
+    "establishes": "the chromatic number of the plane is >= 2",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

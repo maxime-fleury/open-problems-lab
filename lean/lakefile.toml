@@ -1,0 +1,6 @@
+name = "oplab"
+version = "0.1.0"
+defaultTargets = ["Oplab"]
+
+[[lean_lib]]
+name = "Oplab"

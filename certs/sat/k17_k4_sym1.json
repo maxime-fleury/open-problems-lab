@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "problem": "ramsey",
+  "title": "SAT witness for K17, k=4 (symmetry 1): no monochromatic K4",
+  "payload": {
+    "n": 17,
+    "k": 4,
+    "coloring": "0001011101001101011010100110110011000101111011001011011010000110001100101111010100100011011111110001101000000000011101110101001001000111"
+  },
+  "claims": {
+    "n": 17,
+    "mono_k4": 0
+  },
+  "provenance": {
+    "generator": "oplab sat --n 17 --k 4 --symmetry 1",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 0.06182527542114258,
+    "solver_stats": {
+      "memory": 21.3
+    }
+  },
+  "payload_sha256": "f667e358e4a1b6bd986c4f2b9f99896c24cf4aa3b1131eb8d38d8bd8e0d0381b"
+}

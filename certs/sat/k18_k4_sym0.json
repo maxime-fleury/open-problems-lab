@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "problem": "sat_attempt",
+  "title": "SAT encoding of K18, k=4, symmetry=0: unknown",
+  "payload": {
+    "n": 18,
+    "k": 4,
+    "symmetry": 0,
+    "encoding": {
+      "num_vars": 153,
+      "num_clauses": 6120,
+      "edge_vars": 153,
+      "subset_clauses_match_formula": 6120
+    },
+    "backend": "z3",
+    "seconds_budget": 60.0,
+    "status": "unknown",
+    "seconds": 60.01426720619202,
+    "stats": {
+      "memory": 18.3
+    }
+  },
+  "claims": {
+    "n": 18,
+    "k": 4,
+    "status": "unknown",
+    "encoding": {
+      "num_vars": 153,
+      "num_clauses": 6120,
+      "edge_vars": 153,
+      "subset_clauses_match_formula": 6120
+    }
+  },
+  "provenance": {
+    "generator": "oplab sat --n 18 --k 4 --symmetry 0",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 60.01426720619202,
+    "solver_stats": {
+      "memory": 18.3
+    }
+  },
+  "payload_sha256": "3f0d98fedd82266114f66ecc0e166856ac03e734788ae874f3878b8acab18995"
+}

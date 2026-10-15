@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "problem": "circulant",
+  "title": "exhaustive circulant sweep of K17 for monochromatic K4: 2 witness(es) among 256 colourings",
+  "payload": {
+    "n": 17,
+    "k": 4,
+    "colourings_tested": 256,
+    "witnesses": [
+      116,
+      139
+    ],
+    "seconds": 0.0015096664428710938,
+    "workers": 1
+  },
+  "claims": {
+    "colourings_tested": 256,
+    "witnesses": 2
+  },
+  "provenance": {
+    "generator": "oplab circulant --n 17 --k 4",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "workers": 1
+  },
+  "payload_sha256": "32eaaa98c29d1481e739af1c2549b4d26284d2a6bb23b091d0d8f66c2a799797",
+  "verification": {
+    "verified": true,
+    "checks": {
+      "n": 17,
+      "k": 4,
+      "colourings_tested": 256
+    },
+    "establishes": "R(4,4) > 17 via a circulant witness",
+    "tool": "open-problems-lab 0.1.0"
+  }
+}

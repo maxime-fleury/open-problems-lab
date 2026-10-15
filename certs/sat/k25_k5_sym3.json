@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "problem": "ramsey",
+  "title": "SAT witness for K25, k=5 (symmetry 3): no monochromatic K5",
+  "payload": {
+    "n": 25,
+    "k": 5,
+    "coloring": "110100101100000001000000010100000001000101100000100001100001001001000011010011001000000000000111000000000010011000001000010110000100011010100110000001011101100001000111001000000111001101001011100000000101010111111101000011010001100001101100110111100111100101010110101011101001111111110101111011101111"
+  },
+  "claims": {
+    "n": 25,
+    "mono_k5": 0
+  },
+  "provenance": {
+    "generator": "oplab sat --n 25 --k 5 --symmetry 3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 2.0223195552825928,
+    "solver_stats": {
+      "memory": 105.51
+    }
+  },
+  "payload_sha256": "57f5228b547c343aa4cef5efbad76a9d672225567a0d7ae44bf316beb2906884"
+}

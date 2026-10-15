@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "problem": "ramsey_unsat",
+  "title": "unsatisfiable: no 2-colouring of K6 avoids a monochromatic K3 (symmetry 2, backend z3)",
+  "payload": {
+    "n": 6,
+    "k": 3,
+    "symmetry": 2,
+    "encoding": {
+      "num_vars": 179,
+      "num_clauses": 368,
+      "edge_vars": 15,
+      "subset_clauses_match_formula": 40
+    },
+    "backend": "z3",
+    "seconds_budget": 60.0,
+    "status": "unsat",
+    "seconds": 0.0027725696563720703,
+    "stats": {
+      "memory": 17.51
+    }
+  },
+  "claims": {
+    "n": 6,
+    "k": 3,
+    "status": "unsat",
+    "encoding": {
+      "num_vars": 179,
+      "num_clauses": 368,
+      "edge_vars": 15,
+      "subset_clauses_match_formula": 40
+    }
+  },
+  "provenance": {
+    "generator": "oplab sat --n 6 --k 3 --symmetry 2",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "backend": "z3",
+    "seconds": 0.0027725696563720703,
+    "solver_stats": {
+      "memory": 17.51
+    }
+  },
+  "payload_sha256": "2645322475c11c87f1d75914c0434bc71425c592faee7ed86b19bd0c3296b705"
+}

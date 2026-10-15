@@ -1,0 +1,117 @@
+
+=== exact classical constructions (verified in CI) ===
++ python -m oplab.cli build --kind sphere --system a2 --out certs/sphere/a2_kissing.json
+wrote certs\sphere\a2_kissing.json
++ python -m oplab.cli build --kind sphere --system icosahedron --out certs/sphere/icosahedron_kissing.json
+wrote certs\sphere\icosahedron_kissing.json
++ python -m oplab.cli build --kind sphere --system d4 --out certs/sphere/d4_kissing.json
+wrote certs\sphere\d4_kissing.json
++ python -m oplab.cli build --kind sphere --system d5 --out certs/sphere/d5_kissing.json
+wrote certs\sphere\d5_kissing.json
++ python -m oplab.cli build --kind sphere --system e6 --out certs/sphere/e6_kissing.json
+wrote certs\sphere\e6_kissing.json
++ python -m oplab.cli build --kind sphere --system e7 --out certs/sphere/e7_kissing.json
+wrote certs\sphere\e7_kissing.json
++ python -m oplab.cli build --kind sphere --system e8 --out certs/sphere/e8_kissing.json
+wrote certs\sphere\e8_kissing.json
++ python -m oplab.cli build --kind unit-distance --name diamond --out certs/unitdist/diamond.json
+wrote certs\unitdist\diamond.json
++ python -m oplab.cli build --kind unit-distance --name hexagon --out certs/unitdist/hexagon.json
+wrote certs\unitdist\hexagon.json
++ python -m oplab.cli build --kind unit-distance --name moser --out certs/unitdist/moser.json
+wrote certs\unitdist\moser.json
+
+=== exhaustive circulant sweeps (validated on two known Ramsey facts) ===
++ python -m oplab.cli circulant --n 5 --k 3 --workers 1 --out certs/circulant/k5_k3.json
+wrote certs\circulant\k5_k3.json
++ python -m oplab.cli circulant --n 6 --k 3 --workers 1 --out certs/circulant/k6_k3.json
+wrote certs\circulant\k6_k3.json
++ python -m oplab.cli circulant --n 17 --k 4 --workers 1 --out certs/circulant/k17_k4.json
+wrote certs\circulant\k17_k4.json
++ python -m oplab.cli circulant --n 18 --k 4 --workers 1 --out certs/circulant/k18_k4.json
+wrote certs\circulant\k18_k4.json
++ python -m oplab.cli circulant --n 42 --k 5 --workers 16 --out certs/circulant/k42_k5.json
+wrote certs\circulant\k42_k5.json
++ python -m oplab.cli circulant --n 43 --k 5 --workers 16 --out certs/circulant/k43_k5.json
+wrote certs\circulant\k43_k5.json
+
+=== unit-distance graph search (Harary/Exoo style random growth) ===
++ python -m oplab.cli search --target unitdist --n 11 --seconds 45 --out certs/attacks/unitdist_random_search.json
+wrote certs\attacks\unitdist_random_search.json
+
+=== tabu search baselines on K42 and K43 ===
++ python -m oplab.cli search --target ramsey --n 42 --seconds 150 --seed 1 --out certs/attacks/ramsey_k42_tabu.json
+wrote certs\attacks\ramsey_k42_tabu.json
+best monochromatic K5 count = 100 after 30234 flips
++ python -m oplab.cli search --target ramsey --n 43 --seconds 150 --seed 2 --out certs/attacks/ramsey_k43_tabu.json
+wrote certs\attacks\ramsey_k43_tabu.json
+best monochromatic K5 count = 138 after 25659 flips
+
+=== attempts to beat the classical kissing-number lower bounds ===
++ python -m oplab.cli search --target kissing --dim 5 --n 41 --seconds 60 --workers 16 --seed 5 --out certs/attacks/kissing_d5_n41.json
+wrote certs\attacks\kissing_d5_n41.json
+best max dot = 0.516632968710 (threshold 0.5) -> no bound
++ python -m oplab.cli search --target kissing --dim 6 --n 73 --seconds 60 --workers 16 --seed 5 --out certs/attacks/kissing_d6_n73.json
+wrote certs\attacks\kissing_d6_n73.json
+best max dot = 0.544016735222 (threshold 0.5) -> no bound
++ python -m oplab.cli search --target kissing --dim 7 --n 127 --seconds 60 --workers 16 --seed 5 --out certs/attacks/kissing_d7_n127.json
+wrote certs\attacks\kissing_d7_n127.json
+best max dot = 0.571137848140 (threshold 0.5) -> no bound
+
+=== Tammes sweep on S^2 for N = 15..23 (published best known: Sloane) ===
++ python -m oplab.cli sweep --dim 3 --n-min 15 --n-max 23 --seconds 45 --workers 16 --seed 7 --out-dir certs/attacks
+wrote certs\attacks\tammes_d3_n015.json
+  n= 15 min_angle=53.5841005  ref=53.6578501  gap=-0.07375
+wrote certs\attacks\tammes_d3_n016.json
+  n= 16 min_angle=52.1891593  ref=52.2443957  gap=-0.05524
+wrote certs\attacks\tammes_d3_n017.json
+  n= 17 min_angle=51.0576594  ref=51.0903285  gap=-0.03267
+wrote certs\attacks\tammes_d3_n018.json
+  n= 18 min_angle=49.4918106  ref=49.5566548  gap=-0.06484
+wrote certs\attacks\tammes_d3_n019.json
+  n= 19 min_angle=47.6148359  ref=47.6919141  gap=-0.07708
+wrote certs\attacks\tammes_d3_n020.json
+  n= 20 min_angle=47.4048122  ref=47.4310362  gap=-0.02622
+wrote certs\attacks\tammes_d3_n021.json
+  n= 21 min_angle=45.5221516  ref=45.6132231  gap=-0.09107
+wrote certs\attacks\tammes_d3_n022.json
+  n= 22 min_angle=44.6753882  ref=44.7401612  gap=-0.06477
+wrote certs\attacks\tammes_d3_n023.json
+  n= 23 min_angle=43.5831237  ref=43.7099642  gap=-0.12684
+wrote certs\attacks\sweep_d3_summary.json
+
+=== verification of everything on disk ===
++ python -m oplab.cli verify certs
+PASS  certs\attacks\kissing_d5_n41.json
+PASS  certs\attacks\kissing_d6_n73.json
+PASS  certs\attacks\kissing_d7_n127.json
+PASS  certs\attacks\ramsey_k42_tabu.json
+PASS  certs\attacks\ramsey_k43_tabu.json
+PASS  certs\attacks\tammes_d3_n015.json  [a valid configuration of 15 points on S^2]
+PASS  certs\attacks\tammes_d3_n016.json  [a valid configuration of 16 points on S^2]
+PASS  certs\attacks\tammes_d3_n017.json  [a valid configuration of 17 points on S^2]
+PASS  certs\attacks\tammes_d3_n018.json  [a valid configuration of 18 points on S^2]
+PASS  certs\attacks\tammes_d3_n019.json  [a valid configuration of 19 points on S^2]
+PASS  certs\attacks\tammes_d3_n020.json  [a valid configuration of 20 points on S^2]
+PASS  certs\attacks\tammes_d3_n021.json  [a valid configuration of 21 points on S^2]
+PASS  certs\attacks\tammes_d3_n022.json  [a valid configuration of 22 points on S^2]
+PASS  certs\attacks\tammes_d3_n023.json  [a valid configuration of 23 points on S^2]
+PASS  certs\attacks\unitdist_random_search.json  [the chromatic number of the plane is >= 4]
+PASS  certs\circulant\k17_k4.json  [R(4,4) > 17 via a circulant witness]
+PASS  certs\circulant\k18_k4.json  [no circulant 2-colouring of K18 avoids a monochromatic K4]
+PASS  certs\circulant\k42_k5.json  [no circulant 2-colouring of K42 avoids a monochromatic K5]
+PASS  certs\circulant\k43_k5.json  [no circulant 2-colouring of K43 avoids a monochromatic K5]
+PASS  certs\circulant\k5_k3.json  [R(3,3) > 5 via a circulant witness]
+PASS  certs\circulant\k6_k3.json  [no circulant 2-colouring of K6 avoids a monochromatic K3]
+PASS  certs\sphere\a2_kissing.json  [tau(2) >= 6]
+PASS  certs\sphere\d4_kissing.json  [tau(4) >= 24]
+PASS  certs\sphere\d5_kissing.json  [tau(5) >= 40]
+PASS  certs\sphere\e6_kissing.json  [tau(6) >= 72]
+PASS  certs\sphere\e7_kissing.json  [tau(7) >= 126]
+PASS  certs\sphere\e8_kissing.json  [tau(8) >= 240]
+PASS  certs\sphere\icosahedron_kissing.json  [tau(3) >= 12]
+PASS  certs\unitdist\diamond.json  [the chromatic number of the plane is >= 3]
+PASS  certs\unitdist\hexagon.json  [the chromatic number of the plane is >= 2]
+PASS  certs\unitdist\moser.json  [the chromatic number of the plane is >= 4]
+
+31/31 certificates verified
