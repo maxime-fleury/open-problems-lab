@@ -531,13 +531,21 @@ def cmd_cayley(args) -> int:
     ``cayley.groups_of_order`` builds, and ``--group`` picks one of those names, so a
     certificate can be reproduced from its command line without retyping a nested
     direct-product description (and so the family in the file is the one this
-    module builds, not whatever the caller remembered).
+    module builds, not whatever the caller remembered).  ``--portfolio`` widens the
+    list to *every* group of that order, read from a file exported out of the GAP
+    SmallGroups library (``data/smallgroups_<n>.json``) and rebuilt and re-counted
+    here, so a group the named families do not cover can be decided by name too.
 
     ``unsat`` is stored *with* its DRAT trace, replayed here by ``oplab.drat``
     before the certificate is written; that replay is what makes the row a theorem
     about one group rather than a solver verdict.
     """
-    groups = CY.groups_of_order(args.n)
+    groups = CY.load_portfolio(args.portfolio) if args.portfolio \
+        else CY.groups_of_order(args.n)
+    if groups and int(groups[0]["params"][0]) != args.n:
+        print(f"{args.portfolio} holds groups of order {groups[0]['params'][0]}, "
+              f"not {args.n}", file=sys.stderr)
+        return 2
     if not groups:
         print(f"no group of order {args.n} is buildable here", file=sys.stderr)
         return 2
@@ -550,6 +558,8 @@ def cmd_cayley(args) -> int:
         print("--sizes is required (or --list)", file=sys.stderr)
         return 2
     names = ", ".join(description["name"] for description in groups)
+    if len(names) > 400:
+        names = f"{names[:397]}... ({len(groups)} groups)"
     if not args.group:
         print(f"--group is required (or --list).  Groups of order {args.n}: {names}",
               file=sys.stderr)
@@ -826,6 +836,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="forbidden clique size per colour, e.g. 4,4 or 3,3,4 "
                         "(required unless --list)")
     p.add_argument("--group", default=None, help="which group of that order (see --list)")
+    p.add_argument("--portfolio", default=None,
+                   help="pick the group from an exported library instead of the named "
+                        "families: data/smallgroups_<n>.json (see --list)")
     p.add_argument("--list", action="store_true", help="print the portfolio and exit")
     p.add_argument("--seconds", type=float, default=300.0)
     p.add_argument("--solver", default="cadical195")

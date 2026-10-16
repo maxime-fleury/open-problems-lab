@@ -32,3 +32,9 @@ htmlcov/
 # pinned by lean/lean-toolchain
 lean/.lake/
 lean/build/
+
+# The raw SmallGroups exports written by scripts/gap_export_smallgroups.g.  They
+# are reproducible (the GAP version and the digest of each part are recorded in
+# data/smallgroups_<n>.json) and bulky; the checked portfolio built from them is
+# committed, and that is what a sweep reads.
+data/gap/

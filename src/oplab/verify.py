@@ -395,7 +395,12 @@ def verify_cayley_multicolour(cert: dict, deep: bool = False, workers: int = 1,
     sizes = tuple(int(s) for s in payload["sizes"])
     status = payload.get("status")
     table, inverse = CY.group_from_description(description)
-    axioms = CY.verify_group(table, inverse)
+    # the description goes with the table so the check is the one that fits the
+    # family: a `permutation` group is re-closed and compared (its table is the
+    # multiplication of permutations, so associativity is inherited and the stored
+    # copy is compared element by element below), while the named families get the
+    # axioms re-derived over every triple
+    axioms = CY.verify_group(table, inverse, description)
     if not axioms["ok"]:
         return {"ok": False, "reason": f"the declared group is not a group: {axioms['reason']}"}
     instance = CY.CayleyInstance(description, sizes)
@@ -468,6 +473,15 @@ def verify_cayley_multicolour(cert: dict, deep: bool = False, workers: int = 1,
             return {"ok": False,
                     "reason": f"the declared obstruction triangle is not monochromatic "
                               f"by arithmetic: its differences span {sorted(edges)}"}
+        # the certificate has to name the triangle the arithmetic found: the *fact*
+        # is that some element has order 3, and which one it is depends on how the
+        # group was written down
+        declared = payload.get("obstruction") or {}
+        declared_triangle = [int(x) for x in declared.get("triangle", [])]
+        if declared_triangle and declared_triangle != triple:
+            return {"ok": False,
+                    "reason": f"the declared obstruction triangle {declared_triangle} is "
+                              f"not the one the arithmetic finds {triple}"}
         result["establishes"] = (
             f"no translation-invariant colouring of any group of order {n} avoids a "
             f"monochromatic K3 in a colour that forbids one (an element of order 3 "

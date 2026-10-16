@@ -25,11 +25,28 @@ traces land in ``--proof-dir`` and are named after the group, and ``--cnf-dir``
 exports the reduced CNF of every decided group beside them (the same clauses
 ``drat-trim`` is handed by ``scripts/drat_trim_check.py``, and the artifact to
 point a full-strength solver at).
+
+By default the portfolio is the families :func:`oplab.cayley.groups_of_order`
+builds.  ``--portfolio`` replaces it with *every* group of that order, read from a
+data file exported from the GAP SmallGroups library
+(``data/smallgroups_<n>.json``, see ``scripts/gap_export_smallgroups.g`` and
+``scripts/portfolio_build.py``): the generators in that file are data, so each
+group is still closed and checked here before it is searched, and no GAP is needed
+to run or to verify anything.
+
+A screen over a whole portfolio is written with ``--summary``.  The raw rows carry
+the generators of every group they searched, which over 2 328 groups of order 128
+is megabytes of data the portfolio already holds; the summary keeps what the round
+actually produced — the classification, the encoding size it was made on, and the
+budget that was spent — names the portfolio by path and digest, and keeps a
+``sat`` row whole, because a colouring is an artifact that the group does not
+contain.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import multiprocessing as mp
 import sys
@@ -94,14 +111,98 @@ def write_certificate(row: dict, out_dir: Path) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = f"k{row['n']}_{'x'.join(map(str, sizes))}"
     if status != "sat":
-        stem += f"_{group.get('name', group['family'])}"
+        stem += f"_{_slug(group.get('name', group['family']))}"
     path = out_dir / f"{stem}.json"
     path.write_text(json.dumps(cert, indent=2) + "\n", encoding="utf-8")
     return path
 
 
+def _slug(name: str) -> str:
+    """A group name as a filename component.
+
+    The named families are already filenames (``Z2xD32``); a group imported from
+    the SmallGroups library is called ``SmallGroup(128,3)``, whose punctuation is
+    legal but awkward, and the *name* in the certificate stays what the library
+    calls it: only the file it is stored in is slugged.
+    """
+    return "".join(character if character.isalnum() or character in "+-._" else "_"
+                   for character in name)
+
+
 def _proof_filename(n: int, sizes, group: dict) -> str:
-    return f"k{n}_{'x'.join(map(str, sizes))}_{group.get('name', group['family'])}.bdrat.xz"
+    return f"k{n}_{'x'.join(map(str, sizes))}_{_slug(group.get('name', group['family']))}.bdrat.xz"
+
+
+# what a verdict row says about itself; the group it is about is named by `id` and
+# looked up in the portfolio, instead of being copied into every row
+SUMMARY_KEYS = ("n", "sizes", "status", "seconds", "solver_time", "num_vars",
+                "num_clauses", "classes", "self_inverse_classes", "budget_expired",
+                "exit_code", "reason", "note", "cnf", "proof")
+
+
+def summarize(rows: list[dict], produced_by: str, seconds: float, solver: str,
+              mode: str, portfolio_path: str | None = None) -> dict:
+    """A screening round as counts, plus one row per group.
+
+    A ``sat`` row is kept whole: the colouring is the artifact, and unlike a verdict
+    it cannot be recovered from the group it is about.  Every other row keeps the
+    verdict, the encoding size it was reached on and the time it took, and names its
+    group by the portfolio's own label — which is committed, pinned by digest here,
+    and re-checked by :func:`oplab.cayley.load_portfolio` on the way in.
+    """
+    counts: dict[str, int] = {}
+    compact: list[dict] = []
+    for row in rows:
+        counts[row["status"]] = counts.get(row["status"], 0) + 1
+        if row["status"] == "sat":
+            compact.append(row)
+            continue
+        entry = {key: row[key] for key in SUMMARY_KEYS if key in row}
+        entry["name"] = row["name"]
+        if portfolio_path is not None and "id" in row["group"]:
+            # the portfolio names the group; the row does not have to carry it
+            entry["id"] = row["group"]["id"]
+        else:
+            # a screen over the named families has no portfolio to key a row to, so
+            # the description stays: it is the only thing that says which group this
+            # verdict is about
+            entry["group"] = row["group"]
+        compact.append(entry)
+    order, sizes = (rows[0]["n"], list(rows[0]["sizes"])) if rows else (None, [])
+    payload: dict = {
+        "what": f"the screening round over the portfolio of order {order}, {sizes}: "
+                f"{seconds:.0f} s of solver per group, {len(rows)} groups",
+        "produced_by": produced_by,
+        "order": order,
+        "sizes": sizes,
+        "budget_seconds": seconds,
+        "mode": mode,
+        "solver": solver,
+        "reading": (
+            "a row is a verdict about the group it names, reached by this repository "
+            "from generators it closed and checked itself; `unknown` means the budget "
+            "was spent and nothing is claimed, and a `sat` row is kept in full because "
+            "its colouring is the artifact.  "
+            + ("The generators are not repeated here: `portfolio` names the file they "
+               "come from and pins its digest, and that file is what a later round, or a "
+               "reader, reads them out of — this round says which of them are empty."
+               if portfolio_path is not None else
+               "There is no portfolio behind these rows, so each one carries the group "
+               "description it was reached from.")
+        ),
+        "counts": counts,
+        "rows": compact,
+    }
+    if portfolio_path is not None:
+        path = Path(portfolio_path)
+        payload["portfolio"] = {
+            "path": path.as_posix(),
+            "sha256": "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest(),
+            "groups": len(rows),
+        }
+    if rows:
+        payload["seconds"] = round(sum(row.get("seconds", 0.0) for row in rows), 1)
+    return payload
 
 
 def _group_worker(conn, job: dict) -> None:  # pragma: no cover - child process
@@ -225,7 +326,7 @@ def _record_decision(row: dict, proof_path: Path | None, cert_dir: Path | None,
         row["note"] = "verdict without a DRAT trace: not a theorem, nothing stored"
         return
     if cnf_dir is not None:
-        cnf = Path(cnf_dir) / f"k{row['n']}_{'x'.join(map(str, sizes))}_{group['name']}.cnf"
+        cnf = Path(cnf_dir) / f"k{row['n']}_{'x'.join(map(str, sizes))}_{_slug(group['name'])}.cnf"
         cnf.parent.mkdir(parents=True, exist_ok=True)
         C.CayleyInstance(group, sizes).write_dimacs(
             cnf, comment=f"cayley multicolour Ramsey K_{row['n']} over {group['name']}"
@@ -245,8 +346,23 @@ def _record_decision(row: dict, proof_path: Path | None, cert_dir: Path | None,
 
 def hunt(n: int, sizes, seconds: float, workers: int, solver: str = "cadical195",
          only=None, mode: str = "cdcl", seed: int = 0, proof_dir=None, cnf_dir=None,
-         cert_dir=None) -> list[dict]:
-    groups = C.groups_of_order(n)
+         cert_dir=None, portfolio: list[dict] | None = None,
+         keep_going: bool = False) -> list[dict]:
+    """Search every group of the portfolio, one budget each.
+
+    ``portfolio`` is the group list to search and defaults to the named families
+    :func:`oplab.cayley.groups_of_order` can build; a portfolio read from an export
+    (``--portfolio``) is passed in here, already re-checked by
+    :func:`oplab.cayley.load_portfolio`, and is checked once more below because the
+    checks are cheap and a sweep that searched something other than what it says is
+    worse than no sweep.
+
+    A witness stops the sweep, because a witness is the prize: ``keep_going`` is for a
+    *screening* round over a whole portfolio, where the point is to classify every
+    group and the witness is one row of many — the round that found the K96 witness in
+    ``SmallGroup(96,87)`` would otherwise have left 135 groups unvisited.
+    """
+    groups = list(portfolio) if portfolio is not None else C.groups_of_order(n)
     if only:
         groups = [g for g in groups if g["name"] in only]
     if not groups:
@@ -254,7 +370,7 @@ def hunt(n: int, sizes, seconds: float, workers: int, solver: str = "cadical195"
     rows: list[dict] = []
     for description in groups:
         table, inverse = C.group_from_description(description)
-        check = C.verify_group(table, inverse)
+        check = C.verify_group(table, inverse, description)
         if not check["ok"]:
             raise SystemExit(f"{description['name']}: not a group ({check['reason']})")
         if len(table) != n:
@@ -262,8 +378,10 @@ def hunt(n: int, sizes, seconds: float, workers: int, solver: str = "cadical195"
             # it: a table of the wrong order would make those rows lie
             raise SystemExit(f"{description['name']}: the table has order {len(table)}, "
                              f"not {n}")
-    print(f"K{n} {tuple(sizes)}: {len(groups)} groups "
-          f"({', '.join(g['name'] for g in groups)}) x {seconds:.0f} s [{mode}]"
+    names = ", ".join(g["name"] for g in groups)
+    if len(names) > 120:
+        names = f"{names[:117]}..."
+    print(f"K{n} {tuple(sizes)}: {len(groups)} groups ({names}) x {seconds:.0f} s [{mode}]"
           + ("  [recording proofs]" if proof_dir else ""), flush=True)
     ctx = mp.get_context("spawn")
     pending = []
@@ -298,7 +416,7 @@ def hunt(n: int, sizes, seconds: float, workers: int, solver: str = "cadical195"
                   + (f"  <- {result['reason']}" if result.get("reason") else ""),
                   flush=True)
             found = found or result["status"] == "sat"
-        if found:
+        if found and not keep_going:
             break
     sat = [r for r in rows if r["status"] == "sat"]
     if sat:
@@ -320,9 +438,20 @@ def main(argv=None) -> int:
     parser.add_argument("--solver", default="cadical195")
     parser.add_argument("--group", action="append", default=None,
                         help="search only this group (repeatable)")
+    parser.add_argument("--portfolio", default=None,
+                        help="search every group of the order in this exported data "
+                             "file (data/smallgroups_<n>.json) instead of the named "
+                             "families")
     parser.add_argument("--mode", default="cdcl", choices=["cdcl", "repair"],
                         help="cdcl decides (and can prove); repair hunts for a witness")
+    parser.add_argument("--keep-going", action="store_true",
+                        help="do not stop at the first witness: classify every group of "
+                             "the portfolio (a screening round, not a hunt)")
     parser.add_argument("--json", default=None, help="write the rows here")
+    parser.add_argument("--summary", action="store_true",
+                        help="write the round as counts plus one row per group, naming "
+                             "the portfolio by digest instead of repeating its "
+                             "generators (a `sat` row is still kept whole)")
     parser.add_argument("--cert-dir", default=None,
                         help="store every decided row here, as a checked certificate")
     parser.add_argument("--proof-dir", default=None,
@@ -343,15 +472,27 @@ def main(argv=None) -> int:
 
     results: list[dict] = []
     started = time.time()
+    portfolio: list[dict] | None = None
+    if args.portfolio:
+        portfolio = C.load_portfolio(args.portfolio)
+        order = int(portfolio[0]["params"][0]) if portfolio else None
+        print(f"portfolio {args.portfolio}: {len(portfolio)} groups of order {order}, "
+              f"rebuilt and re-counted here", flush=True)
     for spec in args.spec:
         n_text, _, sizes_text = spec.partition(":")
         if not sizes_text:
             print(f"{spec}: expected n:s1,s2,...", file=sys.stderr)
             return 2
-        rows = hunt(int(n_text), tuple(int(s) for s in sizes_text.split(",")),
+        n = int(n_text)
+        if portfolio is not None and int(portfolio[0]["params"][0]) != n:
+            print(f"{args.portfolio} holds groups of order "
+                  f"{portfolio[0]['params'][0]}, not {n}", file=sys.stderr)
+            return 2
+        rows = hunt(n, tuple(int(s) for s in sizes_text.split(",")),
                     args.seconds, args.workers, args.solver, args.group, args.mode,
                     proof_dir=args.proof_dir, cnf_dir=args.cnf_dir,
-                    cert_dir=args.cert_dir)
+                    cert_dir=args.cert_dir, portfolio=portfolio,
+                    keep_going=args.keep_going)
         results.extend(rows)
         if args.cert_dir:
             for row in rows:
@@ -361,7 +502,20 @@ def main(argv=None) -> int:
                 if row["status"] == "sat" or (row["status"] == "unsat" and row.get("proof")):
                     print(f"  stored {write_certificate(row, Path(args.cert_dir))}", flush=True)
     if args.json:
-        Path(args.json).write_text(json.dumps(results, indent=2), encoding="utf-8")
+        if args.summary:
+            payload = summarize(results, " ".join(["python scripts/cayley_hunt.py"] + args.spec
+                                                   + [f"--seconds {args.seconds:g}",
+                                                      f"--workers {args.workers}",
+                                                      f"--solver {args.solver}",
+                                                      f"--mode {args.mode}"]
+                                                   + (["--portfolio " + args.portfolio]
+                                                      if args.portfolio else [])
+                                                   + (["--keep-going"] if args.keep_going else [])
+                                                   + ["--summary", f"--json {args.json}"]),
+                                  args.seconds, args.solver, args.mode, args.portfolio)
+            Path(args.json).write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
+        else:
+            Path(args.json).write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(f"\n{len(results)} group runs in {time.time() - started:.0f} s; "
           f"{sum(1 for r in results if r['status'] == 'sat')} witnesses", flush=True)
     return 0

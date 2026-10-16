@@ -25,6 +25,7 @@ the verifier derives from the payload, not what the search claimed.
 | `certs/cayley/k18_4x4_Z3xD3.json` | cayley_multicolour | yes | no translation-invariant colouring over Z3xD3 (a group of order 18) avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 50 steps) |
 | `certs/cayley/k30_3x3x4_D15.json` | cayley_multicolour | yes | no translation-invariant colouring over D15 (a group of order 30) avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 14039 steps) |
 | `certs/cayley/k6_3x3_D3.json` | cayley_multicolour | yes | no translation-invariant colouring of any group of order 6 avoids a monochromatic K3 in a colour that forbids one (an element of order 3 forces 2 monochromatic triangles, whichever colour its class carries) |
+| `certs/cayley/k96_3x3x3x4_SmallGroup_96_87.json` | cayley_multicolour | yes | R(3, 3, 3, 4) > 96 via a translation-invariant witness over SmallGroup(96,87) (a restriction of the colourings of K96: a witness is a witness) |
 | `certs/circulant/k17_k4.json` | circulant | yes | R(4,4) > 17 via a circulant witness |
 | `certs/circulant/k18_k4.json` | circulant | yes | no circulant 2-colouring of K18 avoids a monochromatic K4 |
 | `certs/circulant/k42_k5.json` | circulant | yes | no circulant 2-colouring of K42 avoids a monochromatic K5 |

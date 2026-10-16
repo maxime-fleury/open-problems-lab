@@ -78,7 +78,7 @@ with no Mathlib, no solver and no floating point in the trusted base. See
 | SAT encoding, `k=3` and `k=4` | `K6` unsat, `K5` sat, `K17` sat at every symmetry level | brute force for `K5`/`K6`, theorem `R(4,4)=18` for `K17` |
 | SAT on `K42` / `K43` | inconclusive within the budget; measured clause-ingestion cost makes the Python/Z3 path unusable at this size | recorded as inconclusive, never as a verdict; DIMACS export provided for real solvers |
 | Multicolour tabu search, `K50`–`K162` | no witness anywhere: the best colourings still carry 140–17 560 monochromatic cliques, **including at `K50` and `K29`, where witnesses are published and known to exist** | 300 s per target, exact counts re-derived by the verifier; raw log in `runs/hunt_driver.log`, machine-readable rows in `runs/hunt_2026-10-15.jsonl` |
-| Translation-invariant colourings over *groups* of order `n` | 52 group-runs at the four undecided sizes in 5-minute rounds, then **one hour each on the 21 groups those rounds left open: 33 decided empty, 19 without a verdict, no witness and no bound moved**; `K128` `(4,4,4)` is the sharp case — 24 of its 26 groups are empty, and only the cyclic group and `D64` survive an hour each | every table checked against the group axioms before it is searched; the four stored rows carry the group as data, a DRAT trace for each `unsat` (replayed by [`drat.py`](src/oplab/drat.py), cross-checked by `drat-trim`) and a Lean theorem that the table *is* a group with the class structure its encoding size comes from; the long round's rows are verdicts, and `runs/cayley_sweep.json` keeps the 5-minute rows they replaced under `superseded` |
+| Translation-invariant colourings over *groups* of order `n` | 52 group-runs at the four undecided sizes in 5-minute rounds, then **one hour each on the 21 groups those rounds left open: 33 decided empty, 19 without a verdict, no witness and no bound moved**; `K128` `(4,4,4)` is the sharp case — 24 of its 26 groups are empty, and only the cyclic group and `D64` survive an hour each.  A 20 s screen over the **complete** portfolios (all 231 groups of order 96 and all 2 328 of order 128) then **refutes 2 329 of the 2 559, leaves 227 open, and finds three `K96` witnesses** — `R(3,3,3,4) > 96` inside the invariant space, in groups no named family contains — **and no `K128` witness** | every table checked against the group axioms before it is searched; the five stored rows carry the group as data, a DRAT trace for each `unsat` (replayed by [`drat.py`](src/oplab/drat.py), cross-checked by `drat-trim`) and a Lean theorem that the table *is* a group with the class structure its encoding size comes from; the long round's rows are verdicts, and `runs/cayley_sweep.json` keeps the 5-minute rows they replaced under `superseded`, while the two screens are counts keyed to the portfolio by digest (`runs/cayley_full_k96.json`, `runs/cayley_full_k128.json`) |
 | Circulant sub-family of the multicolour frontier | 18 of the 24 instances decided in seconds, per instance: witnesses found (and verified) for `K29`, `K44`, `K54`, `K17`, `K5`; **no** circulant witness for `K18`, `K30`, `K35`, `K36`, `K42`, `K43`, `K45`, `K50`, `K55`; at `3 ∣ n` the all-triangle instances (`K6`, `K51`, `K162`, `K537`) are **obstructed by arithmetic**, no search involved; the other six (`K96`, `K97`, `K127`, `K128`, `K161`, `K538`) returned `unknown` with the budget spent and are recorded as no claim | witnesses re-counted by the Python verifier *and* by the Lean kernel; the obstruction is `diffClass n 0 (n/3) = n/3 ∧ …` proved per instance by `decide`; **all nine `unsat` rows carry a DRAT trace, replayed by [`drat.py`](src/oplab/drat.py) and cross-checked by `drat-trim`** |
 
 ---
@@ -196,6 +196,26 @@ a record:
   difference class and colour, one clause per forbidden clique — a few hundred
   variables — and a CDCL solver answers it in seconds
   (`oplab mc-circulant --n 45 --sizes 3,3,5`).
+* **Exactly, over every group of the order**, which is the same encoding with the
+  difference classes of an arbitrary group in place of `Z_n`: the hand-written
+  families of `oplab cayley` grew into the *complete* portfolio — all 231 groups of
+  order 96 and all 2 328 of order 128, exported out of the GAP SmallGroups library
+  as permutation generators (`make portfolio`, `data/smallgroups_96.json`,
+  `data/smallgroups_128.json`) and rebuilt and re-counted here before anything is
+  searched.  That widening changed a conclusion.  Over the 22 named groups of order
+  96 the answer had been *nine refuted, thirteen open, no witness*; over the 231
+  there are **three witnesses** — `SmallGroup(96,87)`, `SmallGroup(96,147)` and
+  `SmallGroup(96,230)` carry a translation-invariant colouring of `K96` with
+  nothing monochromatic in colours `(3,3,3,4)` — so `R(3,3,3,4) > 96` is realised
+  *inside* the invariant construction space at that size, and the earlier sentence
+  was true of one portfolio and false of the space
+  (`runs/cayley_full_k96.json`; one of the three is stored as a
+  [`cayley_multicolour`](certs/cayley) certificate as well).  The same widening
+  over the 2 328 groups of order 128 changed nothing, which is the other half of
+  the point: a 20 s screen refutes **2 314** of them and leaves **14** open, with no
+  witness anywhere, so the named round's *two still open after an hour* survives as
+  a statement about the whole library and those 14 become the shortlist
+  (`runs/cayley_full_k128.json`).
 
 Two things make the second front worth publishing even when it says no:
 
@@ -250,7 +270,7 @@ Two things make the second front worth publishing even when it says no:
 | `unit_distance` | that the edges are exactly the unit-distance pairs, then the exact chromatic number | plane chromatic number `>= chi` |
 | `circulant` | that the sweep covers all `2^(n/2)` circulant colourings, and re-checks every witness | `R(k,k) > n`, or the exhaustive negative statement |
 | `circulant_multicolour` | for `sat`: re-expands the stored string, checks it is constant on every difference class and re-counts every forbidden clique; for `obstructed`: re-derives the `3 ∣ n` arithmetic of the class `n/3` with no solver; for `unsat`: the encoding size **and the recorded DRAT trace** (digest always, replay from scratch when the row is cheap, always under `--deep`); for `unknown`: the encoding size, recomputed from the cliques | `R(s_1,…,s_k) > n` (a witness), the arithmetic obstruction, or *no circulant colouring of `K_n` is clean* (proof-carrying) |
-| `cayley_multicolour` | **everything**: the group table is rebuilt from its family/parameters and checked against the group axioms (identity, inverses, associativity), then the inversion classes, the encoding size and the per-class assignment are recomputed, expanded to all `C(n,2)` edges and re-counted by the exact clique counter; `obstructed` re-derives the `3 ∣ n` argument (an element of order 3 exists in *any* group of that order); `unsat` requires the recorded DRAT trace and replays it against **this group's** encoding, rebuilt from the description (digest always, replay from scratch when the row is cheap, always under `--deep`) | `R(s_1,…,s_k) > n` (a witness over that group), the arithmetic obstruction, or *no translation-invariant colouring over that group is clean* (proof-carrying); an `unsat` row without a trace is refused, so this kind stores no bare verdicts |
+| `cayley_multicolour` | **everything**: the group table is rebuilt from the description — a family's parameters, or the permutation generators of a group imported from the SmallGroups library, closed here (automatic associativity, checked order and re-derived invariants) — and checked against the stored table and the group axioms (identity, inverses, associativity); then the inversion classes, the encoding size and the per-class assignment are recomputed, expanded to all `C(n,2)` edges and re-counted by the exact clique counter; `obstructed` re-derives the `3 ∣ n` argument from the element of order 3 **found in the table** (Cauchy says there is one; which element it is depends on how the group was written down) and the declared triangle has to be the one the arithmetic finds; `unsat` requires the recorded DRAT trace and replays it against **this group's** encoding, rebuilt from the description (digest always, replay from scratch when the row is cheap, always under `--deep`) | `R(s_1,…,s_k) > n` (a witness over that group), the arithmetic obstruction, or *no translation-invariant colouring over that group is clean* (proof-carrying); an `unsat` row without a trace is refused, so this kind stores no bare verdicts |
 | `ramsey_unsat` | consistency of the declared encoding size against `2 * C(n,k)` plus symmetry clauses; `--deep` re-runs the solver | nothing on its own (see §10) |
 | `sat_attempt` | that an inconclusive run is labelled inconclusive and its encoding metadata is right | nothing — it records a failure honestly |
 | `unitdist_search` | the recorded graph really is a unit-distance graph with the claimed chromatic number | plane chromatic number `>= chi` |
@@ -555,6 +575,8 @@ oplab cayley --n 18 --sizes 4,4 --group D9 \
     --proof certs/cayley/proofs/k18_4x4_D9.bdrat.xz --out certs/cayley/k18_4x4_D9.json
 oplab cayley --n 6 --sizes 3,3 --group D3 --out certs/cayley/k6_3x3_D3.json   # obstructed
 oplab cayley --n 128 --sizes 4,4,4 --group D64 --dimacs-only --dimacs dimacs/k128_d64.cnf
+oplab cayley --n 96 --sizes 3,3,3,4 --portfolio data/smallgroups_96.json \
+    --group SmallGroup(96,87) --out certs/cayley/k96_3x3x3x4_SmallGroup_96_87.json
 ```
 
 The group is named rather than described, so a certificate can be reproduced from
@@ -562,8 +584,10 @@ its command line.  `--proof` is the same contract as `mc-circulant --proof`, on 
 different encoding: the trace is replayed against the group's own CNF before the
 certificate is written, and `unsat` without a trace is refused by the verifier
 rather than stored.  `--dimacs-only`/`--dimacs` export the reduced CNF for a
-full-strength solver, and `make cayley` sweeps the whole portfolio at the sizes that
-are still open.
+full-strength solver, `make cayley` sweeps the portfolio of named families at the
+sizes that are still open, and `--portfolio` picks a group out of an exported
+library instead — all 231 groups of order 96, all 2 328 of order 128 — which is
+how `make cayley-full` screens the complete list.
 
 ### Check a proof
 
@@ -658,7 +682,27 @@ scripts/cayley_hunt.py    searches every group it can build for a witness (CDCL,
                   min-conflicts repair with exact incremental counts) and stores what it
                   finds as a `cayley_multicolour` certificate, only after `verify` accepts it;
                   --proof-dir/--cnf-dir also record the DRAT trace of every group the solver
-                  decides, replayed before it is stored, and export the reduced CNF
+                  decides, replayed before it is stored, and export the reduced CNF.
+                  --portfolio swaps the named families for an exported complete list, and
+                  --keep-going screens all of it instead of stopping at the first witness;
+                  --summary writes such a screen as counts plus one row per group, naming the
+                  portfolio by sha256 instead of repeating its generator lists (a `sat` row is
+                  kept whole: a colouring is the artifact, the group does not contain it).
+                  runs/cayley_full_k96.json is what that round found in 519 s and
+                  runs/cayley_full_k128.json what the order-128 one found in 893 s
+data/smallgroups_96.json   every group of order 96, from the GAP SmallGroups library:
+                  permutation generators plus the invariants GAP computed for them, which
+                  `load_portfolio` re-counts from the rebuilt table on every load — the id is
+                  provenance, the group is the table (231 groups, 0.32 MB)
+data/smallgroups_128.json  the same for all 2 328 groups of order 128 (1050 invariant-signature
+                  classes, 462 of them holding more than one group — a signature is necessary
+                  and not sufficient for non-isomorphism, and the file says so; 5.61 MB)
+scripts/gap_export_smallgroups.g  the GAP program that writes those two files' input:
+                  one JSON object per group, `order`/`out` in, `first_id`/`last_id` to split a
+                  long export over several processes.  Nothing downstream trusts it
+scripts/portfolio_build.py  turns that stream into the two data files: every group closed and
+                  re-counted in Python, the parts made to tile the ids exactly once, and a
+                  disagreement refused rather than written
 scripts/sweep_merge.py    folds a later round of those runs into runs/cayley_sweep.json
                   (the frontier takes the new row, `superseded` keeps the one it replaced,
                   and a repair row is refused because it reports no decision); make cayley-long
@@ -666,7 +710,7 @@ scripts/sweep_merge.py    folds a later round of those runs into runs/cayley_swe
 scripts/replay_bench.py   times both replayers — the in-repo `oplab.drat` and the pinned
                   external `drat-trim` — on every stored trace, so the envelope of what can
                   be replayed before storing is measured rather than assumed (make replay-bench)
-tests/                    126 test functions (164 cases): exactness, brute-force cross-checks,
+tests/                    133 test functions (171 cases): exactness, brute-force cross-checks,
                           soundness of every symmetry break, exhaustive encoder equivalence, CLI,
                           proof-store and checker-pin guards, and the proof plumbing (a trace
                           that is replayed against the encoding its certificate declares,

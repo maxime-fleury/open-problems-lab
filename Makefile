@@ -1,8 +1,12 @@
 PYTHON ?= python
 WORKERS ?= 8
 LAKE ?= lake
+GAP ?= gap
+# where `make portfolio` leaves the raw JSONL the GAP export writes (gitignored:
+# their digests are recorded in data/smallgroups_<n>.json, which is committed)
+PORTFOLIO_RAW ?= data/gap
 
-.PHONY: help install test verify verify-deep proof-store cross-check build clean repro report lean lean-certs lean-check cayley cayley-long cayley-anchors replay-bench
+.PHONY: help install test verify verify-deep proof-store cross-check build clean repro report lean lean-certs lean-check cayley cayley-long cayley-anchors cayley-full portfolio replay-bench
 
 help:
 	@echo "make install      - editable install with dev + optional dependencies"
@@ -15,6 +19,8 @@ help:
 	@echo "make repro        - full experiment run (hours -> minutes, see scripts/run_full.sh)"
 	@echo "make cayley       - search the construction space: every group of order n, 300 s each"
 	@echo "make cayley-long  - the same groups the 300 s round could not decide, one hour each"
+	@echo "make portfolio    - export every group of order 96 and 128 from GAP's SmallGroups library"
+	@echo "make cayley-full  - screen the complete portfolio, 20 s per group, 20 s is a screen not a proof"
 	@echo "make replay-bench - time both replayers (in-repo and drat-trim) on every stored trace"
 	@echo "make cayley-anchors - decide one non-cyclic group per anchor, with DRAT traces"
 	@echo "make report       - markdown table of certificates"
@@ -84,6 +90,47 @@ cayley:
 # that took an hour is hundreds of megabytes and days of Python replay, which is
 # not what a committed store can hold.  See `make replay-bench` for the measured
 # envelope and RESULTS.md for what that rules out.
+portfolio:
+	@echo "exporting every group of order 96 (231) and 128 (2328) from GAP's SmallGroups library"
+	mkdir -p $(PORTFOLIO_RAW)
+	$(GAP) -q -b -c 'order := 96;; out := "$(PORTFOLIO_RAW)/smallgroups_96.jsonl"; Read("scripts/gap_export_smallgroups.g"); QUIT;'
+	( $(GAP) -q -b -c 'order := 128;; first_id := 1;; last_id := 582;; out := "$(PORTFOLIO_RAW)/smallgroups_128_1.jsonl"; Read("scripts/gap_export_smallgroups.g"); QUIT;' & \
+	  $(GAP) -q -b -c 'order := 128;; first_id := 583;; last_id := 1164;; out := "$(PORTFOLIO_RAW)/smallgroups_128_583.jsonl"; Read("scripts/gap_export_smallgroups.g"); QUIT;' & \
+	  $(GAP) -q -b -c 'order := 128;; first_id := 1165;; last_id := 1746;; out := "$(PORTFOLIO_RAW)/smallgroups_128_1165.jsonl"; Read("scripts/gap_export_smallgroups.g"); QUIT;' & \
+	  $(GAP) -q -b -c 'order := 128;; first_id := 1747;; last_id := 2328;; out := "$(PORTFOLIO_RAW)/smallgroups_128_1747.jsonl"; Read("scripts/gap_export_smallgroups.g"); QUIT;' & \
+	  wait )
+	$(PYTHON) scripts/portfolio_build.py --jsonl $(PORTFOLIO_RAW)/smallgroups_96.jsonl \
+	  --out data/smallgroups_96.json
+	$(PYTHON) scripts/portfolio_build.py \
+	  --jsonl $(PORTFOLIO_RAW)/smallgroups_128_1.jsonl \
+	  --jsonl $(PORTFOLIO_RAW)/smallgroups_128_583.jsonl \
+	  --jsonl $(PORTFOLIO_RAW)/smallgroups_128_1165.jsonl \
+	  --jsonl $(PORTFOLIO_RAW)/smallgroups_128_1747.jsonl \
+	  --out data/smallgroups_128.json
+
+# The screening round over the *complete* portfolio, which is the whole point of
+# the export above: every group of order 96, then every group of order 128, one
+# budget each.  It is a screening and not a hunt — 20 s will not settle the
+# instances the 3600 s round left open — so it is run with `--keep-going`: a
+# witness stops a hunt, and here the classification of the other 2 327 groups is
+# part of the answer.  The K96 round is what found the witness in
+# SmallGroup(96,87); `make cayley` and `make cayley-long` remain the rounds over
+# the named families, and the three are folded together by scripts/sweep_merge.py.
+#
+# `--summary` writes each round as counts plus one row per group, naming the
+# portfolio it searched by digest rather than repeating 2 328 generator lists —
+# measured: 9.4 MB of rows against 855 kB.  A `sat` row is kept whole, because a
+# colouring is an artifact the group does not contain.  What the two rounds say:
+# K96 gives 3 witnesses in 519 s, and K128 gives 2 314 refutations, 14 groups still
+# open in 893 s and no witness at the record size.
+cayley-full:
+	PYTHONPATH=src $(PYTHON) scripts/cayley_hunt.py 96:3,3,3,4 \
+	  --portfolio data/smallgroups_96.json --seconds 20 --workers $(WORKERS) \
+	  --keep-going --summary --json runs/cayley_full_k96.json
+	PYTHONPATH=src $(PYTHON) scripts/cayley_hunt.py 128:4,4,4 \
+	  --portfolio data/smallgroups_128.json --seconds 20 --workers $(WORKERS) \
+	  --keep-going --summary --json runs/cayley_full_k128.json
+
 cayley-long:
 	PYTHONPATH=src $(PYTHON) scripts/cayley_hunt.py 128:4,4,4 --group cyclic --group D64 \
 	  --group Z2xD32 --seconds 3600 --workers 3 \

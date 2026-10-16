@@ -631,3 +631,234 @@ def test_the_replay_bench_times_the_in_repo_checker_without_a_native_one(tmp_pat
     assert row["python"]["ok"] and row["python"]["seconds"] > 0
     assert row["python"]["steps_checker_read"] == 122
     assert row["python"]["num_clauses"] > 0
+
+
+# --------------------------------------------------------------------------
+# the complete portfolio: every group of one order, imported from GAP
+# --------------------------------------------------------------------------
+def _portfolio_path(n: int) -> Path:
+    return Path(__file__).resolve().parents[1] / "data" / f"smallgroups_{n}.json"
+
+
+def test_a_permutation_description_closes_to_the_group_it_names():
+    """The imported family is a construction, and its order is what is checked.
+
+    A group exported from the SmallGroups library travels as permutation generators,
+    and the table is rebuilt here by closing them under composition: the elements
+    *are* permutations, so associativity is inherited and the one thing that can be
+    wrong is the size.  A closure that is not the declared order is refused, which is
+    what keeps a truncated, edited or mis-exported file from becoming a sweep over
+    some other group — and the invariants of the rebuilt table are the same ones the
+    dihedral family gives for the same group, which checks both constructions.
+
+    """
+    # S3 as it sits in S3: a transposition and a 3-cycle
+    description = {"family": "permutation", "params": [6, [[1, 0, 2], [1, 2, 0]]],
+                   "name": "S3"}
+    table, inverse = CY.group_from_description(description)
+    assert len(table) == 6
+    result = CY.verify_group(table, inverse, description)
+    assert result["ok"] and result["method"] == "permutation closure"
+    signature = CY.portfolio_signature(table, inverse)
+    assert signature == {"orders": {"1": 1, "2": 3, "3": 2},
+                         "classes": {"1:1": 1, "2:3": 1, "3:2": 1},
+                         "center": 1, "derived": 3, "exponent": 6, "abelian": False}
+    dihedral = CY.group_from_description({"family": "dihedral", "params": [3]})
+    assert CY.portfolio_signature(*dihedral) == signature
+
+    # the same generators declared as a group of order 12, and a non-permutation
+    # generator, are both refused
+    with pytest.raises(ValueError, match="order 6, not 12"):
+        CY.group_from_description({"family": "permutation", "params": [12,
+                                   [[1, 0, 2], [1, 2, 0]]]})
+    with pytest.raises(ValueError, match="not a permutation"):
+        CY.group_from_description({"family": "permutation", "params": [6,
+                                   [[0, 0, 2], [1, 2, 0]]]})
+    with pytest.raises(ValueError, match="different numbers of points"):
+        CY.group_from_description({"family": "permutation", "params": [6,
+                                   [[1, 0, 2], [1, 2]]]})
+
+
+def test_the_permutation_check_refuses_a_table_from_somewhere_else():
+    """Passing the description re-derives the closure, so a foreign table is caught.
+
+    The cubic axiom check accepts any group's table, which is exactly what a
+    certificate must not be able to exploit: a row that *claims* to be about
+    ``SmallGroup(96,1)`` has to carry that group's table.  Handing the description to
+    :func:`oplab.cayley.verify_group` is what turns "this is a group" into "this is
+    the group the description names".
+    """
+    description = {"family": "permutation", "params": [6, [[1, 0, 2], [1, 2, 0]]],
+                   "name": "S3"}
+    table, inverse = CY.group_from_description(description)
+    other, other_inverse = CY.group_from_description({"family": "abelian", "params": [6]})
+    assert CY.verify_group(table, inverse, description)["ok"] is True
+    assert CY.verify_group(other, other_inverse, description)["ok"] is False
+    assert CY.verify_group(table, other_inverse, description)["ok"] is False
+    # the same table without a description is still a group: the cubic check is the
+    # weaker statement, and it is the one the named families get
+    assert CY.verify_group(table, inverse)["ok"] is True
+
+
+def test_the_exported_portfolio_is_rebuilt_and_re_counted(tmp_path):
+    """The data file is checked when it is read, and a tampered one is refused.
+
+    `data/smallgroups_96.json` is the whole portfolio for K96 — every group of order
+    96 — and the export's own invariants are re-counted from each rebuilt table on
+    load, so the file cannot disagree with the groups a sweep searches without
+    saying so.  A sweep over a *complete* portfolio is only worth anything if the
+    file is checked, which is why the check is not optional here.
+    """
+    path = _portfolio_path(96)
+    if not path.exists():
+        pytest.skip("no exported portfolio in the repository")
+    groups = CY.load_portfolio(path)
+    assert len(groups) == 231
+    assert {int(g["params"][0]) for g in groups} == {96}
+    assert groups[0]["name"] == "SmallGroup(96,1)" and groups[0]["id"] == 1
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["source"]["nr_small_groups"] == 231
+    assert payload["checks"] == {"groups": 231, "rebuilt_and_recounted": 231,
+                                 "invariant_mismatches": 0,
+                                 "signature_classes": payload["checks"]["signature_classes"],
+                                 "ambiguous_signature_classes":
+                                     payload["checks"]["ambiguous_signature_classes"],
+                                 "largest_signature_class":
+                                     payload["checks"]["largest_signature_class"]}
+
+    # a declared invariant that the table does not have is refused, and so is a
+    # generator list whose closure is a different group
+    tampered = copy.deepcopy(payload)
+    tampered["groups"][0]["center"] += 1
+    bad = tmp_path / "tampered.json"
+    bad.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ValueError, match="the export declares"):
+        CY.load_portfolio(bad)
+    swapped = copy.deepcopy(payload)
+    swapped["groups"][0]["generators"] = payload["groups"][1]["generators"]
+    bad.write_text(json.dumps(swapped), encoding="utf-8")
+    with pytest.raises(ValueError, match="the export declares"):
+        CY.load_portfolio(bad)
+
+
+def test_the_order_128_portfolio_is_the_library_list():
+    """2328 groups, ids 1..2328, and a sample rebuilt and re-counted anyway.
+
+    Loading the whole portfolio with its invariant check is a minute's work and the
+    builder's job (`scripts/portfolio_build.py`); what a *test* has to guard is that
+    the committed file is still the list it says it is.  So: the count, the ids, and
+    every 97th group closed and re-counted against its own declared invariants — the
+    file is data, and data no test ever reads is data that can rot.
+    """
+    path = _portfolio_path(128)
+    if not path.exists():
+        pytest.skip("no exported portfolio in the repository")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["order"] == 128 and payload["source"]["nr_small_groups"] == 2328
+    groups = payload["groups"]
+    assert len(groups) == 2328
+    assert [g["id"] for g in groups] == list(range(1, 2329))
+    for entry in groups[::97]:
+        table, inverse = CY.group_from_description(
+            {"family": "permutation", "params": [128, entry["generators"]],
+             "name": entry["name"]})
+        assert len(table) == 128
+        assert CY.portfolio_signature(table, inverse) == {
+            key: entry[key] for key in ("orders", "classes", "center", "derived",
+                                        "exponent", "abelian")}
+
+
+def test_the_sweep_takes_its_portfolio_from_an_export(tmp_path):
+    """`--portfolio` is the same sweep over a list it did not build itself.
+
+    The hunt checks every table before it searches anything, and a portfolio read from
+    a file is rebuilt by the loader; this is that path end to end, on a one-group file
+    whose group is not in any named family — with the row still naming the group it
+    came from, because a row that says only "some group" is not evidence.
+    """
+    if not SOLVER:
+        pytest.skip("no bundled SAT solver")
+    description = {"family": "permutation", "params": [6, [[1, 0, 2], [1, 2, 0]]],
+                   "name": "SmallGroup(6,1)"}
+    table, inverse = CY.group_from_description(description)
+    portfolio = {"what": "test", "order": 6, "source": {"nr_small_groups": 1},
+                 "groups": [{"id": 1, "name": "SmallGroup(6,1)", "degree": 3,
+                             "generators": description["params"][1],
+                             **CY.portfolio_signature(table, inverse)}]}
+    path = tmp_path / "smallgroups_6.json"
+    path.write_text(json.dumps(portfolio), encoding="utf-8")
+    out = tmp_path / "rows.json"
+    script = Path(__file__).resolve().parents[1] / "scripts" / "cayley_hunt.py"
+    result = subprocess.run(
+        [sys.executable, str(script), "6:3,3", "--portfolio", str(path),
+         "--seconds", "30", "--workers", "1", "--json", str(out)],
+        capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "1 groups" in result.stdout
+    rows = json.loads(out.read_text(encoding="utf-8"))
+    assert len(rows) == 1
+    row, = rows
+    assert row["name"] == "SmallGroup(6,1)" and row["n"] == 6 and row["sizes"] == [3, 3]
+    assert row["group"]["family"] == "permutation"
+    assert row["status"] == "unsat"          # R(3,3) = 6, over this group too
+    assert row["num_vars"] and row["num_clauses"]
+    # the portfolio is for one order: a sweep at another order is refused
+    result = subprocess.run(
+        [sys.executable, str(script), "12:3,3", "--portfolio", str(path),
+         "--seconds", "5"], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "not 12" in result.stderr
+
+
+def test_an_imported_group_can_be_certified_and_verified(tmp_path):
+    """The whole path on a library group: select, decide, then re-derive.
+
+    ``oplab cayley --portfolio`` picks a group the named families do not build and
+    decides it arithmetically here (96 = 2^5 * 3, so the group has an element of
+    order 3 and every colour forbidding a triangle is out), and the verifier then
+    rebuilds that group from the permutation generators the certificate carries —
+    including the stored multiplication table, which is what makes the claim about
+    the group rather than about its name.
+    """
+    from oplab.cli import main
+
+    path = _portfolio_path(96)
+    if not path.exists():
+        pytest.skip("no exported portfolio in the repository")
+    out = tmp_path / "k96_small1.json"
+    assert main(["cayley", "--n", "96", "--sizes", "3,3,3", "--portfolio", str(path),
+                 "--group", "SmallGroup(96,1)", "--out", str(out)]) == 0
+    cert = json.loads(out.read_text(encoding="utf-8"))
+    assert cert["payload"]["status"] == "obstructed"
+    assert cert["payload"]["group"]["family"] == "permutation"
+    assert len(cert["payload"]["table"]) == 96
+    result = verify_certificate(cert)
+    assert result["ok"], result.get("reason")
+    assert "element of order 3" in result["establishes"]
+
+    # the stored table is part of the claim: one wrong entry is refused, even though
+    # the description would still describe a perfectly good group
+    forged = copy.deepcopy(cert)
+    forged["payload"]["table"][7][9] = (forged["payload"]["table"][7][9] + 1) % 96
+    forged["payload_sha256"] = payload_hash(forged["payload"])
+    result = verify_certificate(forged)
+    assert not result["ok"] and "stored multiplication table" in result["reason"]
+
+
+def test_the_cli_lists_and_refuses_an_export_of_another_order(capsys):
+    """`--list` is how a group is named, and the order in the file is binding.
+
+    A portfolio is for one order; the CLI has to refuse one for another order rather
+    than silently searching the wrong list, and it has to be able to name the groups
+    so a certificate can be written from a command line.
+    """
+    from oplab.cli import main
+
+    path = _portfolio_path(96)
+    if not path.exists():
+        pytest.skip("no exported portfolio in the repository")
+    assert main(["cayley", "--n", "96", "--portfolio", str(path), "--list"]) == 0
+    listing = capsys.readouterr().out
+    assert "SmallGroup(96,1)" in listing and listing.count("\n") == 231
+    assert main(["cayley", "--n", "128", "--portfolio", str(path), "--list"]) == 2
+    assert "not 128" in capsys.readouterr().err

@@ -33,6 +33,21 @@ what turns that into a failure: after intentionally re-solving, run
 change in the store is visible in review.  `make proof-store` (and CI) run both
 checks.
 
+**Hard rule, imported data is checked, never trusted.**  A group that comes from
+*somewhere else* — today, every group of order 96 or 128 out of GAP's SmallGroups
+library (`make portfolio`, `data/smallgroups_<n>.json`) — is stored as the
+generators of a faithful permutation representation, and everything the repository
+says about it is derived here: `oplab.cayley.load_portfolio` closes the generators
+into a multiplication table, refuses a closure whose order is not the one declared,
+and re-counts the invariants the export declares (element orders, conjugacy-class
+structure, centre, derived subgroup, exponent, abelianity) from that table.  The
+`id` in a certificate is provenance — which entry of the library it is — and the
+count and the labels are the library's claim; the group is the table.  If you add
+an import of this kind, the same split applies: the builder (`scripts/portfolio_build.py`)
+must refuse a row it cannot rebuild, must refuse parts that do not tile the ids
+exactly once, and the loader must re-check on every load — a file that is read once
+and trusted afterwards is a file that can rot.
+
 **Hard rule, a longer round supersedes rather than overwrites.** Giving the same
 instances a bigger budget is the normal way forward here, and the earlier attempt
 is part of what was measured. Keep the new rows in their own `runs/*.json` file

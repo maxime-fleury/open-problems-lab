@@ -478,7 +478,9 @@ is refused rather than stored, since the clauses are built from the group descri
 and a trace from another family does not fit.  Four rows exercise it and are committed:
 `K18` over the dihedral `D9` (122 steps) and over the product `Z3xD3` (50), `K30` over
 `D15` (14 039, 53 kB), and `K6` over `D3` as `obstructed` — the arithmetic decides that
-one, so no solver run is claimed for it.  Three reasons for the choice of anchors: they
+one, so no solver run is claimed for it.  (A fifth row sits in the same store and is not
+one of these: the `K96` witness the portfolio screen found, a `sat` row, which carries a
+colouring instead of a trace.)  Three reasons for the choice of anchors: they
 are the groups the sweep above already decided, they are cheap to reproduce
 (`make cayley-anchors`, seconds), and they are rows the *circulant* store cannot hold,
 because over `Z_n` those statements are different (and mostly open) ones.  Both stores
@@ -491,6 +493,66 @@ One caveat stays: the portfolio is a portfolio — it is not every group of orde
 only the families `cayley.groups_of_order` lists.  A proof-carrying `unsat` is therefore
 a theorem about *one group*, and reading it as a statement about every construction of
 that size would be reading it wrong.
+
+**That caveat is now closed, and closing it changed an answer.**  The gap was the one
+thing GAP was installed for: `make portfolio` exports *every* group of an order out of
+the SmallGroups library as permutation generators
+(`scripts/gap_export_smallgroups.g`, GAP 4.15.1 with the `smallgrp` package),
+`scripts/portfolio_build.py` closes each one in Python and re-counts the invariants GAP
+declared for it, and the checked lists are committed — **231** groups of order 96 and
+**2 328** of order 128 (`data/smallgroups_96.json`, `data/smallgroups_128.json`, the
+second recording its four export parts and their digests).  Nothing downstream trusts
+GAP: `load_portfolio` closes every group again and re-counts `portfolio_signature` on
+load, a disagreement is an error and not a warning, and a certificate's `id` is
+provenance.  What is *quoted* rather than proved is the classification itself — at order
+128 the invariant signature leaves 462 of its 1 050 classes holding more than one group,
+and sharing a signature is necessary but not sufficient for being isomorphic, so "every
+group of order 128" is the library's claim while each individual table, and every fact
+the repository derives from it, is ours.
+
+The screen over all 231 groups of order 96 — 20 s each, 519 s of wall clock, run with
+`--keep-going` so that a witness does not stop the round
+(`runs/cayley_full_k96.json`) — gives 15 `unsat`, 213 `unknown` and **three witnesses**.
+`SmallGroup(96,87)`, `SmallGroup(96,147)` and `SmallGroup(96,230)` each carry a
+translation-invariant colouring of `K96` with nothing monochromatic in colours
+`(3,3,3,4)`: 252, 260 and 316 variables, decided in 21.3 s, 21.3 s and 13.1 s, each
+re-counted by `multicolour.verify_colouring` (`monochromatic_cliques = [0,0,0,0]`).  So
+`R(3,3,3,4) > 96` *is* realised inside the invariant construction space — and the round
+above, nine refutations and thirteen opens out of twenty-two groups with an hour of
+repair on each open one, was a fact about its portfolio.  None of the three shares an
+invariant signature with any named group, so they are not near-misses of the groups that
+were searched: the witness lives in groups the named families never contained.  No
+published bound moves — `R(3,3,3,4) >= 97`, and 96 is the size below it — but "no
+translation-invariant witness at `K96`" is false of the complete portfolio, and that is
+the kind of sentence this repository exists to be wrong about out loud.
+
+One of the three carries a certificate as well
+(`certs/cayley/k96_3x3x3x4_SmallGroup_96_87.json`, verified like every other row); the
+other two stay verified rows in the round's JSON.  The reason is a cost, not a doubt:
+a certificate's Lean theorem counts `C(96,4) = 3.3 M` subsets with `native_decide`, and
+three of those is a measurable addition to `lake build` for one more instance of the
+same statement.  One is enough to exercise the path end to end, and the round's JSON
+keeps the other two colourings in full.
+
+The same screen over the other half of the portfolio came back empty, which is the half
+of a result that is easiest to leave unsaid: all **2 328** groups of order 128, 20 s each
+on 16 workers, **893 s** of wall clock (`runs/cayley_full_k128.json`) — **2 314 `unsat`,
+14 `unknown`, no witness**.  Nothing new is proved and the finding is a negative one about
+a portfolio, but two numbers in it are the reason the round was run.  First, the screen
+is cheap because the instances are: the median group was *refuted* in 3.5 s — the
+slowest refutation 22.7 s, and 71 of the 2 314 spending the whole 20 s — so the 2 314
+refutations cost 11 163 s of solver time in 893 s of wall clock.  Order 128 does not
+need an hour per group; it needs an hour for fourteen of them.  Second, the widening
+that *falsified* the K96 sentence leaves the K128 one standing.  The 26 named groups map
+into the portfolio by invariant signature — 25 onto one id each, `Z2xDic16` onto four
+that share one — and 22 of the 26 are refuted inside 20 s.  The four that are not are
+the cyclic group, `Z64xZ2`, `D64` and `Z2xD32`: the three the 300 s round left open,
+plus the one that round needed all 300 s for.  Over the whole portfolio the 14 still
+open are
+`SmallGroup(128,{1, 45, 89, 93, 100, 102, 134, 151, 157, 159, 160, 161, 444, 991})`,
+which contains the cyclic group (id 1) and `D64` (161) — the two the long round could not
+decide in an hour — and `Z2xD32` (991), which it decided only at the hour.  A screen is
+not a hunt, and this one names the fourteen groups the next hour should go to.
 
 **One theorem did come out of it.**  The `3 | n` obstruction no longer needs the group
 to be cyclic: Cauchy's theorem gives an element `g` of order 3 in *any* group of order

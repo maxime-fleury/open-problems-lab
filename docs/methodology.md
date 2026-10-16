@@ -43,7 +43,31 @@ A certificate is a JSON file with five parts:
 | `unit_distance` | that the edges are *exactly* the unit-distance pairs, then computes the chromatic number by exact branch and bound | plane chromatic number `>= chi` |
 | `circulant` | that the sweep covers **all** `2^(n/2)` circulant colourings, and re-checks each witness | `R(k,k) > n`, or the negative statement that no circulant witness exists |
 | `circulant_multicolour` | `sat`: re-parse the stored colouring, check that it is constant on every difference class of `Z_n`, and re-count each colour's forbidden cliques; `obstructed`: re-derive the `3 ∣ n` arithmetic of the class `n/3`; `unsat`: the encoding size **and the replayed DRAT trace**; `unknown`: the encoding size, recomputed from the cliques themselves | `R(s_1, …, s_k) > n` (a witness), the arithmetic obstruction, or nothing |
-| `cayley_multicolour` | the group is rebuilt from its family/parameters and checked against the axioms, the stored table is checked against the rebuilt one, then the classes, the clique groups and the encoding size are recomputed, the per-class assignment is expanded to all `C(n,2)` edges and re-counted; `obstructed`: the `3 ∣ n` argument over a group; `unsat`: the encoding size **and the replayed DRAT trace**, against this group's CNF | `R(s_1, …, s_k) > n` over that group, the arithmetic obstruction, or *no translation-invariant colouring over that group is clean* (proof-carrying) |
+| `cayley_multicolour` | the group is rebuilt from its description — a family's parameters, or the permutation generators of an imported library group, closed here — and checked against the stored table and the axioms (for the permutation family the table *is* the multiplication of a closed set of permutations, so the closure is re-derived and compared, and the associated invariants are re-counted on every load); then the classes, the clique groups and the encoding size are recomputed, the per-class assignment is expanded to all `C(n,2)` edges and re-counted; `obstructed`: the `3 ∣ n` argument over a group, with the element of order 3 *found in the table* and the declared triangle required to be that one; `unsat`: the encoding size **and the replayed DRAT trace**, against this group's CNF | `R(s_1, …, s_k) > n` over that group, the arithmetic obstruction, or *no translation-invariant colouring over that group is clean* (proof-carrying) |
+
+A word on the *portfolio* a `cayley_multicolour` row is drawn from, because it is the
+part of that kind which is not fully decided by this repository.  Two lists are
+involved: the families `oplab.cayley.groups_of_order` builds, which are complete for
+the abelian groups and one-per-family otherwise, and the complete list of an order
+exported out of the GAP SmallGroups library (`data/smallgroups_<n>.json`, 231 groups
+of order 96 and 2 328 of order 128).  In both cases the group a row is about is a
+table this repository rebuilt, so every statement *about that group* is checked here;
+what is the library's claim, and is quoted as such, is that the list is the
+classification — at order 128 the invariant signature the loader recomputes leaves
+462 of 1 050 classes holding more than one group, and a shared signature is necessary
+but not sufficient for being isomorphic, so the repository does not pretend to have
+proved pairwise non-isomorphism.  A screen over the complete portfolio is therefore
+two statements at once: "these groups are empty" (ours, per table) and "these are all
+the groups of that order" (the library's).  `RESULTS.md` and `docs/targets.md` say
+which is which where it matters.
+
+Such a screen is recorded the way a trace is: what the round produced, keyed to what
+it read.  `scripts/cayley_hunt.py --summary` writes the counts and one row per group —
+the verdict, the encoding size it was reached on, the seconds it took — and names the
+portfolio and its sha256 instead of copying thousands of generator lists into the run
+file; a `sat` row is the exception and is stored whole, because a colouring is an
+artifact the group it lives in does not contain.  Nothing is dropped that `load_portfolio`
+does not already hold — and re-check — on the way back in.
 
 The asymmetry is deliberate: a *positive* result (a construction) is verified in
 milliseconds, while a *negative* result (an exhaustive sweep) is only as good as

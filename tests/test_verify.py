@@ -303,18 +303,20 @@ def test_stored_multicolour_certificates_verify_and_unknown_claims_nothing():
 def test_stored_cayley_certificates_verify_and_carry_their_group():
     """Every stored `cayley_multicolour` certificate re-verifies, group and all.
 
-    Three `unsat` rows over *non-cyclic* groups and one arithmetic `obstructed` row —
-    statements the circulant store cannot hold, because over `Z_n` they are different
-    (and mostly open) ones.  Each row carries the group as data; the verifier checks
-    that table against the one rebuilt from the description, and each `unsat` row
-    resolves the DRAT trace it names against its own encoding.  The counts are the
+    Three `unsat` rows over *non-cyclic* groups, one arithmetic `obstructed` row and one
+    `sat` row — statements the circulant store cannot hold, because over `Z_n` they are
+    different (and mostly open) ones.  Each row carries the group as data; the verifier
+    checks that table against the one rebuilt from the description, each `unsat` row
+    resolves the DRAT trace it names against its own encoding, and the `sat` row is the
+    witness a 20 s screen over the complete portfolio of order 96 found in a group no
+    named family contains (`SmallGroup(96,87)`, `R(3,3,3,4) > 96`).  The counts are the
     inventory the README and RESULTS.md quote, so a row cannot quietly appear, vanish
     or lose its proof.
     """
     root = Path(__file__).resolve().parents[1]
     directory = root / "certs" / "cayley"
     paths = sorted(directory.glob("*.json"))
-    assert len(paths) == 4
+    assert len(paths) == 5
     seen: dict[str, int] = {}
     for path in paths:
         cert = json.loads(path.read_text(encoding="utf-8"))
@@ -334,4 +336,17 @@ def test_stored_cayley_certificates_verify_and_carry_their_group():
             assert "DRAT proof replayed" in result["establishes"], path.name
         elif payload["status"] == "obstructed":
             assert "any group of order" in result["establishes"], path.name
-    assert seen == {"unsat": 3, "obstructed": 1}
+        elif payload["status"] == "sat":
+            # a witness is re-counted, not trusted: the row says which bound it
+            # realises over which group, and claims zero monochromatic cliques — a
+            # claim the verifier has just re-derived from the expanded colouring
+            sizes = ", ".join(map(str, payload["sizes"]))
+            assert f"R({sizes}) > {payload['n']}" in result["establishes"], path.name
+            assert payload["group"]["name"] in result["establishes"], path.name
+            assert cert["claims"]["monochromatic_cliques"] == [0] * len(payload["sizes"]), \
+                path.name
+            assert result["establishes"] == (
+                f"R({sizes}) > {payload['n']} via a translation-invariant witness over "
+                f"{payload['group']['name']} (a restriction of the colourings of "
+                f"K{payload['n']}: a witness is a witness)"), path.name
+    assert seen == {"unsat": 3, "obstructed": 1, "sat": 1}

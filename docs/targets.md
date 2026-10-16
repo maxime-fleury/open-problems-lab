@@ -166,11 +166,27 @@ a record:
   translation invariant and one variable per (class, colour) decides the family — the
   circulant encoding is the special case where the group is cyclic, and the published
   witnesses could plausibly live in one of the other groups.  Measured, not hoped for:
-  * the portfolio is complete for the **abelian** groups (7 for `n = 96`, 15 for
-    `128`), plus one entry per dihedral, dicyclic and semidihedral family and per
-    direct product of those with a small cyclic factor: 22 groups at `K96`, 26 at
+  * the *default* portfolio is complete for the **abelian** groups (7 for `n = 96`,
+    15 for `128`), plus one entry per dihedral, dicyclic and semidihedral family and
+    per direct product of those with a small cyclic factor: 22 groups at `K96`, 26 at
     `K128`, and 2 at `K538` (`Z269 x Z2` and `D269`, since `538 = 2 * 269`).  It is not
-    every group of order `n` — `cayley.groups_of_order` lists exactly what is in it.
+    every group of order `n` — `cayley.groups_of_order` lists exactly what is in it —
+    and that mattered: see the `K96` row below.
+  * **the complete portfolio is now available too**: `make portfolio` exports *every*
+    group of one order out of the GAP SmallGroups library as permutation generators
+    (`scripts/gap_export_smallgroups.g`, GAP 4.15.1 with the `smallgrp` package),
+    `scripts/portfolio_build.py` closes each one in Python, re-counts the invariants
+    GAP declared for it and refuses any row that disagrees, and the result is checked
+    in: `data/smallgroups_96.json` (**231** groups) and `data/smallgroups_128.json`
+    (**2 328**, the count `NrSmallGroups(128)` gives).  `--portfolio` makes `oplab
+    cayley` and `scripts/cayley_hunt.py` search that list, and `load_portfolio` closes
+    and re-counts every group again on load, so no claim about one of them rests on
+    GAP: the id is provenance, the group is the table.  What the repository does *not*
+    prove is that the list is pairwise non-isomorphic — 1 050 invariant-signature
+    classes at order 128 leave 462 classes holding more than one group, and sharing a
+    signature is necessary but not sufficient — so "every group of order 128" is the
+    library's classification, quoted, while "this group is empty" is about the table
+    in hand and is checked here.
   * every table is checked against the group axioms before it is searched
     (`cayley.verify_group`: identity, inverses, associativity over every triple), which
     is what makes the hand-derived dihedral, dicyclic and semidihedral rules safe to
@@ -178,15 +194,40 @@ a record:
   * **`K128` `(4,4,4)`: 24 of the 26 groups are UNSAT** — 5 of them in seconds (2.3 s
     to 6.2 s), 18 inside the 5-minute budget, and `Z2 x D32` only when the budget went
     to an hour — so the two still open are the *cyclic* group and `D64`.  No
-    translation-invariant witness exists at the record size, so `R(4,4,4) >= 128`
-    stays where it is.
-  * **`K96` `(3,3,3,4)`: 9 of the 22 groups UNSAT, 13 unknown, no witness.**  Four
-    fell in the 5-minute round and five more — `Z3xDic8`, `Z8xD6`, `Z8xDic3`,
-    `Z12xDic2`, `Z16xD3` — when the thirteen that round left open were given an hour
-    each.  Those thirteen were then given an hour each of the *repair* search — the
-    engine that hunts witnesses instead of refutations — and it found none either
-    (`runs/cayley_long_k96_repair.json`): the published `K96`
-    witness is not translation invariant over any of them, over that portfolio.
+    translation-invariant witness *was found* at the record size, so `R(4,4,4) >= 128`
+    stays where it is — and the complete portfolio finds none either: the same 20 s
+    screen over all **2 328** groups (`runs/cayley_full_k128.json`, 893 s of wall
+    clock, the median group refuted in 3.5 s) gives **2 314 UNSAT and 14 unknown**.
+    The 14 are `SmallGroup(128,{1, 45, 89, 93, 100, 102, 134, 151, 157, 159, 160, 161,
+    444, 991})`; four of them are named families (the cyclic group as id 1,
+    `Z64 x Z2` as 159, `D64` as 161, `Z2 x D32` as 991), so 22 of the 26 named groups
+    fall inside 20 s, and the other ten are ids no named family covers.  A screen is
+    not a hunt: those 14 are where the next hour goes, not evidence that no witness
+    exists.
+  * **`K96` `(3,3,3,4)`: over the 22 named groups, 9 UNSAT, 13 unknown, no witness;
+    over all 231 groups of that order, 15 UNSAT, 213 unknown and three witnesses.**
+    Four of the nine fell in the 5-minute round and five more — `Z3xDic8`, `Z8xD6`,
+    `Z8xDic3`, `Z12xDic2`, `Z16xD3` — when the thirteen that round left open were
+    given an hour each; those thirteen were then given an hour each of the *repair*
+    search, the engine that hunts witnesses instead of refutations, and it found none
+    either (`runs/cayley_long_k96_repair.json`).  All of that is a statement about
+    those 22 groups, and the complete portfolio says the difference aloud: a 20 s
+    screen over all 231 (`scripts/cayley_hunt.py 96:3,3,3,4 --portfolio …
+    --keep-going`, `runs/cayley_full_k96.json`) found a clean translation-invariant
+    colouring of `K96` in **`SmallGroup(96,87)`, `SmallGroup(96,147)` and
+    `SmallGroup(96,230)`** — 252, 260 and 316 variables, decided in 21.3 s, 21.3 s and
+    13.1 s — each re-counted by `multicolour.verify_colouring`
+    (`monochromatic_cliques = [0,0,0,0]`), so `R(3,3,3,4) > 96` *is* realised in the
+    invariant construction space at that size.  None of the three shares an invariant
+    signature with any of the named groups, so the named round was not merely
+    unlucky: the witness lives in groups it never contained.  The bound itself does
+    not move — `R(3,3,3,4) >= 97` is published, and a `K96` witness is what sits
+    below it — but "no invariant witness at `K96`" is a claim about a portfolio, and
+    over the complete one it is false.  One of the three carries a certificate as
+    well ([`certs/cayley/k96_3x3x3x4_SmallGroup_96_87.json`](../certs/cayley)), and
+    the other two are recorded as verified rows in the round's JSON: each certificate
+    costs the Lean job minutes to re-prove (`multiMonoCount 96 [3,3,3,4]` counts
+    C(96,4) = 3.3 M subsets), which is why the round keeps one and quotes the rest.
   * **A later round supersedes rows instead of editing them away.**
     `scripts/sweep_merge.py` puts the longer round in `runs/cayley_sweep.json` as the
     frontier and keeps the 300 s rows it replaced under `superseded`, so "300 s told
@@ -206,18 +247,24 @@ a record:
     element `g` of order 3, so `{e, g, g²}` has all three of its differences in the
     single class `{g, g⁻¹}`, and its `n/3` translates are monochromatic in whatever
     colour that class carries.  `K162`, `K537` and every all-triangle instance
-    divisible by 3 are therefore unreachable from *any* group.
+    divisible by 3 are therefore unreachable from *any* group.  Which element that is
+    is *found in the table* (`cayley_obstruction` walks it, the verifier re-finds it
+    and refuses a certificate that declares another triple), because the first three
+    indices are an element of order 3 only in the families that happen to be written
+    that way: in `Z96`, or in a group closed from library generators, they are not.
   * the `unsat` rows now have the same standing as the circulant ones: the encoding
     takes a proof path, `cayley.replay_proof` re-checks the emitted trace against that
     group's own CNF before anything is stored (no solver in the loop), and
     `cayley_multicolour` accepts an `unsat` row **only** with a trace it can replay —
     a bare verdict is refused rather than stored, because the clauses depend on the
     group description and a trace from another family has neither the right variables
-    nor the right clauses.  The three rows in `certs/cayley/` (`D9` and `Z3xD3` at
-    `K18`, `D15` at `K30`) are that path, exercised; `K6` over `D3` is stored as
-    `obstructed` instead, because the arithmetic decides it and a solver run would say
-    less.  `sat` (a witness the ordinary verifier re-counts) is unchanged, and every
-    row is only written after `verify_certificate` has accepted it.
+    nor the right clauses.  The three `unsat` rows in `certs/cayley/` (`D9` and
+    `Z3xD3` at `K18`, `D15` at `K30`) are that path, exercised; `K6` over `D3` is
+    stored as `obstructed` instead, because the arithmetic decides it and a solver run
+    would say less, and the fifth row in that store is the `K96` witness the screen
+    over the complete portfolio turned up (a `sat` row, below).  A witness is re-counted
+    by the ordinary verifier and needs no trace, and every row is only written after
+    `verify_certificate` has accepted it.
   * `oplab cayley --n N --sizes … --group NAME` is the one-group-at-a-time interface
     (`--list` prints the portfolio), `scripts/cayley_hunt.py --proof-dir/--cnf-dir`
     records traces for a whole sweep, and `scripts/drat_trim_check.py` rebuilds the
