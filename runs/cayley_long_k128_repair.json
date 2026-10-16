@@ -1,0 +1,91 @@
+[
+  {
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "group": {
+      "family": "abelian",
+      "params": [
+        128
+      ],
+      "name": "cyclic"
+    },
+    "classes": 64,
+    "self_inverse_classes": 1,
+    "num_vars": 192,
+    "num_clauses": 127813,
+    "seconds": 3253.681,
+    "moves": 109676,
+    "status": "unknown",
+    "best_violations": 92,
+    "repair_moves": 109676,
+    "note": "a near miss is not a witness",
+    "name": "cyclic"
+  },
+  {
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "group": {
+      "family": "dihedral",
+      "params": [
+        64
+      ],
+      "name": "D64"
+    },
+    "classes": 96,
+    "self_inverse_classes": 65,
+    "num_vars": 288,
+    "num_clauses": 239037,
+    "seconds": 3257.0,
+    "moves": 86907,
+    "status": "unknown",
+    "best_violations": 163,
+    "repair_moves": 86907,
+    "note": "a near miss is not a witness",
+    "name": "D64"
+  },
+  {
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "group": {
+      "family": "product",
+      "params": [
+        {
+          "family": "abelian",
+          "params": [
+            2
+          ]
+        },
+        {
+          "family": "dihedral",
+          "params": [
+            32
+          ]
+        }
+      ],
+      "name": "Z2xD32"
+    },
+    "classes": 97,
+    "self_inverse_classes": 67,
+    "num_vars": 291,
+    "num_clauses": 239023,
+    "seconds": 3257.345,
+    "moves": 83163,
+    "status": "unknown",
+    "best_violations": 202,
+    "repair_moves": 83163,
+    "note": "a near miss is not a witness",
+    "name": "Z2xD32"
+  }
+]

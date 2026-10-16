@@ -1,0 +1,236 @@
+{
+  "rows": [
+    {
+      "tag": "k18_4x4_D9",
+      "steps": 122,
+      "bytes": 629,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 0.023364543914794922,
+        "reason": "",
+        "num_vars": 26,
+        "num_clauses": 364,
+        "steps_checker_read": 122
+      },
+      "native": {
+        "ok": true,
+        "seconds": 0.5678877830505371,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k18_4x4_Z3xD3",
+      "steps": 50,
+      "bytes": 218,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 0.0038747787475585938,
+        "reason": "",
+        "num_vars": 20,
+        "num_clauses": 248,
+        "steps_checker_read": 50
+      },
+      "native": {
+        "ok": true,
+        "seconds": 0.5309832096099854,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k30_3x3x4_D15",
+      "steps": 14039,
+      "bytes": 133499,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 4.766952991485596,
+        "reason": "",
+        "num_vars": 66,
+        "num_clauses": 1236,
+        "steps_checker_read": 14039
+      },
+      "native": {
+        "ok": true,
+        "seconds": 1.1306581497192383,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k18_4x4",
+      "steps": 26,
+      "bytes": 93,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 0.0023407936096191406,
+        "reason": "",
+        "num_vars": 18,
+        "num_clauses": 186,
+        "steps_checker_read": 26
+      },
+      "native": {
+        "ok": true,
+        "seconds": 0.731891393661499,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k30_3x3x4",
+      "steps": 1179,
+      "bytes": 7565,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 0.553107738494873,
+        "reason": "",
+        "num_vars": 45,
+        "num_clauses": 680,
+        "steps_checker_read": 1179
+      },
+      "native": {
+        "ok": true,
+        "seconds": 0.7881088256835938,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k35_4x6",
+      "steps": 505,
+      "bytes": 3403,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 6.50618839263916,
+        "reason": "",
+        "num_vars": 34,
+        "num_clauses": 12908,
+        "steps_checker_read": 505
+      },
+      "native": {
+        "ok": true,
+        "seconds": 14.437990665435791,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k36_4x6",
+      "steps": 260,
+      "bytes": 1613,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 4.352556467056274,
+        "reason": "",
+        "num_vars": 36,
+        "num_clauses": 16830,
+        "steps_checker_read": 260
+      },
+      "native": {
+        "ok": true,
+        "seconds": 12.384692668914795,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k42_5x5",
+      "steps": 8288,
+      "bytes": 83017,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 23.123159885406494,
+        "reason": "",
+        "num_vars": 42,
+        "num_clauses": 18164,
+        "steps_checker_read": 8288
+      },
+      "native": {
+        "ok": true,
+        "seconds": 12.474026441574097,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k43_5x5",
+      "steps": 24749,
+      "bytes": 248586,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 67.96287751197815,
+        "reason": "",
+        "num_vars": 42,
+        "num_clauses": 20916,
+        "steps_checker_read": 24749
+      },
+      "native": {
+        "ok": true,
+        "seconds": 15.279582500457764,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k45_3x3x5",
+      "steps": 36496,
+      "bytes": 387223,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 137.2196900844574,
+        "reason": "",
+        "num_vars": 66,
+        "num_clauses": 13173,
+        "steps_checker_read": 36496
+      },
+      "native": {
+        "ok": true,
+        "seconds": 64.03797316551208,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k50_3x3x3x3",
+      "steps": 642728,
+      "bytes": 12687630,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 3677.9805982112885,
+        "reason": "",
+        "num_vars": 100,
+        "num_clauses": 1003,
+        "steps_checker_read": 642728
+      },
+      "native": {
+        "ok": true,
+        "seconds": 90.46753144264221,
+        "detail": ""
+      }
+    },
+    {
+      "tag": "k55_3x4x4",
+      "steps": 173165,
+      "bytes": 2493350,
+      "binary": true,
+      "python": {
+        "ok": true,
+        "seconds": 258.2447612285614,
+        "reason": "",
+        "num_vars": 81,
+        "num_clauses": 6813,
+        "steps_checker_read": 173165
+      },
+      "native": {
+        "ok": true,
+        "seconds": 32.24614214897156,
+        "detail": ""
+      }
+    }
+  ],
+  "what": "both replayers timed on every stored trace",
+  "judge": "/home/max/drat-trim/drat-trim pinned at 2e3b2dc0ecf9",
+  "preserved_pin": "D:\\gen\\physics\\open-problems-lab\\scripts\\drat-trim.pin",
+  "source_sha256": null
+}

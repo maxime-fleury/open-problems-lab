@@ -40,21 +40,23 @@ data by an independent verifier, and CI re-runs that verification on every push.
 
 ## 1. What is in here
 
-**Four engines.**
+**Five engines and one proof checker.**
 
 | module | what it does | exactness |
 |---|---|---|
 | [`src/oplab/sphere.py`](src/oplab/sphere.py) | kissing configurations and the Tammes problem on spheres: exact root systems (`D4`, `D5`, `E6`, `E7`, `E8`, icosahedron, hexagon) plus a time-bounded optimiser | constructions are exact up to float64; search is heuristic |
 | [`src/oplab/ramsey.py`](src/oplab/ramsey.py) | Ramsey colourings: an exact monochromatic-clique counter, delta-evaluating tabu search, and an **exhaustive** circulant sweep | counter is exact and brute-force tested; circulant sweep is exhaustive |
 | [`src/oplab/unitdist.py`](src/oplab/unitdist.py) | unit-distance graphs: analytic Moser spindle and diamond, exact chromatic number by branch and bound, random growth search | chromatic number is exact; search is heuristic |
+| [`src/oplab/multicolour.py`](src/oplab/multicolour.py) | multicolour Ramsey: exact per-colour clique counts, delta-evaluating tabu search, a CDCL encoding with a proved-sound colour break, and the **decidable** circulant sub-family | counts are exact and brute-force tested; the circulant encoding is proved equivalent to cleanliness on small instances (exhaustively, in the tests) |
 | [`src/oplab/sat.py`](src/oplab/sat.py) | CNF encoding of the Ramsey problem with four layers of *sound* symmetry breaking, DIMACS export, Z3 or external-solver backend | encoding is exact; solver verdicts are only as good as the backend |
+| [`src/oplab/drat.py`](src/oplab/drat.py) | a DRAT proof checker (RUP, RAT, deletions) and DIMACS/proof I/O — the trusted base behind every proved `unsat` row | checks a trace against a CNF with no solver involved; about 400 lines, validated on cases whose truth is known independently *and* cross-checked by the external `drat-trim` |
 
 **One verifier.** [`src/oplab/verify.py`](src/oplab/verify.py) re-derives every
 claim from the payload of a certificate, and `oplab verify` exits non-zero as
 soon as one claim fails. That command is what CI runs.
 
 **One Lean layer.** [`lean/`](lean/README.md) re-checks the same finite claims
-in Lean 4 — 108 generated theorems, 103 of them kernel-checked by `decide` —
+in Lean 4 — 174 generated theorems, 140 of them kernel-checked by `decide` —
 with no Mathlib, no solver and no floating point in the trusted base. See
 [§4.4](#44-the-same-claims-checked-in-lean).
 
@@ -75,6 +77,9 @@ with no Mathlib, no solver and no floating point in the trusted base. See
 | Tabu search on `K42` / `K43` | 100 and 138 monochromatic `K5` remaining (from ≈1880) | exact counter re-verification |
 | SAT encoding, `k=3` and `k=4` | `K6` unsat, `K5` sat, `K17` sat at every symmetry level | brute force for `K5`/`K6`, theorem `R(4,4)=18` for `K17` |
 | SAT on `K42` / `K43` | inconclusive within the budget; measured clause-ingestion cost makes the Python/Z3 path unusable at this size | recorded as inconclusive, never as a verdict; DIMACS export provided for real solvers |
+| Multicolour tabu search, `K50`–`K162` | no witness anywhere: the best colourings still carry 140–17 560 monochromatic cliques, **including at `K50` and `K29`, where witnesses are published and known to exist** | 300 s per target, exact counts re-derived by the verifier; raw log in `runs/hunt_driver.log`, machine-readable rows in `runs/hunt_2026-10-15.jsonl` |
+| Translation-invariant colourings over *groups* of order `n` | 52 group-runs at the four undecided sizes in 5-minute rounds, then **one hour each on the 21 groups those rounds left open: 33 decided empty, 19 without a verdict, no witness and no bound moved**; `K128` `(4,4,4)` is the sharp case — 24 of its 26 groups are empty, and only the cyclic group and `D64` survive an hour each | every table checked against the group axioms before it is searched; the four stored rows carry the group as data, a DRAT trace for each `unsat` (replayed by [`drat.py`](src/oplab/drat.py), cross-checked by `drat-trim`) and a Lean theorem that the table *is* a group with the class structure its encoding size comes from; the long round's rows are verdicts, and `runs/cayley_sweep.json` keeps the 5-minute rows they replaced under `superseded` |
+| Circulant sub-family of the multicolour frontier | 18 of the 24 instances decided in seconds, per instance: witnesses found (and verified) for `K29`, `K44`, `K54`, `K17`, `K5`; **no** circulant witness for `K18`, `K30`, `K35`, `K36`, `K42`, `K43`, `K45`, `K50`, `K55`; at `3 ∣ n` the all-triangle instances (`K6`, `K51`, `K162`, `K537`) are **obstructed by arithmetic**, no search involved; the other six (`K96`, `K97`, `K127`, `K128`, `K161`, `K538`) returned `unknown` with the budget spent and are recorded as no claim | witnesses re-counted by the Python verifier *and* by the Lean kernel; the obstruction is `diffClass n 0 (n/3) = n/3 ∧ …` proved per instance by `decide`; **all nine `unsat` rows carry a DRAT trace, replayed by [`drat.py`](src/oplab/drat.py) and cross-checked by `drat-trim`** |
 
 ---
 
@@ -169,6 +174,44 @@ ceiling is 4 — because the smallest known 5-chromatic graph has 509 vertices,
 nothing this generator produces can reach 5, and `RESULTS.md` says so instead of
 implying otherwise.
 
+### 3.5 Multicolour Ramsey numbers: where a record is actually reachable
+
+`R(3,3,3,3) >= 51` (Chung, 1973), `R(3,4,4) >= 55` and `R(3,3,5) >= 45`
+(Kreher–Li–Radziszowski, 1988), `R(3,3,3,3,3) >= 162` (Exoo, 1994),
+`R(4,4,4) >= 128` (Hill–Irving, 1982), `R(4,6) >= 36` (Exoo, 2012).  These
+lower bounds are decades old, the gaps to the upper bounds are wide, and the
+witness is always *one colouring of one graph* — so a colouring of `K_{n+1}` with
+no monochromatic forbidden clique would move the published number by one.
+
+This repository attacks that frontier on two fronts, and neither of them claims
+a record:
+
+* **Heuristically**, with the delta-evaluating tabu engines of
+  [`multicolour.py`](src/oplab/multicolour.py) — measured to *fail*, including on
+  instances whose witness is published (`K50`, `K29`).  The numbers are in
+  [RESULTS.md](RESULTS.md) §8, with the raw log in `runs/hunt_driver.log` and the
+  machine-readable rows in `runs/hunt_2026-10-15.jsonl`.
+* **Exactly, inside the circulant sub-family**, where the question
+  "is there a translation-invariant witness?" becomes one Boolean variable per
+  difference class and colour, one clause per forbidden clique — a few hundred
+  variables — and a CDCL solver answers it in seconds
+  (`oplab mc-circulant --n 45 --sizes 3,3,5`).
+
+Two things make the second front worth publishing even when it says no:
+
+1. a `sat` verdict is a *witness*, re-counted exactly, so it is a real bound
+   (`R(3,3,4) > 29` and `R(3,4,4) > 54` are recovered this way, matching the
+   published values, and `K5`/`K17` recover the 5-cycle and the Paley graph);
+2. when `3` divides `n` and every colour forbids a triangle, **no** circulant
+   colouring can be clean at all: the class `n/3` is a real difference class and
+   the three edges of `{0, n/3, 2n/3}` all lie in it, so whichever colour that
+   class receives, that colour has `n/3` monochromatic triangles.  This is
+   arithmetic, it is verified per instance by the Lean layer
+   (`diffClass n 0 (n/3) = n/3 ∧ …`), and it needs no solver — which is exactly
+   why the target sizes `51`, `96`, `162`, `537` cannot be reached from the
+   circulant side, and why the honest form of that statement is the obstruction
+   rather than a search result.
+
 ---
 
 ## 4. The certificate contract
@@ -206,6 +249,8 @@ implying otherwise.
 | `ramsey` | parses the colouring string, re-counts monochromatic `K_k` | `R(k,k) > n` iff the count is zero (any `k >= 3`) |
 | `unit_distance` | that the edges are exactly the unit-distance pairs, then the exact chromatic number | plane chromatic number `>= chi` |
 | `circulant` | that the sweep covers all `2^(n/2)` circulant colourings, and re-checks every witness | `R(k,k) > n`, or the exhaustive negative statement |
+| `circulant_multicolour` | for `sat`: re-expands the stored string, checks it is constant on every difference class and re-counts every forbidden clique; for `obstructed`: re-derives the `3 ∣ n` arithmetic of the class `n/3` with no solver; for `unsat`: the encoding size **and the recorded DRAT trace** (digest always, replay from scratch when the row is cheap, always under `--deep`); for `unknown`: the encoding size, recomputed from the cliques | `R(s_1,…,s_k) > n` (a witness), the arithmetic obstruction, or *no circulant colouring of `K_n` is clean* (proof-carrying) |
+| `cayley_multicolour` | **everything**: the group table is rebuilt from its family/parameters and checked against the group axioms (identity, inverses, associativity), then the inversion classes, the encoding size and the per-class assignment are recomputed, expanded to all `C(n,2)` edges and re-counted by the exact clique counter; `obstructed` re-derives the `3 ∣ n` argument (an element of order 3 exists in *any* group of that order); `unsat` requires the recorded DRAT trace and replays it against **this group's** encoding, rebuilt from the description (digest always, replay from scratch when the row is cheap, always under `--deep`) | `R(s_1,…,s_k) > n` (a witness over that group), the arithmetic obstruction, or *no translation-invariant colouring over that group is clean* (proof-carrying); an `unsat` row without a trace is refused, so this kind stores no bare verdicts |
 | `ramsey_unsat` | consistency of the declared encoding size against `2 * C(n,k)` plus symmetry clauses; `--deep` re-runs the solver | nothing on its own (see §10) |
 | `sat_attempt` | that an inconclusive run is labelled inconclusive and its encoding metadata is right | nothing — it records a failure honestly |
 | `unitdist_search` | the recorded graph really is a unit-distance graph with the claimed chromatic number | plane chromatic number `>= chi` |
@@ -219,7 +264,23 @@ as its completeness argument, which is why:
   size of the family (`2^21` for `K42` and `K43`), and `oplab verify --deep`
   re-runs the entire sweep from scratch in CI;
 * unsatisfiability claims from the SAT engine are **not** claimed as proofs, since
-  no DRAT proof is produced (see §10).
+  that engine produces no DRAT proof (see §10);
+* unsatisfiability inside the circulant sub-family **is** proof-carrying: all
+  nine `unsat` rows store the CaDiCaL trace next to the certificate, and
+  [`oplab/drat.py`](src/oplab/drat.py) replays it against the encoding it rebuilt
+  from `(n, sizes)` — no solver in the loop. A trace is only stored after that
+  replay has accepted it, and the certificate records the digest of the canonical
+  text, the sha256 of the stored bytes, the container and how long the replay took.
+  The same plumbing carries the `cayley_multicolour` rows: three `unsat` ones in
+  [`certs/cayley/`](certs/cayley) store a trace that is replayed against the
+  encoding of *their* group (rebuilt from the group description, not from
+  `(n, sizes)`, because the clauses are a different CNF) — which is also why a
+  trace cannot be moved between the two families, or between two groups.
+  Every stored trace is then cross-checked by the external `drat-trim`
+  (`scripts/drat_trim_check.py`, CI job `drat-trim`, at the commit
+  `scripts/drat-trim.pin` names), so the proofs do not rest on this repository's
+  own checker alone — and which checker that second opinion comes from is itself
+  pinned and checked, not assumed.
 
 ---
 
@@ -231,7 +292,7 @@ reads every `certs/*.json` and emits [`lean/Oplab/Certs.lean`](lean/Oplab/Certs.
 one theorem per claim, which `lake build` then re-checks:
 
 ```bash
-cd lean && lake build            # 108 theorems, ~7 minutes (two 2^21 sweeps)
+cd lean && lake build            # 174 theorems, ~10 minutes (two 2^21 sweeps)
 make lean                        # same, from the repository root
 python scripts/gen_lean_certs.py --check   # CI: the generated file must be fresh
 ```
@@ -245,14 +306,24 @@ python scripts/gen_lean_certs.py --check   # CI: the generated file must be fres
 | `kissing`, `tammes` | `allCosBelow num den <points> = true`: every pairwise cosine is at most the claimed `max_dot` (rounded up at the 9th decimal), plus distinctness and unit norms |
 | `attacks/kissing_*` | `cosAtLeast` for the pair that beats `1/2` — the `establishes_bound = false` flag, machine-checked |
 | `unit_distance`, `unitdist_search` | `unitEdges` (every stored edge is a unit distance up to `1e-9`) and `chromaticExactly n chi <edges>` |
+| `circulant_multicolour` witnesses | `multiMonoCount n [sizes] <colouring> = [0, …, 0]` — one exact count per colour, by the bitmask recursion, and on the cheap instances also by the naive subset enumeration (`multiSubsetMonoCount`) |
+| `circulant_multicolour` obstruction | `diffClass n 0 (n/3) = n/3 ∧ diffClass n (n/3) (2n/3) = n/3 ∧ diffClass n 0 (2n/3) = n/3` |
+| `circulant_multicolour` encodings | `n/2 * k` variables, and the clause count as `n/2 * (1 + k(k-1)/2)` plus one clause per (colour, clique class set); a second theorem recomputes those class-set counts from the cliques themselves with `cliqueClassGroups`, so the encoding size is a computation rather than a claim |
+| `cayley_multicolour` groups | `isCayleyGroup <table> <inverse> = true`: the stored multiplication table really is a group — two-sided identity, inverses, associativity over all `n³` triples — as data, not as a description |
+| `cayley_multicolour` class structure | `(cayleyClasses <table> <inverse>).length = k` and `(cayleyCliqueClassGroups <table> <inverse> s).length = <count>`: the class count and the clique-group counts the encoding size is built from, **recomputed** from the table's differences |
+| `cayley_multicolour` encodings | `<classes> * k` variables and the clause count as a sum over the (colour, clique class set) groups — kernel arithmetic whose inputs the two theorems above recompute |
+| `cayley_multicolour` obstruction | `hasOrderThree <table> = true`: the group really has an element of order 3, whose class then forces a monochromatic triangle in every colour |
 
 Two points about honesty. Coordinates from JSON are read as exact integers scaled
 by `10^18` and the geometric claims become integer inequalities with a `1e-9`
 rounding allowance — nine orders of magnitude above the round-off of the stored
 decimals — so the theorems bound the *stored data*, not an idealised point set.
-And five theorems (the two `2^21` circulant sweeps, the two `K42`/`K43` tabu
-counts and the `3^12` lower-bound colouring search of the Moser drawing) are
-proved by `native_decide`, which trusts the Lean compiler rather than the kernel;
+And 34 theorems (the two `2^21` circulant sweeps, the two `K42`/`K43` tabu
+counts, the `3^12` lower-bound colouring search of the Moser drawing, the three
+multicolour witness counts, the clique-group recomputations and the group-table
+checks of the `cayley_multicolour` rows) are proved by `native_decide`, which
+trusts the Lean compiler rather than the kernel (the kernel would need hours for
+the sweeps, and it cannot unfold the sorting inside `cliqueClassGroups` at all);
 each is marked as such in its doc string, and every one of them is recomputed by
 the Python verifier as well.
 
@@ -345,6 +416,44 @@ The backend is Z3's Boolean engine by default; if a DIMACS solver
 (`cadical`, `kissat`, `minisat`, `glucose`, `cryptominisat5`) is on `PATH`, it is
 used instead. `oplab sat --dimacs-only` writes the instance for anyone else.
 
+### 5.5 Multicolour instances (`multicolour.py`)
+
+`R(s_1, …, s_k)` with one forbidden clique size per colour, so `k` is no longer
+fixed at 2 and the engine no longer needs one accumulator per colour pair.
+
+* **Exact verification.** `mono_clique_counts` re-counts the monochromatic
+  forbidden cliques of each colour from the stored colouring; it is
+  brute-force-tested against subset enumeration, and every search result is
+  reported only after it agrees.
+* **Two tabu engines.** A matrix engine that evaluates the whole one-edge
+  neighbourhood exactly through `A_c @ A_c` (with rank-2 updates), and a
+  bit-parallel engine that runs an order of magnitude more moves per second on
+  all-triangle instances.  Both are *measured failures* on the frontier: see
+  [RESULTS.md](RESULTS.md) §8.
+* **CDCL with a sound colour break.** `MulticolourInstance` adds the
+  restricted-growth condition on the edges out of vertex 0 — a colour may only be
+  used once the next lower one has appeared — with an explicit auxiliary per
+  (position, colour) whose definitional clauses make the break *exact* rather
+  than merely implied.  The test suite proves the equivalence exhaustively on
+  small instances, and separately that every valid colouring has a symmetric copy
+  satisfying both this break and the vertex-degree break.
+* **The circulant sub-family.** `CirculantInstance` gives one variable per
+  (difference class, colour) and one clause per (colour, clique class set): the
+  models are exactly the clean translation-invariant colourings, a claim checked
+  by exhausting every class assignment on five small instances.  `circulant_solve`
+  drives CaDiCaL or Kissat over it and reports `sat` (with a verified witness),
+  `unsat`, or `obstructed` — the last being the `3 | n` arithmetic obstruction,
+  which is decided without a solver.
+* **The group sub-family (`cayley.py`).** A Cayley colouring assigns a colour per
+  *inversion class* of a group of order `n`, so it is translation invariant and the
+  circulant encoding is the cyclic case.  Every group the module can build
+  (`groups_of_order`: all abelian ones, plus dihedral, dicyclic, semidihedral and
+  products with a small cyclic factor) is checked against the group axioms before it
+  is searched, and `cayley_solve` takes a `--proof` path: the solver writes its DRAT
+  trace, `replay_proof` re-checks it against that group's encoding with no solver in
+  the loop, and only then is a certificate written — so `unsat` leaves the pipeline
+  as a theorem about one group rather than a verdict.
+
 ---
 
 ## 6. Command line reference
@@ -420,12 +529,69 @@ A satisfiable run writes a `ramsey` certificate; an unsatisfiable run writes a
 `ramsey_unsat` certificate; a run that hits its time budget writes a `sat_attempt`
 certificate whose metadata (and whose honesty flag) is still verified.
 
+### Decide the circulant sub-family of a multicolour instance
+
+```bash
+oplab mc-circulant --n 45 --sizes 3,3,5 --proof certs/circulant_multicolour/proofs/k45_3x3x5.bdrat.xz \
+    --out certs/circulant_multicolour/k45_3x3x5.json
+oplab mc-circulant --n 51 --sizes 3,3,3,3 --out certs/circulant_multicolour/k51_3x3x3x3.json
+oplab mc-circulant --n 96 --sizes 3,3,3,4 --dimacs-only --dimacs dimacs/k96_3x3x3x4.cnf
+```
+
+`--proof PATH` writes the DRAT trace of an unsatisfiable run and replays it once
+before the certificate is written; the certificate then records the trace's path,
+its two digests, the step counts and the replay cost.  The name picks the
+container: `.bdrat.xz` is binary DRAT (`drat-trim`'s `-i` format) under xz, which
+is what the stored traces are — the same proof as the ASCII text at an eighth of
+the bytes — while `.drat`, `.drat.gz` and `.bdrat` are the other three
+combinations.  The recorded sha256 is always the sha256 of the canonical *text*,
+so re-encoding or re-compressing a trace changes no digest.
+
+### Decide the translation-invariant colourings of one group
+
+```bash
+oplab cayley --n 18 --list                     # the portfolio of order 18, by name
+oplab cayley --n 18 --sizes 4,4 --group D9 \
+    --proof certs/cayley/proofs/k18_4x4_D9.bdrat.xz --out certs/cayley/k18_4x4_D9.json
+oplab cayley --n 6 --sizes 3,3 --group D3 --out certs/cayley/k6_3x3_D3.json   # obstructed
+oplab cayley --n 128 --sizes 4,4,4 --group D64 --dimacs-only --dimacs dimacs/k128_d64.cnf
+```
+
+The group is named rather than described, so a certificate can be reproduced from
+its command line.  `--proof` is the same contract as `mc-circulant --proof`, on a
+different encoding: the trace is replayed against the group's own CNF before the
+certificate is written, and `unsat` without a trace is refused by the verifier
+rather than stored.  `--dimacs-only`/`--dimacs` export the reduced CNF for a
+full-strength solver, and `make cayley` sweeps the whole portfolio at the sizes that
+are still open.
+
+### Check a proof
+
+```bash
+oplab solvers                                  # which bundled engines actually answer
+oplab drat --cert certs/circulant_multicolour/k30_3x3x4.json   # rebuilds the CNF from (n, sizes)
+oplab drat --cert certs/cayley/k30_3x3x4_D15.json              # or from the group description
+oplab drat --cnf dimacs/k96_3x3x3x4.cnf --proof k96.drat       # or check an explicit pair
+```
+
+No solver is started: the checker verifies RUP and RAT steps and deletions against
+the CNF and accepts the trace when it derives the empty clause.
+
+`sat` writes a witness that the verifier re-counts and re-expands; `obstructed`
+records the arithmetic fact that `3 | n` forces a monochromatic triangle in every
+circulant colouring; `unsat` and `unknown` record the encoding and the solver's
+verdict (never a theorem — see §10).  `--dimacs-only` (or `--dimacs PATH`
+alongside a solve) is the hand-off for the six instances whose encodings
+(20 345–149 024 clauses) exceeded the bundled solver's budget: CaDiCaL and Kissat
+ingest them from the file where the in-process path does not.
+
 ### Verify and report
 
 ```bash
-oplab verify certs                       # re-derive every claim
+oplab verify certs                       # re-derive every claim (and replay the cheap DRAT traces)
 oplab verify certs --write               # also record the verification in the files
-oplab verify certs --deep --workers 8    # also re-run the exhaustive sweeps
+oplab verify certs --deep --workers 8    # also re-run the exhaustive sweeps, every trace and every solver
+oplab drat --cert certs/circulant_multicolour/k45_3x3x5.json   # replay one stored trace
 oplab report --path certs                # markdown table (see docs/certificates.md)
 ```
 
@@ -437,7 +603,7 @@ Exit status is `1` as soon as one certificate fails, which is what CI relies on.
 
 ```bash
 pip install -e ".[dev,opt]"     # numpy, pytest, and optionally scipy for the polish step
-python -m pytest tests -q       # ~1 minute, no network
+python -m pytest tests -q       # ~2 minutes, no network
 python -m oplab.cli verify certs
 
 bash scripts/run_full.sh        # regenerates every certificate (~20 min on 16 cores)
@@ -458,21 +624,53 @@ src/oplab/sphere.py       spherical codes: exact root systems, kissing/Tammes se
 src/oplab/ramsey.py       exact monochromatic-clique counter, tabu search, circulant sweep
 src/oplab/unitdist.py     unit-distance graphs, exact chromatic number, growth search
 src/oplab/sat.py          CNF encoding, sound symmetry breaking, DIMACS, solver backends
+src/oplab/multicolour.py  multicolour counts, tabu engines, CDCL, circulant sub-family decision
 src/oplab/verify.py       the independent verifiers (the part that must not be trusted twice)
-src/oplab/cli.py          build / search / sweep / circulant / sat / verify / report
+src/oplab/cli.py          build / search / sweep / circulant / mc-circulant / cayley / sat / verify / report
 src/oplab/references.py   published reference values, each with its source URL
 certs/sphere/             exact classical kissing constructions
 certs/unitdist/           classical unit-distance graphs
 certs/circulant/          exhaustive circulant sweeps
+certs/circulant_multicolour/  decisions (witness / obstruction / proof-carrying verdict) for the multicolour frontier
+certs/cayley/             the same, over *groups* of order n: one row per non-cyclic group, with its traces
 certs/sat/                SAT validation runs and attempts
 certs/attacks/            measured searches (including the failures) and sweep summaries
 docs/methodology.md       how claims are made checkable, and how they can still be wrong
 docs/targets.md           what is open, with sources, and what a win would look like
 docs/certificates.md      the table produced by `oplab report --path certs`
-scripts/run_full.sh       regenerates the certificates in certs/ (minus the SAT campaign)
+scripts/run_full.sh       regenerates the certificates in certs/ (minus the SAT campaign and the
+                  multicolour tabu hunt, which is scripts/hunt_records.py)
 scripts/run_sat.sh        the SAT campaign and the DIMACS exports
 scripts/gen_lean_certs.py turns certs/*.json into lean/Oplab/Certs.lean
-tests/                    57 tests: exactness, brute-force cross-checks, soundness, CLI
+scripts/proof_manifest.py checks (--check) and rewrites (--write) the pinned list of stored
+                  traces of one store (--certs DIR); one manifest per store,
+                  certs/circulant_multicolour/MANIFEST.txt and certs/cayley/MANIFEST.txt
+scripts/drat-trim.pin     the external checker: commit *and* the sha256 of drat-trim.c
+scripts/drat_trim_check.py  cross-checks every stored trace with that checker, rebuilding the CNF
+scripts/orbit_probe.py    decides restricted sub-families with two symmetry breaks and measures
+                  where each stops helping: the multiplier subgroup (--by-subgroup,
+                  21 variables for K128 instead of 192) and the colour-naming order
+                  (--canonical, checked against the plain encoding by --compare).
+                  No published bound moves; the residual families are the full instances
+src/oplab/cayley.py       colourings that are translation invariant over *any* group of order n —
+                  the construction space, with the circulant family as the cyclic case
+scripts/cayley_hunt.py    searches every group it can build for a witness (CDCL, or a
+                  min-conflicts repair with exact incremental counts) and stores what it
+                  finds as a `cayley_multicolour` certificate, only after `verify` accepts it;
+                  --proof-dir/--cnf-dir also record the DRAT trace of every group the solver
+                  decides, replayed before it is stored, and export the reduced CNF
+scripts/sweep_merge.py    folds a later round of those runs into runs/cayley_sweep.json
+                  (the frontier takes the new row, `superseded` keeps the one it replaced,
+                  and a repair row is refused because it reports no decision); make cayley-long
+                  is the one-hour round over the groups the 5-minute round left open
+scripts/replay_bench.py   times both replayers — the in-repo `oplab.drat` and the pinned
+                  external `drat-trim` — on every stored trace, so the envelope of what can
+                  be replayed before storing is measured rather than assumed (make replay-bench)
+tests/                    126 test functions (164 cases): exactness, brute-force cross-checks,
+                          soundness of every symmetry break, exhaustive encoder equivalence, CLI,
+                          proof-store and checker-pin guards, and the proof plumbing (a trace
+                          that is replayed against the encoding its certificate declares,
+                          refused when it was produced for another group or family)
 lean/                     Lean 4 re-check of every certificate claim (see lean/README.md)
   Oplab/Basic.lean        shared definitions (vectors, edge order, circulant colourings)
   Oplab/Check.lean        hand-written checkers: clique counts, colourings, exact cosine bounds
@@ -483,13 +681,29 @@ lean/                     Lean 4 re-check of every certificate claim (see lean/R
 
 ## 9. Continuous integration
 
-`.github/workflows/ci.yml` runs three jobs:
+`.github/workflows/ci.yml` runs five jobs:
 
 1. **test** — on Python 3.10 and 3.13: install, `pytest tests -q`, then
-   `oplab verify certs` (re-deriving every claim in every committed certificate).
+   `python scripts/proof_manifest.py --check` (the stored traces must still be the
+   ones `certs/circulant_multicolour/MANIFEST.txt` pins), then
+   `oplab verify certs` (re-deriving every claim in every committed certificate,
+   including a replay of every DRAT trace whose recorded cost is under 45 s).
 2. **deep-verify** — re-runs the exhaustive circulant sweeps from scratch
    (`oplab verify certs/circulant --deep --workers 4`) and compares the witnesses.
-3. **lean** — checks that `lean/Oplab/Certs.lean` is up to date with `certs/`
+3. **proofs** — replays every stored DRAT trace against the encoding rebuilt from
+   the certificate
+   (`oplab verify certs/circulant_multicolour --deep --workers 4`), which also
+   re-runs each of those solvers; nine traces, about 12 minutes of checking, most
+   of it the 642 728-step `K50` trace (694 s here).
+4. **drat-trim** — builds [drat-trim](https://github.com/marijnheule/drat-trim)
+   at the commit `scripts/drat-trim.pin` names, cross-checks all nine stored traces
+   with it (`python scripts/drat_trim_check.py --source /tmp/drat-trim/drat-trim.c
+   --require-pin`), rebuilding each CNF from its certificate; about 10 seconds, and
+   the only job that does not use this repository's own checker.  The `--source`
+   hash is compared against the same pin, so a checker that changed behind the
+   pin, a disagreement about a trace, or a pin file with no checker to match it
+   each fail the build.
+5. **lean** — checks that `lean/Oplab/Certs.lean` is up to date with `certs/`
    (`scripts/gen_lean_certs.py --check`), installs the pinned Lean toolchain
    through elan and runs `lake build`, so every Lean theorem is re-proved on the
    upstream runner as well.
@@ -512,26 +726,68 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
 * **The circulant result is a statement about a sub-family.** "No circulant
   witness exists" says nothing about the many non-circulant colourings, and
   nothing about the upper bound.
-* **Unsatisfiability is not proved.** The SAT engine produces no DRAT proof and
-  there is no DRAT checker here, so `ramsey_unsat` certificates are verified only
-  for the consistency of their metadata; `--deep` re-runs the solver, which is
-  reproducibility, not proof. Do not cite them as theorems.
+* **Unsatisfiability is proved only where a trace is stored.** `ramsey_unsat`
+  certificates (the 2-colour SAT engine) carry no DRAT proof at all, so they are
+  verified only for the consistency of their metadata; `--deep` re-runs the
+  solver, which is reproducibility, not proof. Do not cite those as theorems.
+  The circulant-multicolour `unsat` rows are different — see the next bullet —
+  but even there the theorem is relative to the checker, not to a Lean proof.
 * **The Python/Z3 SAT path cannot settle `K43`.** Measured: building the Z3
   solver for `K42` requires ingesting 1 935 727 clauses at roughly 4 000
   clauses/s, i.e. about 8 minutes of pure hand-off, after which the engine
-  returned `unknown`; the DIMACS export exists precisely so that CaDiCaL or
-  Kissat — which ingest orders of magnitude faster — can be pointed at the same
-  instance. (A dedicated solver could not be installed here: no C compiler is
-  available, so `python-sat` cannot build.)
+  returned `unknown`; the DIMACS export exists so that CaDiCaL or Kissat — which
+  ingest orders of magnitude faster — can be pointed at the same instance.
+* **The CDCL route is available and was measured.** `python-sat` ships CaDiCaL
+  (1.03–3.00) and Kissat (4.04) as *binary wheels*, so no C compiler is needed;
+  `multicolour.solve` and `multicolour.circulant_solve` drive them directly.  What
+  they do with it is in [RESULTS.md](RESULTS.md): they decide the circulant
+  sub-family in seconds and they did **not** decide the 2-colour `K43` instance
+  or the multicolour `3 * C(n,2)`-clause instances within 50 minutes — a
+  measured negative, not an excuse.
+* **The multicolour frontier was not moved.** 300 s per target on 12 cores left
+  140–17 560 monochromatic cliques in the best colourings found, and the general
+  engines failed even on `K50` and `K29`, where published witnesses exist.  The
+  circulant sub-family, which is decidable, has no witness at any of the target
+  sizes (and is arithmetically obstructed at the all-triangle sizes divisible by
+  three) — so nothing here raises or lowers any published Ramsey bound.
+* **`unsat` inside the circulant sub-family is proof-carrying, and checked
+  twice.**  All nine `unsat` rows store a DRAT trace that
+  [`drat.py`](src/oplab/drat.py) replays from scratch: `K18` (26 steps, 0.0 s),
+  `K30` (1 179, 0.04 s), `K35` (505, 0.8 s), `K36` (260, 0.6 s), `K42` (8 288,
+  4.1 s), `K43` (24 749, 8.0 s), `K45` (36 496, 13.0 s) and then the two heavy
+  ones — `K55` (173 165, 80 s) and `K50` (642 728 steps, 29.9 MB of text, 12.7 MB
+  as binary DRAT, 4.98 MB stored, 694 s).  The traces are stored as binary DRAT
+  under xz (`proofs/*.bdrat.xz`, 6.27 MB for the nine, down from 8.0 MB of gzipped
+  text) and the digest is over the canonical *text*, so re-encoding or
+  re-compressing one changes no recorded digest.  The seven cheap replays run in
+  every `oplab verify`; the two heavy ones
+  are re-checked by digest there and replayed in full by `--deep` and by the CI
+  `proofs` job.  Because a checker that writes a trace and re-reads it proves
+  nothing by itself, every stored trace is *also* given to the external
+  `drat-trim` — all nine in about 9 seconds, `K50` in 6.4 s — by
+  [`scripts/drat_trim_check.py`](scripts/drat_trim_check.py), which rebuilds each
+  CNF from its certificate and hands over the stored container unchanged (CI job
+  `drat-trim`, at the commit and source hash in `scripts/drat-trim.pin`).  The
+  trusted base is therefore two independent checkers plus the encoding rather than
+  CaDiCaL,
+  and the Python one is validated on cases whose truth does not depend on it
+  (`R(3,3) = 6` is proved by exhaustion in Lean, the tampering tests include a
+  solver-free instance where both RUP and RAT must fail, and a forged certificate
+  whose digest was rewritten, which only `drat-trim` refuses).
+* **The one fully proof-free negative is the `3 | n` obstruction.**  It is
+  arithmetic, needs no solver and no checker, and is checked by `decide` in Lean.
 * **Tolerance discipline.** Configurations are float64 checked at `1e-9`, Tammes
   angles compared at `1e-6` degrees, and ambiguous distances rejected rather than
   guessed.
 * **What the Lean layer does *not* remove.** It re-checks finitely many claims;
-  the search that *found* the configurations is untouched by it. Five of its 108
-  theorems use `native_decide` (compiler-trusted), because the kernel would need
-  hours for the two `2^21` circulant sweeps and the `3^12` colouring search;
-  every one of those five is also recomputed by the Python verifier, and the two
-  circulant sweeps are re-run from scratch by `--deep`. And the geometric statements
+  the search that *found* the configurations is untouched by it. Thirty-four of
+  its 174 theorems use `native_decide` (compiler-trusted), because the kernel
+  would need hours for the two `2^21` circulant sweeps, the `3^12` colouring
+  search, the `K29`/`K44`/`K54` multicolour witness counts, the clique-group
+  recomputations of the larger circulant encodings and the group-table checks of
+  the `certs/cayley` rows; every one of them is also
+  recomputed by the Python verifier, and the two circulant sweeps are re-run from
+  scratch by `--deep`. And the geometric statements
   are about the coordinates *as stored* (decimals scaled by `10^18`, `1e-9`
   allowance), not about an idealised point set.
 * **Two real bugs were caught by this machinery during development**, which is the
@@ -577,7 +833,7 @@ produced it.
 | **`establishes`** | the theorem a verifier is willing to derive from a payload, or `null` |
 | **deep verify** | verification that re-runs an exhaustive sweep or a solver instead of re-checking data |
 | **DIMACS CNF** | the standard text format for SAT instances (`p cnf vars clauses`) |
-| **DRAT** | the standard proof format for unsatisfiability; not produced here |
+| **DRAT** | the standard proof format for unsatisfiability; stored for the circulant `unsat` rows and checked by `oplab drat` (RUP, RAT and deletions) |
 | **DSATUR** | a greedy colouring heuristic used here for ordering and upper bounds |
 | **exhaustive** | every element of a finite, fully specified family has been tested |
 | **lex-leader** | a symmetry-breaking constraint `M <=_lex pi(M)` for a permutation `pi` |

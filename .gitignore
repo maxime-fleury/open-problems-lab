@@ -22,10 +22,11 @@ env/
 .coverage
 htmlcov/
 
-# Local run logs; runs/full_run.log is the raw evidence quoted by RESULTS.md
-# and is deliberately committed.
+# Local run logs; runs/full_run.log and runs/hunt_driver.log are the raw evidence
+# quoted by RESULTS.md and are deliberately committed.
 *.log
 !runs/full_run.log
+!runs/hunt_driver.log
 
 # Lean build artifacts; the Lean sources live in lean/ and their toolchain is
 # pinned by lean/lean-toolchain

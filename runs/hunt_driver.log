@@ -1,0 +1,23 @@
+# 16 jobs, 300s each, 12 workers -> runs\hunt_2026-10-15.jsonl
+  record     R(3,3,3,3)   K51   engine=matrix seed=203  violations=150    steps=1361130   300s
+  validation R(3,3,3,3)   K50   engine=matrix seed=101  violations=147    steps=1398269   300s
+  validation R(3,3,3,3)   K50   engine=matrix seed=102  violations=151    steps=1387095   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=207  violations=161    steps=1366128   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=205  violations=155    steps=1344841   300s
+  validation R(3,3,3,3)   K50   engine=matrix seed=104  violations=158    steps=1390363   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=208  violations=171    steps=1389568   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=206  violations=140    steps=1366210   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=204  violations=166    steps=1377230   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=202  violations=163    steps=1358292   300s
+  validation R(3,3,3,3)   K50   engine=matrix seed=103  violations=156    steps=1426088   300s
+  record     R(3,3,3,3)   K51   engine=matrix seed=201  violations=175    steps=1359979   300s
+  validation R(3,3,4)     K29   engine=(n/a)  seed=401  violations=130    steps=252053    300s
+  record     R(3,3,3,3,3) K162  engine=bits   seed=302  violations=17303  steps=2026023   300s
+  record     R(3,3,3,3,3) K162  engine=bits   seed=303  violations=17469  steps=2027647   300s
+  record     R(3,3,3,3,3) K162  engine=bits   seed=301  violations=17560  steps=1976323   300s
+
+# best per instance
+  R(3,3,3,3) K50             violations=147    (no witness)
+  R(3,3,3,3) K51             violations=140    (no witness)
+  R(3,3,3,3,3) K162          violations=17303  (no witness)
+  R(3,3,4) K29               violations=130    (no witness)

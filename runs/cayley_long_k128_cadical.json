@@ -1,0 +1,83 @@
+[
+  {
+    "name": "cyclic",
+    "group": {
+      "family": "abelian",
+      "params": [
+        128
+      ],
+      "name": "cyclic"
+    },
+    "status": "unknown",
+    "budget_expired": true,
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "classes": 64,
+    "self_inverse_classes": 1,
+    "num_vars": 192,
+    "num_clauses": 127813,
+    "seconds": 3603.301
+  },
+  {
+    "name": "D64",
+    "group": {
+      "family": "dihedral",
+      "params": [
+        64
+      ],
+      "name": "D64"
+    },
+    "status": "unknown",
+    "budget_expired": true,
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "classes": 96,
+    "self_inverse_classes": 65,
+    "num_vars": 288,
+    "num_clauses": 239037,
+    "seconds": 3605.331
+  },
+  {
+    "n": 128,
+    "sizes": [
+      4,
+      4,
+      4
+    ],
+    "group": {
+      "family": "product",
+      "params": [
+        {
+          "family": "abelian",
+          "params": [
+            2
+          ]
+        },
+        {
+          "family": "dihedral",
+          "params": [
+            32
+          ]
+        }
+      ],
+      "name": "Z2xD32"
+    },
+    "classes": 97,
+    "self_inverse_classes": 67,
+    "num_vars": 291,
+    "num_clauses": 239023,
+    "solver_time": 629.6875,
+    "status": "unsat",
+    "name": "Z2xD32",
+    "seconds": 3605.324,
+    "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+  }
+]

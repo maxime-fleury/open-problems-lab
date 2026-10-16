@@ -159,15 +159,20 @@ measurement that shows it".
 ## 7. Verification status
 
 ```
-53/53 certificates verified   (oplab verify certs)
-108/108 claims re-proved in Lean 4   (cd lean && lake build)
+81/81 certificates verified   (oplab verify certs)
+174/174 claims re-proved in Lean 4   (cd lean && lake build)
 ```
 
 * `certs/*.json` is mirrored, claim by claim, into `lean/Oplab/Certs.lean` by
-  `scripts/gen_lean_certs.py`: 108 theorems over 53 certificates, 103 of them
-  kernel-checked by `decide` and 5 (the two `2^21` circulant sweeps, the two
-  `K42`/`K43` tabu counts and the `3^12` lower-bound colouring search of the
-  Moser drawing) by `native_decide`. The Lean layer has no Mathlib and
+  `scripts/gen_lean_certs.py`: 174 theorems over 81 certificates, 140 of them
+  kernel-checked by `decide` and 34 (the two `2^21` circulant sweeps, the two
+  `K42`/`K43` tabu counts, the `3^12` lower-bound colouring search of the
+  Moser drawing, the `K29`/`K44`/`K54` multicolour witness counts, the
+  clique-group recomputations that are too large for the kernel, and the
+  group-table checks of the four `certs/cayley` rows: that each stored table is a
+  group, and that the class and clique-group counts its encoding size is computed
+  from are recomputed from it) by
+  `native_decide`. The Lean layer has no Mathlib and
   no floating point: coordinates from JSON become exact integers scaled by
   `10^18`, and the geometric claims become integer inequalities with an explicit
   `1e-9` rounding allowance. See [`lean/README.md`](lean/README.md) for the table
@@ -196,6 +201,362 @@ measurement that shows it".
   checking that the generated file is up to date with `certs/`.
 * `runs/full_run.log` is the raw, timestamped output of the run quoted above.
 
+## 8. Multicolour Ramsey frontier: the general engines, measured
+
+The multicolour lower bounds are the softest part of the Ramsey table —
+`R(3,3,3,3) >= 51` has stood since 1973, `R(4,4,4) >= 128` since 1982 — so this
+is where a record would be cheapest. `scripts/hunt_records.py` runs the engines
+of `multicolour.py` against that frontier: **300 s per job, 16 jobs on 12 cores
+(2026-10-15)**, every count re-derived exactly by the verifier, raw log in
+`runs/hunt_driver.log`, machine-readable rows in `runs/hunt_2026-10-15.jsonl`.
+
+| target | engine | seeds | best mono-clique count | steps per run | witness? |
+|---|---|---|---|---|---|
+| `K50`, `(3,3,3,3)` — **validation**: the published 1973 witness exists | matrix | 4 | 147 (147, 151, 156, 158) | ≈1.4 M | **no** |
+| `K51`, `(3,3,3,3)` — the record attempt (`R(3,3,3,3) >= 52`) | matrix | 8 | 140 | ≈1.36 M | no |
+| `K162`, `(3,3,3,3,3)` — the record attempt (`R(3,3,3,3,3) >= 163`) | bits | 3 | 17 303 | ≈2.0 M | no |
+| `K29`, `(3,3,4)` — **validation**: `R(3,3,4) = 30` is a theorem | general | 1 | 130 | 252 053 | **no** |
+
+Reading:
+
+* The two validation rows are the point of the table. `K50` *has* a clean
+  4-colouring (Chung 1973) and `K29` *has* a clean `(3,3,4)`-colouring
+  (Kreher–Li–Radziszowski 1988), yet 300 s of tabu search lands 130–158
+  monochromatic cliques away from a witness. A search that cannot find known
+  solutions cannot be trusted to report a negative, which is why nothing in this
+  section is a bound.
+* The engines are fast in the only sense that is measurable here — 1.4 M exact
+  neighbourhood evaluations in 300 s (matrix) and 2.0 M moves in 300 s
+  (bit-parallel) — and still nowhere near the published constructions, which come
+  from algebraic and recursive methods rather than local search.
+* Two bugs were fixed before these numbers were produced, both found by the tests
+  rather than by the results: a perturbation that could write a colour index out
+  of range (it crashed most jobs), and a reporting mix-up between the current and
+  the incumbent objective. Re-running after the fix changed nothing qualitative,
+  which is the honest outcome for a heuristic that is simply the wrong tool.
+
+## 9. The circulant sub-family, decided
+
+A *circulant* colouring of `K_n` assigns one colour to each difference class of
+`Z_n`, so it is described by `n/2` choices instead of `C(n,2)`. Inside that
+sub-family the question "is there a witness?" is an exact CNF — one variable per
+(class, colour), one clause per (colour, clique class set) — with a few hundred
+variables and a few thousand clauses, so CaDiCaL or Kissat answers it in
+seconds (`oplab mc-circulant`). The encoding is not assumed to be right: the test
+suite enumerates **every** class assignment on five small instances and checks
+that the clause set is satisfiable exactly when the expansion is clean.
+
+| instance | status | witness | encoding | time | stored DRAT trace |
+|---|---|---|---|---|---|
+| `K5`, `(3,3)` | `sat` | yes — the 5-cycle | 2 classes, 6 clauses | < 0.1 s | — |
+| `K6`, `(3,3)` | **obstructed** | none possible: `3 ∣ 6` | 3 classes, 12 clauses | arithmetic | — |
+| `K17`, `(4,4)` | `sat` | yes — Paley(17) | 8 classes, 152 clauses | < 0.1 s | — |
+| `K18`, `(4,4)` | `unsat` | — agrees with `R(4,4) = 18` | 9 classes, 186 clauses | < 0.1 s | **26 steps**, replay < 0.1 s |
+| `K29`, `(3,3,4)` | `sat` | yes — a verified witness | 14 classes, 623 clauses | < 0.1 s | — |
+| `K30`, `(3,3,4)` | `unsat` | — agrees with `R(3,3,4) = 30` | 15 classes, 680 clauses | < 0.1 s | **1 179 steps**, replay 0.04 s |
+| `K35`, `(4,6)` | `unsat` | — | 17 classes, 12 908 clauses | 0.05 s | **505 steps**, replay 0.8 s |
+| `K36`, `(4,6)` | `unsat` | — no circulant witness for `R(4,6) >= 37` | 18 classes, 16 830 clauses | 0.06 s | **260 steps**, replay 0.6 s |
+| `K42`, `(5,5)` | `unsat` | — agrees with the exhaustive `2^21` sweep of §2 | 21 classes, 18 164 clauses | 0.64 s | **8 288 steps**, replay 4.1 s |
+| `K43`, `(5,5)` | `unsat` | — agrees with the exhaustive `2^21` sweep of §2 | 21 classes, 20 916 clauses | 0.66 s | **24 749 steps**, replay 8.0 s |
+| `K44`, `(3,3,5)` | `sat` | yes — a verified witness | 22 classes, 11 641 clauses | 0.04 s | — |
+| `K45`, `(3,3,5)` | `unsat` | — no circulant witness for `R(3,3,5) >= 46` | 22 classes, 13 173 clauses | 0.20 s | **36 496 steps**, replay 13.0 s |
+| `K50`, `(3,3,3,3)` | `unsat` | — no circulant witness at the published size | 25 classes, 1 003 clauses | 6.7 s | **642 728 steps**, replay 694 s (`drat-trim`: 6.4 s) |
+| `K51`, `(3,3,3,3)` | **obstructed** | none possible: `3 ∣ 51`, class 17 | 25 classes, 1 043 clauses | arithmetic | — |
+| `K54`, `(3,4,4)` | `sat` | yes — a verified witness | 27 classes, 6 399 clauses | 0.37 s | — |
+| `K55`, `(3,4,4)` | `unsat` | — no circulant witness for `R(3,4,4) >= 56` | 27 classes, 6 813 clauses | 1.3 s | **173 165 steps**, replay 80 s (`drat-trim`: 0.9 s) |
+| `K96`, `(3,3,3,4)` | `unknown` | — none claimed: budget spent | 48 classes, 20 345 clauses | 120 s | — |
+| `K97`, `(3,3,3,4)` | `unknown` | — none claimed: budget spent | 48 classes, 21 016 clauses | 120 s | — |
+| `K127`, `(4,4,4)` | `unknown` | — none claimed: budget spent | 63 classes, 124 866 clauses | 120 s | — |
+| `K128`, `(4,4,4)` | `unknown` | — none claimed: budget spent | 64 classes, 127 813 clauses | 300 s | — |
+| `K161`, `(3,3,3,3,3)` | `unknown` | — none claimed: budget spent | 80 classes, 11 680 clauses | 300 s | — |
+| `K162`, `(3,3,3,3,3)` | **obstructed** | none possible: `3 ∣ 162`, class 54 | 81 classes, 11 826 clauses | arithmetic | — |
+| `K537`, `(3,3,3,3,3,3)` | **obstructed** | none possible: `3 ∣ 537`, class 179 | 268 classes, 148 474 clauses | arithmetic | — |
+| `K538`, `(3,3,3,3,3,3)` | `unknown` | — none claimed: budget spent | 269 classes, 149 024 clauses | 300 s | — |
+
+**All nine `unsat` rows are proof-carrying, and every trace is checked twice.**
+The traces are stored in `certs/circulant_multicolour/proofs/` as **binary DRAT
+under xz** (`name.bdrat.xz`: drat-trim's `-i` encoding, the same proof as the ASCII
+text at about an eighth of the bytes — 132 B to 4.98 MB, 6.27 MB for the nine,
+against 8.0 MB as gzipped text) and the certificate records the path, the sha256 of
+the canonical text, the sha256 of the stored bytes, the container, the step counts,
+the sizes and the replay cost.  [`oplab/drat.py`](../src/oplab/drat.py)
+checks a trace against the encoding it rebuilds from `(n, sizes)`: RUP for every
+addition, RAT when RUP fails, deletions honoured, accepted when the empty clause
+is derived — no solver in the loop, and every addition RUP-checked against
+**two watched literals per clause** rather than the whole formula.  A trace is
+only stored after that replay has accepted it.  On this machine the nine replays
+cost 0.0 s to 694 s: seven are cheap enough (under 14 s) that a plain
+`oplab verify` re-runs them every time, and the two heaviest (`K50`: 694 s for
+642 728 steps; `K55`: 80 s for 173 165) are re-checked by digest on every run and
+replayed in full by `--deep` and by the `proofs` CI job.
+
+Those two rows are stored at all because the Python replay stopped being the only
+way to check them: `scripts/drat_trim_check.py` rebuilds each CNF from its
+certificate and hands the pair to **`drat-trim`**, Marijn Heule's checker, which
+verifies all nine traces in about 9 seconds — `K50` in 6.4 s, `K55` in 0.9 s —
+and shares no code with `oplab.drat`, reading the stored binary container directly.
+`make replay-bench` (`scripts/replay_bench.py`) is what times the two of them on the same
+traces, which is how the envelope quoted with the long round below is a measurement rather
+than an assumption.
+That cross-check runs in CI (the `drat-trim` job, which builds the commit
+`scripts/drat-trim.pin` names and hashes the source it compiled against the same
+pin) and on demand, so an accepted trace has to convince two unrelated
+implementations, and a bug in one of them cannot keep a bad proof looking good in
+every later run — nor can a checker that quietly changed, because the script
+refuses a verdict from any `drat-trim.c` but the pinned one.
+
+**The store itself is pinned, not only each trace.**  Every check above is
+internal: the certificate's digest matches its trace, today and tomorrow.  A
+*consistent* replacement — re-solve, store a different trace, write a fresh
+certificate with fresh digests — would pass them all while the artifact under
+review was gone.  `certs/circulant_multicolour/MANIFEST.txt` is therefore checked
+in (both digests, steps, container and size for each of the nine), and
+`scripts/proof_manifest.py --check` compares manifest, certificates and the bytes
+on disk three ways, failing by name on any drift; `--write` rewrites it, so
+regenerating the store is a visible diff rather than a silent one.  Two
+regenerations of all nine traces produced byte-identical files, so the manifest
+survived both unchanged, which is the property the check is for.
+
+**Six rows are still `unknown`, and two refinements of them were tried.**
+Nothing here decides `K96`, `K97`, `K127`, `K128`, `K161` or `K538`.  The stored
+budgets (120 s and 300 s of CaDiCaL) expired — and now say so: those six rows
+record `budget_expired`, which is what distinguishes an exhausted budget from a
+solver that died, a distinction the verifier enforces (the bundled Kissat wheel
+dies with an access violation on this platform, and such a row is refused instead
+of being filed as a bounded attempt).  A **30-minute round** then gave every one
+of the six to CaDiCaL and to Glucose4, and the three cheapest to MapleChrono: 15
+runs, 1800 s each, one core each — **15 `unknown`**, including `K96` and `K97` at
+192 variables and `K161` at 400, the three where an answer looked reachable.  The
+six rows are therefore settled as *open*, not as *undecided-but-easy*: at six to
+fifteen times the stored budget, with three unrelated engines, none of them
+produces a verdict.  The DIMACS hand-off (20 345 to 149 024 clauses) remains the documented
+way to attack them with a stronger solver.  What *can* be
+decided in milliseconds is the sub-family one step tighter than circulant: the
+colourings invariant under multiplication by the units of `Z_n`, where the
+instance collapses to one variable per orbit — 21 for `K128`, 15 for `K161`
+(`scripts/orbit_probe.py`).  It is not vacuous (`K8` with sizes `(3,3,3)` is SAT
+there, and the witness re-counts), and it is **empty at all six target sizes**, so
+no structured candidate is hiding at them.  That statement is about that
+sub-family, and nothing else: the full circulant family and every published bound
+are untouched by it.
+
+**Where that restriction actually stops helping (measured).**  The full unit group
+is *too* strong a restriction, so `scripts/orbit_probe.py --by-subgroup` sweeps
+every distinct subgroup of it (5–16 per size), most restricted first, and the
+answer changes with the size:
+
+| instance | what the sweep decided | what is left |
+|---|---|---|
+| `K127` `(4,4,4)` | **SAT in 2 s** at the order-42 subgroup (3 orbits, 9 variables), witness re-counted: `R(4,4,4) > 127` | nothing below it |
+| `K96` `(3,3,3,4)` | 14 of its 16 subgroups (56–144 variables): UNSAT | the two that are the full 192-variable instance |
+| `K97` `(3,3,3,4)` | 10 of the 12, down to order 3 (4–96 variables): UNSAT | the two that are the full 192 |
+| `K128` `(4,4,4)` | 10 of the 12 (21–144 variables): UNSAT | the two that are the full 192 |
+| `K161` `(3,3,3,3,3)` | 12 of the 16 (15–170 variables): UNSAT, plus one order-2 family (235 variables) **UNSAT after 3774 s** | the three order-2 families and the full 400 |
+| `K537` `(3,3,3,3,3,3)` | all 8, including the full 1608-variable instance: UNSAT — the arithmetic obstruction, since `3 | n` | nothing |
+| `K538` `(3,3,3,3,3,3)` | 3 of the 6 (18–30 variables): UNSAT | order 4 (810) and the two that are the full 1614 |
+
+The `K127` row is the useful one: the ordinary verifier re-counts the colouring,
+but `127` is the published *witness* size (`R(4,4,4) >= 128`), so this reproduces
+a known bound inside a restricted family — it is not a record, and it is the one
+place where the restriction stops being empty.  What is left after the sweep is
+never smaller than the full instance: for odd `n` the difference classes are
+already quotiented by ±1, so the order-2 subgroup *is* the whole circulant family,
+and `K96`/`K97` at 192 variables and `K161` at 400 are exactly the instances that
+spent 30 minutes without a verdict above.  Those residual families (`K96` full,
+`K97` full, `K161` full, `K538` order 4 and full) are the only undecided rows this
+tool has left, and they are the ones handed a 3-hour budget.  One of them has since
+fallen: `K161` at order 2 — 47 orbits, 235 variables, 11 505 clauses — is **UNSAT**
+after 3774 s, so at `K161` every structured family below the full instance is now
+refuted and only the 400-variable circulant instance itself is open.  The other
+five were still running when this was written; the raw rows are in
+`runs/invariant_sweep.json`, which is where a result has to land before it is
+quoted here.  Two caveats, in the repository's own terms: the `sat` row is a
+*witness*, re-counted by the ordinary verifier, but this `unsat` row is a solver
+**verdict** with no stored DRAT trace and no certificate — the nine proof-carrying
+`unsat` rows above are theorems, this one is not, and turning it into one means
+re-running the reduced CNF with `--proof` (the reduced encoding is not exported by
+the CLI yet, so the trace cannot be produced with the current commands).
+
+**The second symmetry, and the one that was still there.**  The circulant encoding
+had no colour-naming break at all, although colours with the same forbidden-clique
+size are interchangeable: for `(3,3,3,4)` the three 3s can be relabelled (`3!`),
+for five 3s `5!`, for six 3s `6!` — a factor 720 at `K537`/`K538`.  Requiring
+equal-size colours to *first appear* in increasing order costs no colouring (any
+colouring can be relabelled that way), and it is checked rather than asserted:
+`orbit_probe.py --compare` runs both encodings on **every subgroup of a case** and
+demands the same verdict, with every `sat` row re-counted clean.  On `K29`, `K44`,
+`K51`, `K18` and the whole sweep above the two encodings agree family by family;
+`K29`/`K44` remain SAT through *smaller* subgroups than the unit group (which is
+UNSAT there), and `K18`/`K30`/`K51` remain UNSAT everywhere.  The break buys search
+space, not a verdict: with it `K96`/`K97` (192 variables) and `K161` (400) still
+have no verdict inside their budget.
+
+**The construction space, searched (measured).**  The note in `docs/targets.md` asks
+for the next step to be a search over *constructions* rather than over colourings, and
+that is now implemented: `oplab.cayley` colours the **inversion classes of a group of
+order `n`**, so the colouring is translation invariant and one variable per (class,
+colour) decides the family — the circulant encoding is the cyclic case, and the other
+groups are constructions the circulant sweep cannot see.  The portfolio is complete for
+the *abelian* groups (7 for `n = 96`, 15 for `128`) plus one entry per dihedral,
+dicyclic and semidihedral family and per direct product with a small cyclic factor:
+22 groups at `K96`, 26 at `K128`, 2 at `K538` (only `Z269 x Z2` and the non-abelian
+`D269` exist there), 1 at `K97` and 1 at `K161` (prime and `7 * 23`, so nothing beyond
+the cyclic group).  Every table is checked against the group axioms before it is
+searched, which is what makes the hand-derived dihedral/dicyclic/semidihedral rules
+usable.
+
+| target | groups searched | verdicts (300 s per group, then 3 600 s for the leftovers) |
+|---|---|---|
+| `K96` `(3,3,3,4)` | 22 | **9 UNSAT**, 13 unknown, **no witness** |
+| `K128` `(4,4,4)` | 26 | **24 UNSAT**, 2 unknown (`cyclic`, `D64`), **no witness** |
+| `K97` `(3,3,3,4)` | 1 (cyclic) | unknown |
+| `K538` `(3,3,3,3,3,3)` | 2 | unknown |
+| `K161` `(3,3,3,3,3)` | 1 (cyclic) | unknown |
+
+52 group-runs in 2 141 s at 300 s each, then **21 runs of one hour each on exactly the
+groups that round left open** — and six of those 21 came back with a verdict, so 33
+sub-families are decided empty and 19 are not, with **no witness anywhere** and no bound
+moved: `R(4,4,4)` stays `>= 128`, `R(3,3,3,4)` stays `>= 97`.  The `K128` row is the
+interesting one — 5 of its UNSAT groups fall in seconds (2.3 s to 6.2 s: the 381-variable
+elementary-abelian `Z2^7`, `Z16xD4`, `Z16xDic2` and two abelian groups), the other 18 spend
+the whole five-minute budget, and only `Z2 x D32` fell once the budget was an hour: the two
+still open are the 192-variable *cyclic* instance and `D64`.  So the non-cyclic groups are
+both easy to refute and empty here, and the group that matters at that size is the one that
+was already hard.  At `K96` the hour bought five more refutations (`Z3xDic8`, `Z8xD6`,
+`Z8xDic3`, `Z12xDic2`, `Z16xD3`) and thirteen groups are still open.  Raw rows:
+`runs/cayley_sweep.json`, whose `rows` are the frontier and whose `superseded` list keeps
+the 300 s rows the longer round replaced — the earlier attempt is part of what was
+measured, and `scripts/sweep_merge.py` is what wrote both.
+
+**Why the long round stored no traces, measured.**  The same plumbing that makes an
+`unsat` row over a group a theorem (below) is available to that round and was left off on
+purpose, and the reason is a size, not a doubt.  `scripts/replay_bench.py` times both
+replayers on the twelve traces already committed — 901 607 steps — on the same CNFs and
+the same traces, back to back.  Measured while this machine was carrying a 16-way solver
+round, so both columns are slow and the *pairing* is what is comparable: the in-repo
+`oplab.drat` took **4 181 s** (216 steps/s) and the pinned `drat-trim` **245 s** (3 679
+steps/s), about **17× end to end**.  The gap is decisive where the trace is big — `K50`,
+642 728 steps, 3 678 s against 90 s (**40.7×**); `K55`, 173 165 steps, 258 s against 32 s —
+and *absent* where it is small, because a native run pays a fixed cost the Python one does
+not: `K35` (505 steps) took 6.5 s in Python and 14.4 s natively, `K36` (260) 4.4 s against
+12.4 s.  Idle, the same `K50` pair was measured as 693.7 s against 6.4 s when the store was
+written, so the ratio moves with the load (17× to 100×) while the ordering never does.  Raw
+rows: `runs/replay_bench.json`.  So the native replayer is the one to reach for when a
+trace is too big to replay in Python.  But
+the store is committed to git, and the traces are **7.7 bytes per step** (`K50`: 4.98 MB
+for 642 728 steps, 6.27 MB for all nine).  A refutation that takes an hour produces on the
+order of 10^7–10^8 steps — **hundreds of megabytes each** — so the binding constraint on
+a long round is bytes rather than minutes: the clock moved by one to two orders of
+magnitude, the repository did not move at all.  Making those rows theorems means keeping their traces outside the store and
+citing their digests from the certificate, which is a change to the certificate kind, not
+a longer run — until then the long round records verdicts and says so.
+
+**And the witness hunt over the same groups, one hour each.**  A refutation is not the
+prize at these sizes — a clean colouring would be, and it is `cayley.repair` that hunts
+one (`--mode repair`), because CDCL is poor at *finding* a witness in a structured
+instance even where one exists.  The three groups at `K128` were given an hour each of
+local search, and it found **no witness in any of them**: three `unknown` rows with the
+best violation count each reached, in `runs/cayley_long_k128_repair.json`.  Together with
+the 24 refutations that is *no translation-invariant witness at the record size*, neither
+found nor left unrefuted except for the cyclic group and `D64`, and `R(4,4,4) >= 128`
+stays where it is.  Those repair rows are deliberately **not** merged into the sweep: they
+report no decision, so `scripts/sweep_merge.py` refuses them (folding one in would replace
+the frontier row with an attempt) and they stay in their own file, quoted here.  A repair
+round over the thirteen open `K96` groups — the same experiment at the size where a
+published witness *does* exist — found no witness either: thirteen `unknown` rows after an
+hour each, in `runs/cayley_long_k96_repair.json`.  That is the measurement worth having:
+the witness at `K96` is real, and a one-hour local search over the classes of any of these
+thirteen groups does not reach it, so the published witness is not translation invariant
+over them.
+
+The rows above are verdicts from that sweep, and the plumbing that turns a verdict into
+a theorem now exists for this encoding too: `cayley_solve` takes a proof path, the solver
+writes its DRAT trace, `cayley.replay_proof` re-checks it against **that group's** CNF
+before anything is stored (no solver in the loop), and the certificate kind
+`cayley_multicolour` accepts `unsat` *only* with a trace it can replay — a bare verdict
+is refused rather than stored, since the clauses are built from the group description
+and a trace from another family does not fit.  Four rows exercise it and are committed:
+`K18` over the dihedral `D9` (122 steps) and over the product `Z3xD3` (50), `K30` over
+`D15` (14 039, 53 kB), and `K6` over `D3` as `obstructed` — the arithmetic decides that
+one, so no solver run is claimed for it.  Three reasons for the choice of anchors: they
+are the groups the sweep above already decided, they are cheap to reproduce
+(`make cayley-anchors`, seconds), and they are rows the *circulant* store cannot hold,
+because over `Z_n` those statements are different (and mostly open) ones.  Both stores
+are pinned the same way — `proof_manifest.py --certs certs/cayley --check`, which `make
+proof-store` runs alongside the circulant manifest — and all twelve traces are
+cross-checked by the external `drat-trim`, which rebuilds each CNF from its certificate
+(the group rows from the group description, not from `(n, sizes)`).
+
+One caveat stays: the portfolio is a portfolio — it is not every group of order `n`,
+only the families `cayley.groups_of_order` lists.  A proof-carrying `unsat` is therefore
+a theorem about *one group*, and reading it as a statement about every construction of
+that size would be reading it wrong.
+
+**One theorem did come out of it.**  The `3 | n` obstruction no longer needs the group
+to be cyclic: Cauchy's theorem gives an element `g` of order 3 in *any* group of order
+`n` with `3 | n`, so `{e, g, g²}` has all three of its differences in the single class
+`{g, g⁻¹}` and its `n/3` translates are monochromatic in whatever colour that class
+carries.  No translation-invariant colouring of any group of order `n` avoids
+a monochromatic triangle there — `K162`, `K537` and every other all-triangle instance
+divisible by 3 are unreachable from *any* group, not just from `Z_n`.  The verifier
+re-derives that argument arithmetically (`cayley_multicolour`, status `obstructed`) with
+no solver in the loop.
+
+The checkers are not taken on faith either.  `K6` in this same encoding is
+refuted by a trace *and* by Lean's exhaustive proof of `R(3,3) = 6`; the tampering
+tests include a solver-free instance (`(1 ∨ ¬2)` is not RUP and its `(2)` is not
+RAT) where both rules must fail, and a trace whose certificate's digest was
+forged, which only the external checker refuses.  The tests have also caught two
+real bugs in the checker: the first version accepted the empty clause without a
+RUP check (RAT cannot apply to it, so any trace pasting `0` at the top looked
+valid), and the watched-literal version dropped the entries a conflict left
+unexamined in a watch list — `K18`'s trace then came back "neither RUP nor RAT",
+which is exactly what that trace is for.
+
+Four things are worth stating plainly:
+
+1. **The validations are exact.** `R(3,3,4) = 30` is a theorem (Codish et al.,
+   2016): the encoding finds a witness at 29 and proves none exists at 30.
+   `R(4,4) = 18` likewise. The 5-cycle and the Paley graph are rediscovered
+   without being told about them. Those five rows are the evidence that a
+   `sat`/`unsat` pair from this encoding means what it says.
+2. **No decided instance is a record.** The five `sat` rows are circulant
+   witnesses at published *witness* sizes, and every `unsat` row says the
+   circulant family has nothing at that size — which at three published witness
+   sizes (`K35`, `K42`, `K50`, the witnesses for `R(4,6) >= 36`, `R(5,5) >= 43`
+   and `R(3,3,3,3) >= 51`) means those published witnesses are not circulant
+   colourings. For the multicolour frontier that is a *negative about a
+   sub-family*: it moves no published bound. The statement is deliberately limited
+   to the 18 decided rows — the six `unknown` verdicts record a spent budget, not
+   evidence of absence — and two of those six (`K96`, `K127`) sit at the published
+   witness sizes of `R(3,3,3,4)` and `R(4,4,4)`, where the published witnesses
+   come from algebraic and recursive constructions, so whether a circulant witness
+   exists there is left open.
+3. **At `3 ∣ n` the all-triangle instances are obstructed by arithmetic, not by
+   search.**  If every colour forbids a triangle and `3 ∣ n`, the difference
+   class `n/3` is a real class and the three edges of `{0, n/3, 2n/3}` all lie in
+   it; the colour class `n/3` receives is then monochromatic on `n/3` triangles.
+   So **no** circulant colouring of `K_n` is clean — for any number of colours —
+   and `K6`, `K51`, `K162`, `K537` are all settled without a solver. This is the
+   only *proved* negative in the repository that is not an exhaustive sweep: the
+   Lean layer checks `diffClass n 0 (n/3) = n/3 ∧ …` per instance with
+   `decide`.
+4. **Six instances are undecided and stay undecided here.** `K96`/`K97`,
+   `K127`/`K128`, `K161` and `K538` returned `unknown` when the encoding reached
+   20 000–149 000 clauses and the 120 s/300 s budget ran out. They are not one
+   budget step away either: a 30-minute round gave each of them to CaDiCaL and to
+   Glucose4, and the three with the fewest clauses (`K161`: 11 680 over 400
+   variables; `K96`: 20 345; `K97`: 21 016) to MapleChrono as well — 15 runs of
+   1800 s, one core each, **15 `unknown`**, every one of them recording
+   `budget_expired` rather than leaving the reason to be inferred. They are stored
+   as certificates with `status: unknown`, the verifier re-derives their encoding
+   size and nothing else, and no table in this repository counts them as a
+   negative. Deciding them needs more than this budget, and more than one more
+   engine: the DIMACS hand-off is what makes that possible —
+   `oplab mc-circulant --n 96 --sizes 3,3,3,4 --dimacs-only --dimacs
+   dimacs/k96_3x3x3x4.cnf`, which `scripts/run_full.sh` does for all six, and which
+   the 30-minute round above consumed without a verdict.
+
 ## Limitations, stated plainly
 
 * **Only the circulant sweeps are exhaustive.** Everything else is a heuristic
@@ -209,7 +570,22 @@ measurement that shows it".
   analysis before being called a record.
 * **The circulant result is a statement about a sub-family.** "No circulant
   witness exists" says nothing about the many non-circulant colourings, and
-  nothing about the upper bound.
+  nothing about the upper bound. That cuts both ways: the multicolour lower
+  bounds were *not* moved, and a `sat` verdict inside the family would have been
+  a genuine record (none of the target sizes produced one).
+* **`unsat` from the circulant CNF is a theorem, and it is checked by two
+  checkers.**  All nine `unsat` rows in §9 carry a DRAT trace that `oplab.drat`
+  replays, and every stored trace is cross-checked by the external `drat-trim`
+  (`scripts/drat_trim_check.py`, CI job `drat-trim`); the `ramsey_unsat  certificates still have no trace at all.  Where a trace exists, the row rests on
+  a ~400-line checker *and* on a checker that shares no code with it, plus the
+  encoding rather than on CaDiCaL — still a claim about the circulant sub-family
+  only, and still one whose trusted base is two programs rather than none.  The
+  `sat` rows are witnesses re-counted by the verifier *and* by Lean.
+* **The multicolour heuristic was beaten by the encoding.** 300 s of tabu search
+  could not find the *published* witnesses at `K50` and `K29`, while the
+  circulant decision found clean witnesses at `K29` and `K44` in milliseconds.
+  That is a statement about which sub-problems are worth encoding, not about
+  which colourings exist.
 * **Timings are single-machine wall-clock numbers** on a 16-core Windows box
   (`Python 3.14.6`, `numpy 2.4.4`), and are quoted only to describe the effort,
   not as a benchmark.

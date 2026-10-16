@@ -1,0 +1,2274 @@
+{
+  "what": "translation-invariant (Cayley) colourings over every group this repository can build, at the undecided sizes: a 300 s round over the whole portfolio (CaDiCaL 1.95), then a 3600 s round over exactly the groups that round left open. `rows` is the frontier now; `superseded` keeps the 300 s rows a longer run replaced, so a spent budget stays on the record",
+  "produced_by": "round 1: python scripts/cayley_hunt.py 96:3,3,3,4 128:4,4,4 97:3,3,3,4 538:3,3,3,3,3,3 161:3,3,3,3,3 --seconds 300 --workers 12   |   round 2: `make cayley-long` (the 3 open groups at K128 and the 18 at K96, 3600 s each, CaDiCaL 1.95), folded in by scripts/sweep_merge.py",
+  "reading": "`sat` would be a witness re-counted by oplab.multicolour.verify_colouring; `unsat` is a solver verdict about that one group's family (this encoding stores no DRAT trace, so it is not a theorem); `unknown` is a spent budget; `obstructed` is the 3 | n arithmetic, decided with no solver; a later round supersedes a row rather than editing it away, so both the 300 s attempt and the 3600 s verdict it grew out of are readable",
+  "totals": {
+    "unknown": 19,
+    "unsat": 33
+  },
+  "per_target": [
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "groups": {
+        "unknown": 13,
+        "unsat": 9
+      },
+      "group_count": 22
+    },
+    {
+      "n": 97,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "groups": {
+        "unknown": 1
+      },
+      "group_count": 1
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "groups": {
+        "unknown": 2,
+        "unsat": 24
+      },
+      "group_count": 26
+    },
+    {
+      "n": 161,
+      "sizes": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "groups": {
+        "unknown": 1
+      },
+      "group_count": 1
+    },
+    {
+      "n": 538,
+      "sizes": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "groups": {
+        "unknown": 2
+      },
+      "group_count": 2
+    }
+  ],
+  "rows": [
+    {
+      "name": "Z32xZ3",
+      "group": {
+        "family": "abelian",
+        "params": [
+          32,
+          3
+        ],
+        "name": "Z32xZ3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 48,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 20345,
+      "seconds": 3601.539
+    },
+    {
+      "name": "Z16xZ3xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          16,
+          3,
+          2
+        ],
+        "name": "Z16xZ3xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 20343,
+      "seconds": 3602.832
+    },
+    {
+      "name": "Z8xZ4xZ3",
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          4,
+          3
+        ],
+        "name": "Z8xZ4xZ3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 20314,
+      "seconds": 3603.703
+    },
+    {
+      "name": "Z8xZ3xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          3,
+          2,
+          2
+        ],
+        "name": "Z8xZ3xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 20358,
+      "seconds": 3604.442
+    },
+    {
+      "name": "Z4xZ4xZ3xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          4,
+          3,
+          2
+        ],
+        "name": "Z4xZ4xZ3xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 20302,
+      "seconds": 3605.107
+    },
+    {
+      "name": "Z4xZ3xZ2xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          3,
+          2,
+          2,
+          2
+        ],
+        "name": "Z4xZ3xZ2xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 55,
+      "self_inverse_classes": 15,
+      "num_vars": 220,
+      "num_clauses": 20480,
+      "seconds": 3605.643
+    },
+    {
+      "name": "Z3xZ2xZ2xZ2xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          3,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "name": "Z3xZ2xZ2xZ2xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 63,
+      "self_inverse_classes": 31,
+      "num_vars": 252,
+      "num_clauses": 21276,
+      "seconds": 3606.156
+    },
+    {
+      "name": "D48",
+      "group": {
+        "family": "dihedral",
+        "params": [
+          48
+        ],
+        "name": "D48"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 72,
+      "self_inverse_classes": 49,
+      "num_vars": 288,
+      "num_clauses": 37615,
+      "seconds": 3606.643
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "dicyclic",
+        "params": [
+          24
+        ],
+        "name": "Dic24"
+      },
+      "classes": 48,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 19635,
+      "solver_time": 165.265625,
+      "status": "unsat",
+      "name": "Dic24",
+      "seconds": 300.199
+    },
+    {
+      "name": "Z2xD24",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              24
+            ]
+          }
+        ],
+        "name": "Z2xD24"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 73,
+      "self_inverse_classes": 51,
+      "num_vars": 292,
+      "num_clauses": 37625,
+      "seconds": 3607.097
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              12
+            ]
+          }
+        ],
+        "name": "Z2xDic12"
+      },
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 19291,
+      "solver_time": 129.40625,
+      "status": "unsat",
+      "name": "Z2xDic12",
+      "seconds": 300.193
+    },
+    {
+      "name": "Z3xD16",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              3
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              16
+            ]
+          }
+        ],
+        "name": "Z3xD16"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 56,
+      "self_inverse_classes": 17,
+      "num_vars": 224,
+      "num_clauses": 34239,
+      "seconds": 3607.594
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              3
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z3xDic8"
+      },
+      "classes": 48,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 32171,
+      "solver_time": 364.140625,
+      "status": "unsat",
+      "name": "Z3xDic8",
+      "seconds": 3607.586,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "name": "Z4xD12",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              4
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              12
+            ]
+          }
+        ],
+        "name": "Z4xD12"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 61,
+      "self_inverse_classes": 27,
+      "num_vars": 244,
+      "num_clauses": 33784,
+      "seconds": 3608.046
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              4
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              6
+            ]
+          }
+        ],
+        "name": "Z4xDic6"
+      },
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 29159,
+      "solver_time": 119.390625,
+      "status": "unsat",
+      "name": "Z4xDic6",
+      "seconds": 300.079
+    },
+    {
+      "name": "Z6xD8",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              6
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z6xD8"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 57,
+      "self_inverse_classes": 19,
+      "num_vars": 228,
+      "num_clauses": 33349,
+      "seconds": 3608.494
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              6
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              4
+            ]
+          }
+        ],
+        "name": "Z6xDic4"
+      },
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 30443,
+      "solver_time": 192.484375,
+      "status": "unsat",
+      "name": "Z6xDic4",
+      "seconds": 300.082
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              6
+            ]
+          }
+        ],
+        "name": "Z8xD6"
+      },
+      "classes": 55,
+      "self_inverse_classes": 15,
+      "num_vars": 220,
+      "num_clauses": 32904,
+      "solver_time": 1228.59375,
+      "status": "unsat",
+      "name": "Z8xD6",
+      "seconds": 3608.484,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              3
+            ]
+          }
+        ],
+        "name": "Z8xDic3"
+      },
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 31988,
+      "solver_time": 845.203125,
+      "status": "unsat",
+      "name": "Z8xDic3",
+      "seconds": 3608.472,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "name": "Z12xD4",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              12
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              4
+            ]
+          }
+        ],
+        "name": "Z12xD4"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 53,
+      "self_inverse_classes": 11,
+      "num_vars": 212,
+      "num_clauses": 30840,
+      "seconds": 3608.868
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              12
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              2
+            ]
+          }
+        ],
+        "name": "Z12xDic2"
+      },
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 28837,
+      "solver_time": 717.25,
+      "status": "unsat",
+      "name": "Z12xDic2",
+      "seconds": 3608.859,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              16
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              3
+            ]
+          }
+        ],
+        "name": "Z16xD3"
+      },
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 33368,
+      "solver_time": 1354.328125,
+      "status": "unsat",
+      "name": "Z16xD3",
+      "seconds": 3608.848,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "name": "cyclic",
+      "group": {
+        "family": "abelian",
+        "params": [
+          128
+        ],
+        "name": "cyclic"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "classes": 64,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 127813,
+      "seconds": 3603.301
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          64,
+          2
+        ],
+        "name": "Z64xZ2"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 127751,
+      "solver_time": 55.125,
+      "status": "unsat",
+      "name": "Z64xZ2",
+      "seconds": 300.01
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          32,
+          4
+        ],
+        "name": "Z32xZ4"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 127616,
+      "solver_time": 11.765625,
+      "status": "unsat",
+      "name": "Z32xZ4",
+      "seconds": 299.998
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          32,
+          2,
+          2
+        ],
+        "name": "Z32xZ2xZ2"
+      },
+      "classes": 67,
+      "self_inverse_classes": 7,
+      "num_vars": 201,
+      "num_clauses": 127666,
+      "solver_time": 0.046875,
+      "status": "unsat",
+      "name": "Z32xZ2xZ2",
+      "seconds": 299.993
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          16,
+          8
+        ],
+        "name": "Z16xZ8"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 127652,
+      "solver_time": 9.96875,
+      "status": "unsat",
+      "name": "Z16xZ8",
+      "seconds": 299.982
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          16,
+          4,
+          2
+        ],
+        "name": "Z16xZ4xZ2"
+      },
+      "classes": 67,
+      "self_inverse_classes": 7,
+      "num_vars": 201,
+      "num_clauses": 127438,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z16xZ4xZ2",
+      "seconds": 299.971
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          16,
+          2,
+          2,
+          2
+        ],
+        "name": "Z16xZ2xZ2xZ2"
+      },
+      "classes": 71,
+      "self_inverse_classes": 15,
+      "num_vars": 213,
+      "num_clauses": 127736,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z16xZ2xZ2xZ2",
+      "seconds": 299.96
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          8,
+          2
+        ],
+        "name": "Z8xZ8xZ2"
+      },
+      "classes": 67,
+      "self_inverse_classes": 7,
+      "num_vars": 201,
+      "num_clauses": 127510,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z8xZ8xZ2",
+      "seconds": 299.95
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          4,
+          4
+        ],
+        "name": "Z8xZ4xZ4"
+      },
+      "classes": 67,
+      "self_inverse_classes": 7,
+      "num_vars": 201,
+      "num_clauses": 126934,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z8xZ4xZ4",
+      "seconds": 299.944
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          4,
+          2,
+          2
+        ],
+        "name": "Z8xZ4xZ2xZ2"
+      },
+      "classes": 71,
+      "self_inverse_classes": 15,
+      "num_vars": 213,
+      "num_clauses": 127448,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z8xZ4xZ2xZ2",
+      "seconds": 299.94
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          2,
+          2,
+          2,
+          2
+        ],
+        "name": "Z8xZ2xZ2xZ2xZ2"
+      },
+      "classes": 79,
+      "self_inverse_classes": 31,
+      "num_vars": 237,
+      "num_clauses": 129508,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z8xZ2xZ2xZ2xZ2",
+      "seconds": 299.926
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          4,
+          4,
+          2
+        ],
+        "name": "Z4xZ4xZ4xZ2"
+      },
+      "classes": 71,
+      "self_inverse_classes": 15,
+      "num_vars": 213,
+      "num_clauses": 126536,
+      "solver_time": 0.0,
+      "status": "unsat",
+      "name": "Z4xZ4xZ4xZ2",
+      "seconds": 299.916
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          4,
+          2,
+          2,
+          2
+        ],
+        "name": "Z4xZ4xZ2xZ2xZ2"
+      },
+      "classes": 79,
+      "self_inverse_classes": 31,
+      "num_vars": 237,
+      "num_clauses": 129460,
+      "solver_time": 0.0,
+      "status": "unsat",
+      "name": "Z4xZ4xZ2xZ2xZ2",
+      "seconds": 3.446
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "name": "Z4xZ2xZ2xZ2xZ2xZ2"
+      },
+      "classes": 95,
+      "self_inverse_classes": 63,
+      "num_vars": 285,
+      "num_clauses": 144812,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z4xZ2xZ2xZ2xZ2xZ2",
+      "seconds": 3.44
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "abelian",
+        "params": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "name": "Z2xZ2xZ2xZ2xZ2xZ2xZ2"
+      },
+      "classes": 127,
+      "self_inverse_classes": 127,
+      "num_vars": 381,
+      "num_clauses": 256540,
+      "solver_time": 1.28125,
+      "status": "unsat",
+      "name": "Z2xZ2xZ2xZ2xZ2xZ2xZ2",
+      "seconds": 6.21
+    },
+    {
+      "name": "D64",
+      "group": {
+        "family": "dihedral",
+        "params": [
+          64
+        ],
+        "name": "D64"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "classes": 96,
+      "self_inverse_classes": 65,
+      "num_vars": 288,
+      "num_clauses": 239037,
+      "seconds": 3605.331
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "dicyclic",
+        "params": [
+          32
+        ],
+        "name": "Dic32"
+      },
+      "classes": 64,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 124285,
+      "solver_time": 0.3125,
+      "status": "unsat",
+      "name": "Dic32",
+      "seconds": 300.019
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "semidihedral",
+        "params": [
+          64
+        ],
+        "name": "SD64"
+      },
+      "classes": 80,
+      "self_inverse_classes": 33,
+      "num_vars": 240,
+      "num_clauses": 221597,
+      "solver_time": 0.1875,
+      "status": "unsat",
+      "name": "SD64",
+      "seconds": 300.014
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              32
+            ]
+          }
+        ],
+        "name": "Z2xD32"
+      },
+      "classes": 97,
+      "self_inverse_classes": 67,
+      "num_vars": 291,
+      "num_clauses": 239023,
+      "solver_time": 629.6875,
+      "status": "unsat",
+      "name": "Z2xD32",
+      "seconds": 3605.324,
+      "note": "verdict without a DRAT trace: not a theorem, nothing stored"
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              16
+            ]
+          }
+        ],
+        "name": "Z2xDic16"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 122615,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z2xDic16",
+      "seconds": 300.024
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              4
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              16
+            ]
+          }
+        ],
+        "name": "Z4xD16"
+      },
+      "classes": 81,
+      "self_inverse_classes": 35,
+      "num_vars": 243,
+      "num_clauses": 218400,
+      "solver_time": 0.140625,
+      "status": "unsat",
+      "name": "Z4xD16",
+      "seconds": 300.013
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              4
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z4xDic8"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 192620,
+      "solver_time": 0.015625,
+      "status": "unsat",
+      "name": "Z4xDic8",
+      "seconds": 300.002
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z8xD8"
+      },
+      "classes": 73,
+      "self_inverse_classes": 19,
+      "num_vars": 219,
+      "num_clauses": 217000,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z8xD8",
+      "seconds": 299.992
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              4
+            ]
+          }
+        ],
+        "name": "Z8xDic4"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 206126,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z8xDic4",
+      "seconds": 299.987
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              16
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              4
+            ]
+          }
+        ],
+        "name": "Z16xD4"
+      },
+      "classes": 69,
+      "self_inverse_classes": 11,
+      "num_vars": 207,
+      "num_clauses": 200682,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z16xD4",
+      "seconds": 2.264
+    },
+    {
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              16
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              2
+            ]
+          }
+        ],
+        "name": "Z16xDic2"
+      },
+      "classes": 65,
+      "self_inverse_classes": 3,
+      "num_vars": 195,
+      "num_clauses": 192401,
+      "solver_time": 0.03125,
+      "status": "unsat",
+      "name": "Z16xDic2",
+      "seconds": 2.258
+    },
+    {
+      "name": "cyclic",
+      "group": {
+        "family": "abelian",
+        "params": [
+          97
+        ],
+        "name": "cyclic"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.011,
+      "n": 97,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 48,
+      "self_inverse_classes": 0,
+      "num_vars": 192,
+      "num_clauses": 21016
+    },
+    {
+      "name": "Z269xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          269,
+          2
+        ],
+        "name": "Z269xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.012,
+      "n": 538,
+      "sizes": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "classes": 269,
+      "self_inverse_classes": 1,
+      "num_vars": 1614,
+      "num_clauses": 149024
+    },
+    {
+      "name": "D269",
+      "group": {
+        "family": "dihedral",
+        "params": [
+          269
+        ],
+        "name": "D269"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.021,
+      "n": 538,
+      "sizes": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "classes": 403,
+      "self_inverse_classes": 269,
+      "num_vars": 2418,
+      "num_clauses": 258904
+    },
+    {
+      "name": "Z23xZ7",
+      "group": {
+        "family": "abelian",
+        "params": [
+          23,
+          7
+        ],
+        "name": "Z23xZ7"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.012,
+      "n": 161,
+      "sizes": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "classes": 80,
+      "self_inverse_classes": 0,
+      "num_vars": 400,
+      "num_clauses": 11680
+    }
+  ],
+  "snapshot": "2026-10-16",
+  "superseded": [
+    {
+      "name": "cyclic",
+      "group": {
+        "family": "abelian",
+        "params": [
+          128
+        ],
+        "name": "cyclic"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.025,
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "classes": 64,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 127813
+    },
+    {
+      "name": "D64",
+      "group": {
+        "family": "dihedral",
+        "params": [
+          64
+        ],
+        "name": "D64"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.024,
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "classes": 96,
+      "self_inverse_classes": 65,
+      "num_vars": 288,
+      "num_clauses": 239037
+    },
+    {
+      "name": "Z2xD32",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              32
+            ]
+          }
+        ],
+        "name": "Z2xD32"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.028,
+      "n": 128,
+      "sizes": [
+        4,
+        4,
+        4
+      ],
+      "classes": 97,
+      "self_inverse_classes": 67,
+      "num_vars": 291,
+      "num_clauses": 239023
+    },
+    {
+      "name": "Z32xZ3",
+      "group": {
+        "family": "abelian",
+        "params": [
+          32,
+          3
+        ],
+        "name": "Z32xZ3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.11,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 48,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 20345
+    },
+    {
+      "name": "Z16xZ3xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          16,
+          3,
+          2
+        ],
+        "name": "Z16xZ3xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.121,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 20343
+    },
+    {
+      "name": "Z8xZ4xZ3",
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          4,
+          3
+        ],
+        "name": "Z8xZ4xZ3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.167,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 20314
+    },
+    {
+      "name": "Z8xZ3xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          8,
+          3,
+          2,
+          2
+        ],
+        "name": "Z8xZ3xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.184,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 20358
+    },
+    {
+      "name": "Z4xZ4xZ3xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          4,
+          3,
+          2
+        ],
+        "name": "Z4xZ4xZ3xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.187,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 20302
+    },
+    {
+      "name": "Z4xZ3xZ2xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          4,
+          3,
+          2,
+          2,
+          2
+        ],
+        "name": "Z4xZ3xZ2xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.2,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 55,
+      "self_inverse_classes": 15,
+      "num_vars": 220,
+      "num_clauses": 20480
+    },
+    {
+      "name": "Z3xZ2xZ2xZ2xZ2xZ2",
+      "group": {
+        "family": "abelian",
+        "params": [
+          3,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "name": "Z3xZ2xZ2xZ2xZ2xZ2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.208,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 63,
+      "self_inverse_classes": 31,
+      "num_vars": 252,
+      "num_clauses": 21276
+    },
+    {
+      "name": "D48",
+      "group": {
+        "family": "dihedral",
+        "params": [
+          48
+        ],
+        "name": "D48"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.213,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 72,
+      "self_inverse_classes": 49,
+      "num_vars": 288,
+      "num_clauses": 37615
+    },
+    {
+      "name": "Z2xD24",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              2
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              24
+            ]
+          }
+        ],
+        "name": "Z2xD24"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.204,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 73,
+      "self_inverse_classes": 51,
+      "num_vars": 292,
+      "num_clauses": 37625
+    },
+    {
+      "name": "Z3xD16",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              3
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              16
+            ]
+          }
+        ],
+        "name": "Z3xD16"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.198,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 56,
+      "self_inverse_classes": 17,
+      "num_vars": 224,
+      "num_clauses": 34239
+    },
+    {
+      "name": "Z3xDic8",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              3
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z3xDic8"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.071,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 48,
+      "self_inverse_classes": 1,
+      "num_vars": 192,
+      "num_clauses": 32171
+    },
+    {
+      "name": "Z4xD12",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              4
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              12
+            ]
+          }
+        ],
+        "name": "Z4xD12"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.091,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 61,
+      "self_inverse_classes": 27,
+      "num_vars": 244,
+      "num_clauses": 33784
+    },
+    {
+      "name": "Z6xD8",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              6
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              8
+            ]
+          }
+        ],
+        "name": "Z6xD8"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.093,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 57,
+      "self_inverse_classes": 19,
+      "num_vars": 228,
+      "num_clauses": 33349
+    },
+    {
+      "name": "Z8xD6",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              6
+            ]
+          }
+        ],
+        "name": "Z8xD6"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.099,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 55,
+      "self_inverse_classes": 15,
+      "num_vars": 220,
+      "num_clauses": 32904
+    },
+    {
+      "name": "Z8xDic3",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              8
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              3
+            ]
+          }
+        ],
+        "name": "Z8xDic3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.123,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 31988
+    },
+    {
+      "name": "Z12xD4",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              12
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              4
+            ]
+          }
+        ],
+        "name": "Z12xD4"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.129,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 53,
+      "self_inverse_classes": 11,
+      "num_vars": 212,
+      "num_clauses": 30840
+    },
+    {
+      "name": "Z12xDic2",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              12
+            ]
+          },
+          {
+            "family": "dicyclic",
+            "params": [
+              2
+            ]
+          }
+        ],
+        "name": "Z12xDic2"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.14,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 49,
+      "self_inverse_classes": 3,
+      "num_vars": 196,
+      "num_clauses": 28837
+    },
+    {
+      "name": "Z16xD3",
+      "group": {
+        "family": "product",
+        "params": [
+          {
+            "family": "abelian",
+            "params": [
+              16
+            ]
+          },
+          {
+            "family": "dihedral",
+            "params": [
+              3
+            ]
+          }
+        ],
+        "name": "Z16xD3"
+      },
+      "status": "unknown",
+      "budget_expired": true,
+      "seconds": 300.139,
+      "n": 96,
+      "sizes": [
+        3,
+        3,
+        3,
+        4
+      ],
+      "classes": 51,
+      "self_inverse_classes": 7,
+      "num_vars": 204,
+      "num_clauses": 33368
+    }
+  ],
+  "rounds": [
+    {
+      "file": "cayley_long_k128_cadical.json",
+      "rows": 3,
+      "seconds": 3605.331,
+      "statuses": [
+        "unknown",
+        "unsat"
+      ],
+      "decisions_changed": 1
+    },
+    {
+      "file": "cayley_long_k96.json",
+      "rows": 18,
+      "seconds": 3608.868,
+      "statuses": [
+        "unknown",
+        "unsat"
+      ],
+      "decisions_changed": 5
+    }
+  ]
+}
