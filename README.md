@@ -910,6 +910,27 @@ each next to the URL it came from, and are explained in
   5 lower bound, and Jaan Parts (`arXiv:2011.05658`) for the 509-vertex
   construction.
 
+## How to cite
+
+Citing the repository is the only condition its licence asks for, so here is the
+entry a bibliography wants.  It is generated from [CITATION.cff](CITATION.cff),
+which is the file to edit: `python scripts/gen_citation.py` rewrites it, and the
+test suite fails when the two disagree.
+
+<!-- citation:begin (generated: scripts/gen_citation.py) -->
+```bibtex
+@software{open-problems-lab,
+  author  = {maxime-fleury},
+  title   = {{open-problems-lab: reproducible attacks and certificates for open problems in mathematics}},
+  year    = {2026},
+  version = {0.1.0},
+  license = {CC-BY-4.0},
+  url     = {https://github.com/maxime-fleury/open-problems-lab},
+  note    = {Citing this repository is the only condition its licence asks for; the reference values it compares against are listed in docs/targets.md.}
+}
+```
+<!-- citation:end -->
+
 ## Licence
 
 **CC BY 4.0** — see [LICENSE](LICENSE), which is the canonical legal code with its

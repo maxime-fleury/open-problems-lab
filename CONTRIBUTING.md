@@ -1,6 +1,6 @@
 # Contributing
 
-The repository has three hard rules and the habits that go with them.
+The repository has six hard rules and the habits that go with them.
 
 **Hard rule: no unverifiable claim.** Any number that appears in a certificate
 must be recomputable by `oplab.verify` from the payload alone, within the
@@ -59,6 +59,21 @@ diff with both halves still quotable. The prose about the round — `what`,
 only recomputes the counts. A row from an engine that reports no *decision*, such
 as the repair search, which hunts witnesses, is not merged at all: it stays in its
 own file and is quoted as an attempt.
+
+**Hard rule, incoming is outgoing.**  The repository goes out under CC BY 4.0
+([LICENSE](LICENSE)), whose only condition is the citation [NOTICE](NOTICE)
+specifies, and a contribution is accepted under that same licence, with that same
+single condition — nothing is asked of a contributor that is not asked of a user.
+So do not paste anything that cannot be licensed that way: a bound, a table or a
+figure that came from somewhere else is quoted with the URL it came from and stays
+under its own terms, which is what `src/oplab/references.py` and `docs/targets.md`
+do for every reference value here.  The README's BibTeX block is generated from
+`CITATION.cff` by `scripts/gen_citation.py` and the test suite fails when the two
+disagree, because the citation is the condition the licence attaches: a stale one is
+a defect, not a typo.  The licence text itself is pinned by digest in
+`tests/test_license.py`, the way every other artifact quoted here is pinned: a
+digest is what turns "this is the canonical text" into something a stranger can
+check.
 
 **Soft rule: publish the failures.** A search that did not improve anything is
 still a result if it is measured. Record the best value found, the seeds, the
@@ -136,9 +151,14 @@ python -m pytest tests -q
 python scripts/proof_manifest.py --check   # the store is still the pinned one
 python -m oplab.cli verify certs --deep --workers 4
 python scripts/gen_lean_certs.py --check
+python scripts/gen_citation.py --check     # the README citation, built from CITATION.cff
 python scripts/drat_trim_check.py          # needs drat-trim on PATH; CI builds it
 cd lean && lake build
 ```
+
+`pytest` runs the citation check as well (`tests/test_license.py` calls the
+generator and hashes the licence), so a stale citation or a hand-edited licence
+text fails the suite itself, not only one of the commands above.
 
 The cross-check is the one check whose tool is not in this repository: build
 `drat-trim` from the commit in `scripts/drat-trim.pin`
