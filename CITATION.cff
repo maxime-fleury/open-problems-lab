@@ -1,10 +1,13 @@
 cff-version: 1.2.0
 title: "open-problems-lab: reproducible attacks and certificates for open problems in mathematics"
-message: "If you use these certificates or this harness, please cite the repository and the original sources of the reference values listed in docs/targets.md."
+message: "If you use these certificates or this harness, please cite the repository (maxime-fleury/open-problems-lab) and the original sources of the reference values listed in docs/targets.md."
 type: software
+authors:
+  - name: "maxime-fleury"
 version: 0.1.0
 date-released: "2026-10-15"
-license: MIT
+license: CC-BY-4.0
+repository-code: "https://github.com/maxime-fleury/open-problems-lab"
 keywords:
   - Ramsey numbers
   - kissing number

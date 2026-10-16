@@ -912,4 +912,7 @@ each next to the URL it came from, and are explained in
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+**CC BY 4.0** — see [LICENSE](LICENSE).  Everything is permitted, including
+commercial use, modification and redistribution, on one condition: the repository
+is cited, as `maxime-fleury/open-problems-lab`.  [CITATION.cff](CITATION.cff) is
+the machine-readable form of that citation.
