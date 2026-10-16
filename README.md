@@ -912,7 +912,9 @@ each next to the URL it came from, and are explained in
 
 ## Licence
 
-**CC BY 4.0** — see [LICENSE](LICENSE).  Everything is permitted, including
-commercial use, modification and redistribution, on one condition: the repository
-is cited, as `maxime-fleury/open-problems-lab`.  [CITATION.cff](CITATION.cff) is
-the machine-readable form of that citation.
+**CC BY 4.0** — see [LICENSE](LICENSE), which is the canonical legal code with its
+sha256 in [NOTICE](NOTICE).  Everything is permitted, including commercial use,
+modification and redistribution, on one condition: the repository is cited, as
+`maxime-fleury/open-problems-lab`.  [CITATION.cff](CITATION.cff) is the
+machine-readable form of that citation, and NOTICE is the specification of the
+manner of attribution the licence's section 3(a)(1) asks for.
