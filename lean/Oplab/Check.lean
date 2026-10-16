@@ -189,6 +189,152 @@ colouring of `K n` avoids a monochromatic `K k`. -/
 def cleanCirculantMasks (n k bound : Nat) : List Nat :=
   (List.range bound).filter (fun m => circulantClean n k m)
 
+/-! ### Multicolour instances (one forbidden clique size per colour)
+
+A multicolour colouring is a list with one digit per edge in the same
+lexicographic order that `edgeIndex` uses, so the Python and the Lean verifier
+share one decoding path.  Colour `c` is the `c`-th entry of `sizes`, and entry
+`c` of `multiMonoCount` counts the monochromatic `sizes[c]`-cliques of colour `c`.
+-/
+
+/-- Colour of the edge `{u, v}` in a multicolour colouring (0 if out of range). -/
+def edgeColour (n : Nat) (coloring : List Nat) (u v : Nat) : Nat :=
+  coloring.getD (edgeIndex n (Nat.min u v) (Nat.max u v)) 0
+
+/-- Adjacency mask of vertex `v` in colour `c` of a multicolour colouring. -/
+def colourAdj (n : Nat) (coloring : List Nat) (c : Nat) : Nat → Nat :=
+  fun v =>
+    (List.range n).foldl
+      (fun acc u =>
+        if u == v then acc
+        else if edgeColour n coloring u v == c then acc ||| (1 <<< u) else acc)
+      0
+
+/-- Monochromatic forbidden-clique counts of a multicolour colouring, one per
+colour, by the bitmask recursion `countCliques`.
+
+`multiMonoCount n [3, 3, 5] <colouring> = [0, 0, 0]` is the machine-checkable
+content of a clean multicolour witness. -/
+def multiMonoCountFrom (n : Nat) (coloring : List Nat) : Nat → List Nat → List Nat
+  | _, [] => []
+  | c, s :: rest =>
+    countCliques n (colourAdj n coloring c) (fullMask n) s
+      :: multiMonoCountFrom n coloring (c + 1) rest
+
+/-- `multiMonoCount n sizes coloring`: exact violation counts, one per colour. -/
+def multiMonoCount (n : Nat) (sizes : List Nat) (coloring : List Nat) : List Nat :=
+  multiMonoCountFrom n coloring 0 sizes
+
+/-- Does the subset `t` consist of edges that all carry colour `c`? -/
+def monoSubsetColour (n c : Nat) (coloring : List Nat) (t : List Nat) : Bool :=
+  (allPairs t).all (fun p => edgeColour n coloring p.1 p.2 == c)
+
+/-- The same counts by *subset enumeration* — deliberately naive, and used to
+cross-check `multiMonoCount` on the cases where the enumeration is cheap. -/
+def multiSubsetMonoCountFrom (n : Nat) (coloring : List Nat) :
+    Nat → List Nat → List Nat
+  | _, [] => []
+  | c, s :: rest =>
+    ((subsetsOfSize n s).filter (monoSubsetColour n c coloring)).length
+      :: multiSubsetMonoCountFrom n coloring (c + 1) rest
+
+/-- `multiSubsetMonoCount n sizes coloring`, the naive cross-check. -/
+def multiSubsetMonoCount (n : Nat) (sizes : List Nat) (coloring : List Nat) : List Nat :=
+  multiSubsetMonoCountFrom n coloring 0 sizes
+
+/-- The distinct edge-class sets that an `s`-clique of `K n` can use, sorted and
+deduplicated — the constraint groups of the `circulant_multicolour` encoding.
+
+Computed from the cliques themselves, so a certificate's claimed encoding size is
+reproduced here instead of trusted. -/
+def cliqueClassGroups (n s : Nat) : List (List Nat) :=
+  let classesOf (vs : List Nat) : List Nat :=
+    ((allPairs vs).map (fun p => diffClass n p.1 p.2)).mergeSort (fun a b => decide (a ≤ b))
+  ((subsetsOfSize n s).map (fun vs => (classesOf vs).eraseDups)).eraseDups
+
+/-! ### Cayley (translation invariant over a group) colourings
+
+A Cayley colouring assigns a colour per *inversion class* `{d, d⁻¹}` of a group
+of order `n`, so the colouring is translation invariant and the circulant
+encoding is the special case where the group is `Z n`.  The group itself is data:
+a certificate stores its multiplication table and its inverse list, because the
+`n` labels are the vertices and a colouring is decided by `x⁻¹ · y`.
+
+What is checked here is the same thing the Python verifier checks, in Lean: that
+the stored table *is* a group, that the class and clique-group counts the encoding
+size is computed from are reproduced from that table, and — for a witness — that
+the expanded colouring has no monochromatic forbidden clique.
+-/
+
+/-- Row `i`, column `j` of a stored multiplication table (`0` out of range). -/
+def entry (rows : List (List Nat)) (i j : Nat) : Nat :=
+  (rows.getD i []).getD j 0
+
+/-- The identity of a table: the row that fixes every element (`0` when there is
+none, a case `isCayleyGroup` rejects). -/
+def cayleyId (table : List (List Nat)) : Nat :=
+  ((List.range table.length).find? (fun e =>
+    (List.range table.length).all (fun y => entry table e y == y))).getD 0
+
+/-- Is the stored table a group with the stored inverse list?
+
+Closure and range are structural (`entry` is total), so the checks are: square
+rows, an inverse list of the right length, a two-sided identity, a two-sided
+inverse at every element, and associativity over every triple.  This is the
+same test `cayley.verify_group` makes in Python, restated so the Lean kernel (or
+`native_decide`) re-derives it from the certificate's own data. -/
+def isCayleyGroup (table : List (List Nat)) (inv : List Nat) : Bool :=
+  let n := table.length
+  table.all (fun row => row.length == n)
+    && (inv.length == n)
+    && (let e := cayleyId table
+        (List.range n).all (fun y => entry table e y == y && entry table y e == y)
+          && (List.range n).all (fun x =>
+               entry table x (inv.getD x n) == e && entry table (inv.getD x n) x == e)
+          && (List.range n).all (fun a => (List.range n).all (fun b =>
+               (List.range n).all (fun c =>
+                 entry table (entry table a b) c == entry table a (entry table b c)))))
+
+/-- An element of order three in the table: some `g ≠ 1` with `g³ = 1`.
+
+Cauchy's theorem guarantees one whenever `3 ∣ n`, which is what makes the
+`3 ∣ n` obstruction a statement about *every* group of that order rather than
+about the cyclic one; here it is checked on the stored table. -/
+def hasOrderThree (table : List (List Nat)) : Bool :=
+  let e := cayleyId table
+  (List.range table.length).any (fun g =>
+    g != e && entry table (entry table g g) g == e)
+
+/-- The inversion class of `d` in the labelling the certificates use: the smaller
+of `d` and `d⁻¹` (so `d` and `d⁻¹` share one class, as they must). -/
+def cayleyClass (inv : List Nat) (d : Nat) : Nat :=
+  Nat.min d (inv.getD d d)
+
+/-- The class of the difference `x⁻¹ · y`, which is what decides the colour of
+the edge `{x, y}` of a Cayley colouring. -/
+def cayleyDiff (table : List (List Nat)) (inv : List Nat) (x y : Nat) : Nat :=
+  cayleyClass inv (entry table (inv.getD x x) y)
+
+/-- The distinct inversion classes of the group (the identity excluded, matching
+the encoder: one variable per class *and colour*). -/
+def cayleyClasses (table : List (List Nat)) (inv : List Nat) : List Nat :=
+  (((List.range table.length).filter (fun d => d != 0)).map (cayleyClass inv)).eraseDups
+
+/-- The distinct class sets an `s`-clique can use, sorted and deduplicated —
+the constraint groups of the Cayley encoding.
+
+Computed from the table's own differences, exactly as `cliqueClassGroups` does
+for `Z n`, so the encoding size of a certificate is reproduced here rather than
+trusted.  (The encoder translates each clique to contain the identity, which
+loses nothing because differences are invariant under translation; enumerating
+every `s`-subset here gives the same collection of class sets.) -/
+def cayleyCliqueClassGroups (table : List (List Nat)) (inv : List Nat) (s : Nat) :
+    List (List Nat) :=
+  let classesOf (vs : List Nat) : List Nat :=
+    ((allPairs vs).map (fun p => cayleyDiff table inv p.1 p.2)).mergeSort
+      (fun a b => decide (a ≤ b))
+  ((subsetsOfSize table.length s).map (fun vs => (classesOf vs).eraseDups)).eraseDups
+
 /-! ### Unit-distance drawings -/
 
 /-- Are the stored edges unit length within `tol`, given coordinates scaled by

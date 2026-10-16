@@ -95,6 +95,23 @@ def blueMask (n base v : Nat) : Nat :=
   let full := (1 <<< n) - 1
   (full ^^^ rotMask n base v) &&& (full ^^^ (1 <<< v))
 
+/-! ### The circulant class of an edge
+
+`diffClass` is the invariant that makes the *circulant* sub-family of a
+multicolour instance small: an edge of `Z n` is classified by `min(d, n - d)`,
+and a colouring is circulant when it is constant on each class.  The multicolour
+counters themselves live in `Oplab.Check`, next to the two-colour ones.
+
+For `3 ∣ n` the three edges of `{0, n/3, 2n/3}` are all class `n / 3`: the class
+`n / 3` carries one colour, and that colour is then monochromatic on those
+`n / 3` triangles.  That is the arithmetic obstruction of every all-triangle
+instance at a size divisible by three, proved per instance by `decide` on
+`diffClass` and needing no solver. -/
+
+/-- Difference class of the edge `{u, v}` of `Z n`: `min(d, n - d)`, `d = (v - u) mod n`. -/
+def diffClass (n u v : Nat) : Nat :=
+  Nat.min ((v + n - u) % n) (n - ((v + n - u) % n))
+
 /-- Does the circulant colouring `mask` avoid every monochromatic `K k`?
 
 Only cliques through vertex 0 need to be tested, because the colouring is

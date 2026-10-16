@@ -459,6 +459,340 @@ theorem ramsey_R33_exhaustive : cleanMasks 6 3 (2 ^ 15) = [] := by decide
 """
 
 
+#: subset enumerations above this size are skipped, or replaced by the bitmask
+#: counter (see `emit_ramsey`, which does the same for two colours)
+SUBSET_BUDGET = 40_000
+#: clique-group recomputations above this size are skipped
+GROUP_BUDGET = 60_000
+
+
+def emit_circulant_multicolour(f: File, path: str, cert: dict) -> None:
+    """Multicolour circulant certificates: witness, obstruction, encoding size.
+
+    A witness is re-counted by the bitmask recursion `multiMonoCount` (which is
+    fast even at `K54`) and, when the enumeration is cheap, again by the naive
+    `multiSubsetMonoCount`; an `obstructed` certificate is the arithmetic fact
+    that the class `n/3` exists and makes one triangle monochromatic; an `unsat`
+    or `unknown` certificate gets the encoding sizes only, which is the same
+    standard the `ramsey_unsat` certificates are held to.
+    """
+    name, head = name_of(path), head_of(path, cert)
+    payload, claims = cert["payload"], cert["claims"]
+    n = int(payload["n"])
+    sizes = [int(s) for s in payload["sizes"]]
+    k = len(sizes)
+    status = payload["status"]
+    sizes_lit = natlist(sizes)
+    colouring = payload.get("coloring")
+    groups = {int(s): int(c) for s, c in payload["clique_groups"].items()}
+    zeros = natlist([0] * k)
+
+    if colouring is not None:
+        f.define(
+            f"{name}_coloring",
+            "List Nat",
+            natlist([int(c) for c in colouring]),
+            f"The multicolour colouring of `K{n}` stored in {rel(path)}: one digit "
+            f"per edge in lexicographic order, digit `c` meaning the colour whose "
+            f"forbidden clique size is `sizes[c]`, with `sizes` = {sizes}.",
+        )
+        native = n > 20
+        f.theorem(
+            f"{name}_clean",
+            f"multiMonoCount {n} {sizes_lit} {name}_coloring = {zeros}",
+            native,
+            f"{head}\n\nThis circulant colouring of `K{n}` has **no** monochromatic "
+            f"forbidden clique: one entry per colour, each counting the "
+            f"monochromatic cliques of the size that colour forbids, by the bitmask "
+            f"recursion "
+            f"`multiMonoCount`, and every entry is zero"
+            + (", checked with `native_decide`.\n\n" if native else ".\n\n")
+            + f"Equivalently `R{tuple(sizes)} > {n}` for the circulant sub-family, "
+            f"which is a restriction of the colourings — a witness is a witness.",
+        )
+        subsets = sum(math.comb(n, s) for s in sizes)
+        if subsets <= SUBSET_BUDGET:
+            f.theorem(
+                f"{name}_clean_subsets",
+                f"multiSubsetMonoCount {n} {sizes_lit} {name}_coloring = {zeros}",
+                False,
+                f"{head}\n\nThe same claim by the *second*, deliberately naive counter: "
+                f"all {subsets} `{{3,4,5}}`-subsets of the {n} vertices are enumerated "
+                f"and each is tested against the colour of its edges.  Two "
+                f"independent implementations agree on the witness (see also "
+                f"`{name}_encoding`).",
+            )
+        else:
+            f.notes.append(
+                f"{rel(path)}: the naive subset cross-check of the witness is skipped "
+                f"({subsets} subsets); the bitmask count is stated alone"
+            )
+
+    if status == "obstructed":
+        obstruction = payload["obstruction"]
+        d = int(obstruction["class"])
+        x, y, z = (int(t) for t in obstruction["triangle"])
+        f.theorem(
+            f"{name}_obstruction",
+            f"diffClass {n} {x} {y} = {d} ∧ diffClass {n} {y} {z} = {d} ∧ "
+            f"diffClass {n} {x} {z} = {d}",
+            False,
+            f"{head}\n\nThe negative answer is arithmetic, not a search: `3` divides "
+            f"`{n}`, so `{d}` is a genuine difference class, and the three edges of "
+            f"`{{{x}, {y}, {z}}}` all land in it — computed here by `decide` from "
+            f"`diffClass`.  Whatever colour the class `{d}` receives, those "
+            f"{obstruction['triangles']} triangles are monochromatic, so **no** "
+            f"circulant colouring of `K{n}` can be clean in every colour.  No solver "
+            f"is involved in this claim.",
+        )
+
+    clause_terms = [f"{groups[s]} * {sizes.count(s)}" for s in sorted(groups)]
+    statement = (
+        f"{n} / 2 * {k} = {int(payload['num_vars'])} ∧ "
+        f"{n} / 2 * (1 + {k} * ({k} - 1) / 2) + " + " + ".join(clause_terms)
+        + f" = {int(payload['num_clauses'])}"
+    )
+    f.theorem(
+        f"{name}_encoding",
+        statement,
+        False,
+        f"{head}\n\nThe size of the circulant encoding of `K{n}` with sizes "
+        f"`{sizes}`: `{n}/2 * {k}` = {int(payload['num_vars'])} class variables "
+        f"(one per difference class and colour), and "
+        f"{int(payload['num_clauses'])} clauses = one hot clause and one "
+        f"at-most-one clause per class, plus one clause per (colour, clique "
+        f"class-set) pair — the group counts appear here as the numbers the "
+        f"certificate declares."
+        + (
+            ""
+            if status in ("sat", "obstructed")
+            else (
+                # an `unsat` row with a DRAT trace is a theorem, but not a *Lean*
+                # theorem: Lean states the encoding, `oplab.drat` refutes it
+                f"  The `unsat` verdict is carried by the DRAT trace "
+                f"`{payload['proof']['file']}` (digest `{payload['proof']['sha256'][:16]}`, "
+                f"replayed by `oplab.drat` and cross-checked by the external "
+                f"`drat-trim`, not by Lean): this theorem states the "
+                f"encoding that the trace refutes."
+                if payload.get("proof")
+                else (
+                    "  This row stores no DRAT trace: the verdict is the solver's, "
+                    "and the theorem below is a statement about the encoding, not a "
+                    "refutation of it."
+                    if status == "unsat"
+                    else f"  No verdict is claimed: the run stopped with status `{status}`."
+                )
+            )
+        ),
+    )
+    cheap_groups = [s for s in sorted(groups) if math.comb(n, s) <= GROUP_BUDGET]
+    if cheap_groups:
+        f.theorem(
+            f"{name}_clique_groups",
+            " ∧ ".join(f"(cliqueClassGroups {n} {s}).length = {groups[s]}"
+                      for s in cheap_groups),
+            True,
+            f"{head}\n\nThe clique-class-set counts declared by the certificate are "
+            f"**recomputed** here from the cliques themselves: `cliqueClassGroups n s` "
+            f"enumerates every `s`-subset of the `{n}` vertices, maps each to the "
+            f"set of edge classes of its edges and deduplicates; the resulting "
+            f"lengths are exactly the group counts above, which is what turns the "
+            f"encoding size into a checked computation rather than a claim.  Stated "
+            f"with `native_decide`: the kernel cannot unfold the sorting inside "
+            f"`cliqueClassGroups`, so this cross-check is compiler-trusted and the "
+            f"arithmetic identity in `{name}_encoding` is the kernel-checked part.",
+        )
+
+
+def emit_cayley_multicolour(f: File, path: str, cert: dict) -> None:
+    """Translation-invariant colourings over a *group*: the table is the subject.
+
+    This kind stores its group as data — the multiplication table, the inverse list
+    and the per-size clique-group counts — precisely so that this generator, which
+    is dependency-free and cannot run the Python group builder, can re-derive the
+    encoding from the same object the certificate does.  The theorems below check, in
+    this order: that the table *is* a group (identity, inverses, associativity over
+    every triple); that the class and clique-group counts the encoding size is built
+    from are reproduced from that table; that the arithmetic identity itself holds;
+    for an `obstructed` row, that the group really has an element of order three and
+    that the declared triangle's three differences lie in one class; and, for a
+    witness, that the expanded colouring has no monochromatic forbidden clique.
+
+    A proof-carrying `unsat` row is a theorem — but not a *Lean* theorem: Lean has
+    no DRAT checker here, so the statement is the encoding the trace refutes, exactly
+    as for the circulant rows, and the doc string names the trace that refutes it.
+    """
+    name, head = name_of(path), head_of(path, cert)
+    payload = cert["payload"]
+    n = int(payload["n"])
+    sizes = [int(s) for s in payload["sizes"]]
+    k = len(sizes)
+    status = payload["status"]
+    description = payload["group"]
+    over = description.get("name") or description["family"]
+    table = [[int(x) for x in row] for row in payload["table"]]
+    inverse = [int(x) for x in payload["inverse"]]
+    classes = int(payload["classes"])
+    groups = {int(s): int(c) for s, c in payload["clique_groups"].items()}
+    sizes_lit = natlist(sizes)
+    colouring = payload.get("coloring")
+    zeros = natlist([0] * k)
+
+    # the group, as the certificate stores it: every theorem below reads this
+    f.define(
+        f"{name}_table",
+        "List (List Nat)",
+        ipts(table),
+        f"The multiplication table of `{over}`, a group of order {n}, exactly as "
+        f"{rel(path)} stores it: row `i`, column `j` is the index of the product of "
+        f"the `i`-th and `j`-th elements.  The Python verifier rebuilds the table "
+        f"from the certificate's family/parameters and refuses a payload whose "
+        f"table disagrees, so this definition is checked data rather than an "
+        f"independent claim.",
+    )
+    f.define(
+        f"{name}_inverse",
+        "List Nat",
+        natlist(inverse),
+        f"The inverse list of `{over}`: entry `i` is the index of the inverse of "
+        f"the `i`-th element (so `{name}_table` with `{name}_inverse` is the whole "
+        f"group, and every claim below is computed from these two lists).",
+    )
+    native = n > 20
+    f.theorem(
+        f"{name}_is_group",
+        f"isCayleyGroup {name}_table {name}_inverse = true",
+        True,
+        f"{head}\n\nThe stored table really is a group with the stored inverses: "
+        f"two-sided identity, two-sided inverse at every element, and "
+        f"associativity over all {n}³ = {n ** 3} triples, checked from the table "
+        f"itself by `isCayleyGroup` with `native_decide`.  This is what lets the "
+        f"encoding below be recomputed from the table instead of from the "
+        f"description's parameters.",
+    )
+    f.theorem(
+        f"{name}_classes",
+        f"(cayleyClasses {name}_table {name}_inverse).length = {classes}",
+        True,
+        f"{head}\n\nThe group has exactly {classes} inversion classes — the pairs "
+        f"`{{d, d⁻¹}}` of non-identity elements — **recomputed** from the table by "
+        f"`cayleyClasses`, which is the number of variables of the encoding beyond "
+        f"the colour index: one variable per (class, colour).  Stated with "
+        f"`native_decide` because the deduplication of the class map is a list "
+        f"computation.",
+    )
+    cheap_groups = [s for s in sorted(groups) if math.comb(n, s) <= GROUP_BUDGET]
+    if cheap_groups:
+        f.theorem(
+            f"{name}_clique_groups",
+            " ∧ ".join(
+                f"(cayleyCliqueClassGroups {name}_table {name}_inverse {s}).length = {groups[s]}"
+                for s in cheap_groups
+            ),
+            True,
+            f"{head}\n\nThe clique-group counts declared by the certificate are "
+            f"**recomputed** from the table: `cayleyCliqueClassGroups` enumerates "
+            f"every `s`-subset of the {n} elements, maps each of its edges to the "
+            f"class of the difference `x⁻¹ · y` read off `{name}_table`, sorts and "
+            f"deduplicates, and the resulting lengths are exactly the counts the "
+            f"encoding size is computed from.  Stated with `native_decide` (the "
+            f"enumeration is {sum(math.comb(n, s) for s in cheap_groups)} cliques "
+            f"and the kernel cannot unfold the sorting); the arithmetic identity in "
+            f"`{name}_encoding` is the kernel-checked part, and this is what makes "
+            f"its inputs checked numbers.",
+        )
+    else:
+        f.notes.append(
+            f"{rel(path)}: the clique-group recomputation is skipped "
+            f"({sum(math.comb(n, s) for s in groups)} cliques); the counts in the "
+            f"encoding theorem are the declared ones"
+        )
+
+    if status == "obstructed":
+        obstruction = payload.get("obstruction", {})
+        x, y, z = (int(t) for t in obstruction.get("triangle", (0, 1, 2)))
+        d = int(obstruction.get("class_order", 3))
+        f.theorem(
+            f"{name}_obstruction",
+            f"hasOrderThree {name}_table = true ∧ "
+            f"cayleyDiff {name}_table {name}_inverse {x} {y} = "
+            f"cayleyDiff {name}_table {name}_inverse {y} {z} ∧ "
+            f"cayleyDiff {name}_table {name}_inverse {x} {z} = "
+            f"cayleyDiff {name}_table {name}_inverse {x} {y}",
+            False,
+            f"{head}\n\nThe negative answer is arithmetic, not a search: the group "
+            f"has an element of order {d} (Cauchy's theorem guarantees one in *any* "
+            f"group of this order, and `hasOrderThree` finds it in the table), and "
+            f"the three differences of `{{{x}, {y}, {z}}}` lie in one class, so the "
+            f"{obstruction.get('triangles', n // 3)} translates of that triangle are "
+            f"monochromatic in whatever colour the class carries.  No solver is "
+            f"involved in this claim, and it holds over every group of order {n}, "
+            f"not just this one.",
+        )
+
+    if colouring is not None:
+        f.define(
+            f"{name}_coloring",
+            "List Nat",
+            natlist([int(c) for c in colouring]),
+            f"The colouring of `K{n}` expanded from the certificate's per-class "
+            f"assignment over `{over}`: one digit per edge in lexicographic order, "
+            f"digit `c` meaning the colour whose forbidden clique size is "
+            f"`sizes[c]`, with `sizes` = {sizes}.",
+        )
+        f.theorem(
+            f"{name}_clean",
+            f"multiMonoCount {n} {sizes_lit} {name}_coloring = {zeros}",
+            native,
+            f"{head}\n\nThis translation-invariant colouring of `K{n}` over "
+            f"`{over}` has **no** monochromatic forbidden clique: one entry per "
+            f"colour, each counting the monochromatic cliques of the size that "
+            f"colour forbids, by the bitmask recursion `multiMonoCount`, and every "
+            f"entry is zero"
+            + (", checked with `native_decide`.\n\n" if native else ".\n\n")
+            + f"Equivalently `R{tuple(sizes)} > {n}` over this group, which is a "
+            f"restriction of the colourings of `K{n}` — a witness is a witness.",
+        )
+
+    clause_terms = [f"{groups[s]} * {sizes.count(s)}" for s in sorted(groups)]
+    statement = (
+        f"{classes} * {k} = {int(payload['num_vars'])} ∧ "
+        f"{classes} * (1 + {k} * ({k} - 1) / 2) + " + " + ".join(clause_terms)
+        + f" = {int(payload['num_clauses'])}"
+    )
+    f.theorem(
+        f"{name}_encoding",
+        statement,
+        False,
+        f"{head}\n\nThe size of the encoding of this group's translation-invariant "
+        f"colourings, with sizes `{sizes}`: `{classes} * {k}` = "
+        f"{int(payload['num_vars'])} class variables (one per inversion class and "
+        f"colour — the class count is the one `{name}_classes` recomputes), and "
+        f"{int(payload['num_clauses'])} clauses = one hot clause and one at-most-one "
+        f"clause per class, plus one clause per (colour, clique class-set) pair — "
+        f"the group counts appear here as the numbers "
+        f"`{name}_clique_groups` recomputes from the table."
+        + (
+            ""
+            if status in ("sat", "obstructed")
+            else (
+                f"  The `unsat` verdict is carried by the DRAT trace "
+                f"`{payload['proof']['file']}` (digest `{payload['proof']['sha256'][:16]}`, "
+                f"replayed by `oplab.drat` against this group's encoding and "
+                f"cross-checked by the external `drat-trim`, not by Lean): this "
+                f"theorem states the encoding that the trace refutes."
+                if payload.get("proof")
+                else (
+                    "  This row stores no DRAT trace, and this kind stores no bare "
+                    "verdicts: the verifier refuses it."
+                    if status == "unsat"
+                    else f"  No verdict is claimed: the run stopped with status `{status}`."
+                )
+            )
+        ),
+    )
+
+
 def emit_header(f: File) -> None:
     f.add(
         f"""\
@@ -532,6 +866,10 @@ def main() -> int:
             emit_ramsey(f, path, cert)
         elif problem in ("sat_attempt", "ramsey_unsat"):
             emit_sat(f, path, cert)
+        elif problem == "circulant_multicolour":
+            emit_circulant_multicolour(f, path, cert)
+        elif problem == "cayley_multicolour":
+            emit_cayley_multicolour(f, path, cert)
         elif problem == "circulant":
             name, head = name_of(path), head_of(path, cert)
             payload, claims = cert["payload"], cert["claims"]
