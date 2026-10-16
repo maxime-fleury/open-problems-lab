@@ -1,6 +1,6 @@
 # Contributing
 
-The repository has one hard rule and one soft one.
+The repository has three hard rules and the habits that go with them.
 
 **Hard rule: no unverifiable claim.** Any number that appears in a certificate
 must be recomputable by `oplab.verify` from the payload alone, within the
@@ -9,11 +9,55 @@ a new kind of claim, add its verifier in the same pull request, and wire the
 certificate into `scripts/run_full.sh` so it is regenerated and re-checked
 forever.
 
+**Hard rule, proof-carrying rows: two checkers, one pinned.** A stored DRAT trace
+is checked by `oplab.drat` (this repository's own ~300-line checker) *and* by the
+external `drat-trim` — see `scripts/drat_trim_check.py`, which rebuilds each CNF
+from its certificate, and the `drat-trim` CI job. When you add or regenerate a
+trace, run both: the point of the second one is that it shares no code, and
+therefore no bug, with the first. The checker itself is pinned, twice over, in
+`scripts/drat-trim.pin`: the CI job checks out the commit it names and the script
+refuses to report a verdict for a `drat-trim.c` whose sha256 is not the pinned
+one. Moving that pin is a decision — re-run the cross-check over the whole store,
+explain why in the pull request, and change the file in the same commit.
+
+**Hard rule, pinned store.** A stored trace is pinned by a `MANIFEST.txt`, checked
+in beside it and holding both the sha256 of the canonical proof text and the sha256
+of the bytes on disk.  There is one per store, because a manifest only speaks for
+its own directory: `certs/circulant_multicolour/MANIFEST.txt` (the circulant rows)
+and `certs/cayley/MANIFEST.txt` (the translation-invariant rows over a group).  The
+certificates agree with each other by construction, so a *regeneration* — a new
+trace, a new certificate, digests that match — would otherwise pass every check
+in the repository while replacing the artifact that was reviewed.  The manifest is
+what turns that into a failure: after intentionally re-solving, run
+`python scripts/proof_manifest.py --certs DIR --write` and commit the diff, so the
+change in the store is visible in review.  `make proof-store` (and CI) run both
+checks.
+
+**Hard rule, a longer round supersedes rather than overwrites.** Giving the same
+instances a bigger budget is the normal way forward here, and the earlier attempt
+is part of what was measured. Keep the new rows in their own `runs/*.json` file
+and fold them in with `scripts/sweep_merge.py` (`make cayley-long` is the one
+that round is made of today): the frontier takes the new row and the row it
+replaced moves to `superseded`, so "300 s told nothing, 3600 s decided it" is one
+diff with both halves still quotable. The prose about the round — `what`,
+`produced_by`, `reading` in the sweep — is updated by hand, because the script
+only recomputes the counts. A row from an engine that reports no *decision*, such
+as the repair search, which hunts witnesses, is not merged at all: it stays in its
+own file and is quoted as an attempt.
+
 **Soft rule: publish the failures.** A search that did not improve anything is
 still a result if it is measured. Record the best value found, the seeds, the
 number of samples, and the time budget; write it as a `*_search` certificate and
 quote it in `RESULTS.md`. Do not delete a failed run because a later one looks
 better.
+
+**Soft rule: measure before storing a trace.** The store is bounded by bytes,
+not by the clock. The committed traces run 7.7 bytes per step (`K50`: 4.98 MB for
+642 728 steps), and `scripts/replay_bench.py` (`make replay-bench`) times both
+replayers on them: the in-repo checker at about a thousand steps a second, the
+pinned `drat-trim` at roughly twenty-five times that. A refutation carried by an
+hour of search is hundreds of megabytes, so its trace belongs outside the
+repository, cited by its digests — not in a directory that is committed.
 
 ## Symmetry breaking has its own rule
 
@@ -74,7 +118,34 @@ should say so in its own doc string.
 
 ```bash
 python -m pytest tests -q
+python scripts/proof_manifest.py --check   # the store is still the pinned one
 python -m oplab.cli verify certs --deep --workers 4
 python scripts/gen_lean_certs.py --check
+python scripts/drat_trim_check.py          # needs drat-trim on PATH; CI builds it
 cd lean && lake build
+```
+
+The cross-check is the one check whose tool is not in this repository: build
+`drat-trim` from the commit in `scripts/drat-trim.pin`
+(`gcc -O2 drat-trim.c -o drat-trim`) and put it on `PATH`, or point at a build
+elsewhere with `--drat-trim PATH`. Add `--source PATH/TO/drat-trim.c --require-pin`
+to check that it really is the pinned source, as CI does; without `--source` the
+script looks for `drat-trim.c` next to the binary. `tests/test_drat_trim.py` runs
+it when it is available there and skips when it is not, and
+`tests/test_proof_store.py` covers the pin and the manifest without needing the
+checker at all. On Windows the checker often lives inside WSL, and then the
+command has to be a binary with the file arguments appended —
+`--drat-trim 'wsl -e /home/you/drat-trim/drat-trim' --wsl` (with
+`OPLAB_DRAT_TRIM="wsl -e /home/you/drat-trim/drat-trim" OPLAB_DRAT_TRIM_WSL=1` for
+the test module). A `wsl -e bash -lc "cd ~/drat-trim && ./drat-trim"` form does
+not work: bash takes the appended paths as `$0`, `$1`, … and the checker is then
+started with no arguments. Passing a WSL-side path through Git Bash also needs
+`MSYS_NO_PATHCONV=1`, otherwise `/home/you/...` is rewritten into a Windows path
+that exists on neither side — and Git Bash converts the same value when it is in
+`OPLAB_DRAT_TRIM_SOURCE`, so prefix that export too:
+
+```bash
+MSYS_NO_PATHCONV=1 OPLAB_DRAT_TRIM_SOURCE=/home/you/drat-trim/drat-trim.c \
+  OPLAB_DRAT_TRIM="wsl -e /home/you/drat-trim/drat-trim" OPLAB_DRAT_TRIM_WSL=1 \
+  python -m pytest tests/test_proof_store.py tests/test_drat_trim.py -q
 ```

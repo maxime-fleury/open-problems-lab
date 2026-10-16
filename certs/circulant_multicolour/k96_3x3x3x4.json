@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K96 with forbidden clique sizes [3, 3, 3, 4]: unknown",
+  "payload": {
+    "n": 96,
+    "sizes": [
+      3,
+      3,
+      3,
+      4
+    ],
+    "status": "unknown",
+    "classes": 48,
+    "num_vars": 192,
+    "num_clauses": 20345,
+    "clique_groups": {
+      "3": 768,
+      "4": 17705
+    },
+    "solver": "cadical195",
+    "seconds": 120.0318341255188,
+    "budget_expired": true
+  },
+  "claims": {
+    "n": 96,
+    "sizes": [
+      3,
+      3,
+      3,
+      4
+    ],
+    "status": "unknown"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 96 --sizes 3,3,3,4",
+    "created": "2026-10-16",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "a9029bda5a11c0d59615f48d79206615f40e66899b406449e2f04bf6f0619930"
+}

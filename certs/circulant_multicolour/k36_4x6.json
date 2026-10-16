@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K36 with forbidden clique sizes [4, 6]: unsat",
+  "payload": {
+    "n": 36,
+    "sizes": [
+      4,
+      6
+    ],
+    "status": "unsat",
+    "classes": 18,
+    "num_vars": 36,
+    "num_clauses": 16830,
+    "clique_groups": {
+      "4": 844,
+      "6": 15950
+    },
+    "solver": "cadical195",
+    "seconds": 1.2253949642181396,
+    "proof": {
+      "file": "proofs/k36_4x6.bdrat.xz",
+      "sha256": "d39aa60b0c6d0f8ea98b69f25aa0c0efbe10a3945044d3a2ee99ca2fc62e8e30",
+      "file_sha256": "bbec5c70e25b8232324a5bc6ef0392f2818e5c8ec5ebd49b4c54eb125d348395",
+      "bytes": 4888,
+      "steps": 260,
+      "added": 174,
+      "deleted": 86,
+      "encoding": "binary",
+      "payload_bytes": 1613,
+      "stored_bytes": 736,
+      "replay_seconds": 0.71
+    }
+  },
+  "claims": {
+    "n": 36,
+    "sizes": [
+      4,
+      6
+    ],
+    "status": "unsat"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 36 --sizes 4,6",
+    "created": "2026-10-16",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "d83bde9c0767e78e4fdfafdc392f1d3c54ac53dfa656f5f924d50dd9ee92c69c"
+}

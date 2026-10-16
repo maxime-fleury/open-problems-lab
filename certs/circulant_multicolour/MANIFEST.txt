@@ -1,0 +1,20 @@
+# Stored DRAT traces of certs/circulant_multicolour, pinned on purpose.
+# text_sha256 is the sha256 of the canonical proof text (what the certificate
+# records, and what survives re-encoding or re-compression); file_sha256 is the
+# sha256 of the bytes committed here.  Regenerate with:
+#
+#     python scripts/proof_manifest.py --write
+#
+# and only after deciding, deliberately, that the traces should change: the
+# point of this file is that such a change shows up in review.
+#
+# text_sha256  file_sha256  steps  encoding  stored_bytes  file
+8c6ff8f304b60cf2918b7f5cba24a1ea0c4975a1a096f485362898071a2602e0  44f6a9433ba8e97cfbed0f57b4e5a8d96070f458515d543277e7847631c0be6f  26  binary  132  proofs/k18_4x4.bdrat.xz
+4295cf0064c9f5f2e67366df657dfaef6f09896d5293511c1b0b8617bdf67196  1d16125549d0a5fd930db7d9831541c5e89daf12d1a53f740e65d9ffc82f1930  1179  binary  3236  proofs/k30_3x3x4.bdrat.xz
+0f4780e5d36ee8d871e19c8ba357d0bcaccea79d7c8adb867ee5cdb12197be00  acc2fc7880a10d59b75cdb07d953bd6ddeb6d238039740c51d4a6a59c6278567  505  binary  1292  proofs/k35_4x6.bdrat.xz
+d39aa60b0c6d0f8ea98b69f25aa0c0efbe10a3945044d3a2ee99ca2fc62e8e30  bbec5c70e25b8232324a5bc6ef0392f2818e5c8ec5ebd49b4c54eb125d348395  260  binary  736  proofs/k36_4x6.bdrat.xz
+5ff8242fea56d90781a599d627028f1a7c32482c81192cdd5523b2ca06153304  c2b6de67767ae90bd946f4b47c50c27c43cdc37db083738447c5dbd612ffa4b0  8288  binary  27680  proofs/k42_5x5.bdrat.xz
+6ae678c8ab022e2f7f63c82e321c9dce0fe5a12c25ed1a7ffe1dd5cedfd32fa3  285e34aa48f3738d4b9848e8824758c23792e87157f679112ca71f7fc6024318  24749  binary  104120  proofs/k43_5x5.bdrat.xz
+7390d6184ac3f8a74475ea764be42906664939dbcf42a09bf20e60c663670c3c  affeeabf0a447451140b87ae74bf7cdf327e00a6add5c3726cd2fdf94283f73f  36496  binary  146008  proofs/k45_3x3x5.bdrat.xz
+4459f4889904a16ac151c8522ae8f4b1739255d38b4864fec8e6622b458f2155  e84c0ee0e22f724ed31f45caed8626825127db2bea475456a4e94c494ceec629  642728  binary  4976424  proofs/k50_3x3x3x3.bdrat.xz
+f98808b407f012af0f482802746f7a1647a0bd812efa18e77df3d44679fc1533  627ca686d565023f50bea4d0dff81950c297a525a949f0ed4461a8bdfac7e564  173165  binary  1013676  proofs/k55_3x4x4.bdrat.xz

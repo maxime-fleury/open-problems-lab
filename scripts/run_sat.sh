@@ -23,6 +23,11 @@ LOG=runs/sat_run.log
 
 run () { echo "+ $*" | tee -a "$LOG"; "$@" 2>&1 | tee -a "$LOG"; }
 
+echo "=== 0. the engines this campaign will use ===" | tee -a "$LOG"
+# probed, not assumed: an engine that imports and dies on its first clause is not
+# available, and this table is where that shows up before it costs a run
+run python -m oplab.cli solvers --seconds 20 || true
+
 echo "=== 1. symmetry-breaking ablation on solved cases ===" | tee -a "$LOG"
 for spec in "5 3 sat" "6 3 unsat" "17 4 sat" "18 4 unsat"; do
   set -- $spec

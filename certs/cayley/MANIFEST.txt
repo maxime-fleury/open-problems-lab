@@ -1,0 +1,14 @@
+# Stored DRAT traces of certs/cayley, pinned on purpose.
+# text_sha256 is the sha256 of the canonical proof text (what the certificate
+# records, and what survives re-encoding or re-compression); file_sha256 is the
+# sha256 of the bytes committed here.  Regenerate with:
+#
+#     python scripts/proof_manifest.py --write
+#
+# and only after deciding, deliberately, that the traces should change: the
+# point of this file is that such a change shows up in review.
+#
+# text_sha256  file_sha256  steps  encoding  stored_bytes  file
+baed160ba330906b43d77760b1e97641c8abf1a915794efa07a568e826ca98f3  edd0b91a0ad2d6d78eabb7b8cb66acd8f93bbe36c51ad2677926424e42a6a45b  122  binary  392  proofs/k18_4x4_D9.bdrat.xz
+6edc235bc9fa43777d5db9ef3b7bc83df1aa5fc25f7f9dafafcc18d21f96b2b0  9f7a2185ff2060bf8f8edbe496cb24eecb5be114a592cdeaa25c4ef95ce324c0  50  binary  196  proofs/k18_4x4_Z3xD3.bdrat.xz
+c2dc400841ba761f1abc2206d099e8ebccd2c888ba7cc59effa80612e856a1ac  4d1c2e30a82c932196fc571136e9a283fa497ea1f75d3b94ebd5bfdf820d0a47  14039  binary  53156  proofs/k30_3x3x4_D15.bdrat.xz

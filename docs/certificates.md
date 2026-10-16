@@ -21,12 +21,61 @@ the verifier derives from the payload, not what the search claimed.
 | `certs/attacks/tammes_d3_n023.json` | tammes | yes | a valid configuration of 23 points on S^2 |
 | `certs/attacks/unitdist_grow_edge.json` | unitdist_search | yes | the chromatic number of the plane is >= 3 |
 | `certs/attacks/unitdist_grow_moser.json` | unitdist_search | yes | the chromatic number of the plane is >= 4 |
+| `certs/cayley/k18_4x4_D9.json` | cayley_multicolour | yes | no translation-invariant colouring over D9 (a group of order 18) avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 122 steps) |
+| `certs/cayley/k18_4x4_Z3xD3.json` | cayley_multicolour | yes | no translation-invariant colouring over Z3xD3 (a group of order 18) avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 50 steps) |
+| `certs/cayley/k30_3x3x4_D15.json` | cayley_multicolour | yes | no translation-invariant colouring over D15 (a group of order 30) avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 14039 steps) |
+| `certs/cayley/k6_3x3_D3.json` | cayley_multicolour | yes | no translation-invariant colouring of any group of order 6 avoids a monochromatic K3 in a colour that forbids one (an element of order 3 forces 2 monochromatic triangles, whichever colour its class carries) |
 | `certs/circulant/k17_k4.json` | circulant | yes | R(4,4) > 17 via a circulant witness |
 | `certs/circulant/k18_k4.json` | circulant | yes | no circulant 2-colouring of K18 avoids a monochromatic K4 |
 | `certs/circulant/k42_k5.json` | circulant | yes | no circulant 2-colouring of K42 avoids a monochromatic K5 |
 | `certs/circulant/k43_k5.json` | circulant | yes | no circulant 2-colouring of K43 avoids a monochromatic K5 |
 | `certs/circulant/k5_k3.json` | circulant | yes | R(3,3) > 5 via a circulant witness |
 | `certs/circulant/k6_k3.json` | circulant | yes | no circulant 2-colouring of K6 avoids a monochromatic K3 |
+| `certs/circulant_multicolour/k127_4x4x4.json` | circulant_multicolour | yes |  |
+| `certs/circulant_multicolour/k128_4x4x4.json` | circulant_multicolour | yes |  |
+| `certs/circulant_multicolour/k161_3x3x3x3x3.json` | circulant_multicolour | yes |  |
+| `certs/circulant_multicolour/k162_3x3x3x3x3.json` | circulant_multicolour | yes | no circulant colouring of K162 avoids a monochromatic K3 in a colour that forbids it (the class 54 forces 54 monochromatic triangles, whichever colour it gets) |
+| `certs/circulant_multicolour/k17_4x4.json` | circulant_multicolour | yes | R(4, 4) > 17 via a circulant witness (the sub-family is a restriction: a witness is a witness) |
+| `certs/circulant_multicolour/k18_4x4.json` | circulant_multicolour | yes | no circulant colouring of K18 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 26 steps) |
+| `certs/circulant_multicolour/k29_3x3x4.json` | circulant_multicolour | yes | R(3, 3, 4) > 29 via a circulant witness (the sub-family is a restriction: a witness is a witness) |
+| `certs/circulant_multicolour/k30_3x3x4.json` | circulant_multicolour | yes | no circulant colouring of K30 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 1179 steps) |
+| `certs/circulant_multicolour/k35_4x6.json` | circulant_multicolour | yes | no circulant colouring of K35 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 505 steps) |
+| `certs/circulant_multicolour/k36_4x6.json` | circulant_multicolour | yes | no circulant colouring of K36 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 260 steps) |
+| `certs/circulant_multicolour/k42_5x5.json` | circulant_multicolour | yes | no circulant colouring of K42 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 8288 steps) |
+| `certs/circulant_multicolour/k43_5x5.json` | circulant_multicolour | yes | no circulant colouring of K43 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 24749 steps) |
+| `certs/circulant_multicolour/k44_3x3x5.json` | circulant_multicolour | yes | R(3, 3, 5) > 44 via a circulant witness (the sub-family is a restriction: a witness is a witness) |
+| `certs/circulant_multicolour/k45_3x3x5.json` | circulant_multicolour | yes | no circulant colouring of K45 avoids a monochromatic forbidden clique in every colour (DRAT proof replayed, 36496 steps) |
+| `certs/circulant_multicolour/k50_3x3x3x3.json` | circulant_multicolour | yes | no circulant colouring of K50 avoids a monochromatic forbidden clique in every colour (DRAT proof on disk, digest re-checked; run with --deep to replay it) |
+| `certs/circulant_multicolour/k51_3x3x3x3.json` | circulant_multicolour | yes | no circulant colouring of K51 avoids a monochromatic K3 in a colour that forbids it (the class 17 forces 17 monochromatic triangles, whichever colour it gets) |
+| `certs/circulant_multicolour/k537_3x3x3x3x3x3.json` | circulant_multicolour | yes | no circulant colouring of K537 avoids a monochromatic K3 in a colour that forbids it (the class 179 forces 179 monochromatic triangles, whichever colour it gets) |
+| `certs/circulant_multicolour/k538_3x3x3x3x3x3.json` | circulant_multicolour | yes |  |
+| `certs/circulant_multicolour/k54_3x4x4.json` | circulant_multicolour | yes | R(3, 4, 4) > 54 via a circulant witness (the sub-family is a restriction: a witness is a witness) |
+| `certs/circulant_multicolour/k55_3x4x4.json` | circulant_multicolour | yes | no circulant colouring of K55 avoids a monochromatic forbidden clique in every colour (DRAT proof on disk, digest re-checked; run with --deep to replay it) |
+| `certs/circulant_multicolour/k5_3x3.json` | circulant_multicolour | yes | R(3, 3) > 5 via a circulant witness (the sub-family is a restriction: a witness is a witness) |
+| `certs/circulant_multicolour/k6_3x3.json` | circulant_multicolour | yes | no circulant colouring of K6 avoids a monochromatic K3 in a colour that forbids it (the class 2 forces 2 monochromatic triangles, whichever colour it gets) |
+| `certs/circulant_multicolour/k96_3x3x3x4.json` | circulant_multicolour | yes |  |
+| `certs/circulant_multicolour/k97_3x3x3x4.json` | circulant_multicolour | yes |  |
+| `certs/sat/k17_k4_sym0.json` | ramsey | yes | R(4,4) > 17  (i.e. R(4,4) >= 18) |
+| `certs/sat/k17_k4_sym1.json` | ramsey | yes | R(4,4) > 17  (i.e. R(4,4) >= 18) |
+| `certs/sat/k17_k4_sym2.json` | ramsey | yes | R(4,4) > 17  (i.e. R(4,4) >= 18) |
+| `certs/sat/k17_k4_sym3.json` | ramsey | yes | R(4,4) > 17  (i.e. R(4,4) >= 18) |
+| `certs/sat/k18_k4_sym0.json` | sat_attempt | yes |  |
+| `certs/sat/k18_k4_sym1.json` | sat_attempt | yes |  |
+| `certs/sat/k18_k4_sym2.json` | sat_attempt | yes |  |
+| `certs/sat/k18_k4_sym3.json` | sat_attempt | yes |  |
+| `certs/sat/k20_k5_sym3.json` | ramsey | yes | R(5,5) > 20  (i.e. R(5,5) >= 21) |
+| `certs/sat/k25_k5_sym3.json` | ramsey | yes | R(5,5) > 25  (i.e. R(5,5) >= 26) |
+| `certs/sat/k30_k5_sym3.json` | ramsey | yes | R(5,5) > 30  (i.e. R(5,5) >= 31) |
+| `certs/sat/k42_k5_sym3.json` | sat_attempt | yes |  |
+| `certs/sat/k43_k5_sym3.json` | sat_attempt | yes |  |
+| `certs/sat/k5_k3_sym0.json` | ramsey | yes | R(3,3) > 5  (i.e. R(3,3) >= 6) |
+| `certs/sat/k5_k3_sym1.json` | ramsey | yes | R(3,3) > 5  (i.e. R(3,3) >= 6) |
+| `certs/sat/k5_k3_sym2.json` | ramsey | yes | R(3,3) > 5  (i.e. R(3,3) >= 6) |
+| `certs/sat/k5_k3_sym3.json` | ramsey | yes | R(3,3) > 5  (i.e. R(3,3) >= 6) |
+| `certs/sat/k6_k3_sym0.json` | ramsey_unsat | yes |  |
+| `certs/sat/k6_k3_sym1.json` | ramsey_unsat | yes |  |
+| `certs/sat/k6_k3_sym2.json` | ramsey_unsat | yes |  |
+| `certs/sat/k6_k3_sym3.json` | ramsey_unsat | yes |  |
 | `certs/sphere/a2_kissing.json` | kissing | yes | tau(2) >= 6 |
 | `certs/sphere/d4_kissing.json` | kissing | yes | tau(4) >= 24 |
 | `certs/sphere/d5_kissing.json` | kissing | yes | tau(5) >= 40 |

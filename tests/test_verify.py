@@ -1,8 +1,10 @@
 import json
+from pathlib import Path
 
 import numpy as np
+import pytest
 
-from oplab import ramsey as R, sphere as S, unitdist as U
+from oplab import multicolour as MC, ramsey as R, sphere as S, unitdist as U
 from oplab.cli import main
 from oplab.verify import make_certificate, payload_hash, verify_certificate, verify_path
 
@@ -152,3 +154,184 @@ def test_cli_verify_fails_on_a_broken_certificate(tmp_path):
     bad_json = tmp_path / "not_json.json"
     bad_json.write_text("{oops")
     assert main(["verify", str(bad_json)]) == 1
+
+
+# --------------------------------------------------------------------------
+# the multicolour circulant certificates
+# --------------------------------------------------------------------------
+def _mc_cert(n, sizes, payload=None, claims=None):
+    from oplab.multicolour import CirculantInstance, circulant_obstruction, circulant_solve
+
+    instance = CirculantInstance(n, sizes)
+    base = {
+        "n": n,
+        "sizes": list(sizes),
+        "status": "unsat",
+        "classes": len(instance.classes),
+        "num_vars": instance.total_vars(),
+        "num_clauses": instance.clause_count(),
+        "clique_groups": {str(s): len(g) for s, g in instance.groups.items()},
+        "solver": "cadical195",
+        "seconds": 1.0,
+    }
+    result = circulant_solve(n, sizes, seconds=60.0)
+    base["status"] = result["status"]
+    if "coloring" in result:
+        base["coloring"] = result["coloring"]
+    obstruction = circulant_obstruction(n, sizes)
+    if obstruction is not None:
+        base["obstruction"] = {
+            "class": obstruction["class"],
+            "triangle": list(obstruction["triangle"]),
+            "triangles": obstruction["triangles"],
+        }
+    base.update(payload or {})
+    return make_certificate(
+        "circulant_multicolour",
+        f"test certificate for K{n} {list(sizes)}",
+        base,
+        {"n": n, "sizes": list(sizes), "status": base["status"], **(claims or {})},
+        {"generator": "test", "created": "2026-10-15"},
+    )
+
+
+@pytest.mark.skipif(not MC.available_solvers(), reason="no bundled SAT solver")
+def test_multicolour_circulant_witness_and_obstruction_verify():
+    """A witness re-counts; the obstruction is arithmetic; a wrong count is caught."""
+    witness = _mc_cert(29, (3, 3, 4))
+    assert witness["payload"]["status"] == "sat"
+    result = verify_certificate(witness)
+    assert result["ok"] and "R(3, 3, 4) > 29" in result["establishes"]
+
+    lie = _mc_cert(29, (3, 3, 4), claims={"monochromatic_cliques": [0, 0, 7]})
+    assert not verify_certificate(lie)["ok"]
+
+    obstructed = _mc_cert(51, (3, 3, 3, 3))
+    result = verify_certificate(obstructed)
+    assert obstructed["payload"]["status"] == "obstructed"
+    assert result["ok"] and "no circulant colouring" in result["establishes"]
+
+    # the obstruction may not be claimed where there is none, and a solver
+    # verdict may not be dressed up as one
+    fake = _mc_cert(50, (3, 3, 3, 3), payload={"status": "obstructed"})
+    assert not verify_certificate(fake)["ok"]
+    mismatch = _mc_cert(51, (3, 3, 3, 3), payload={"status": "unsat"})
+    assert not verify_certificate(mismatch)["ok"]
+
+
+def test_multicolour_circulant_verifier_rejects_a_non_circulant_witness():
+    """A colouring that is not constant on the difference classes is not a witness."""
+    from oplab.multicolour import circulant_colouring, difference_classes, serialize_colouring
+
+    payload = {"coloring": ""}
+    cert = _mc_cert(29, (3, 3, 4), payload=payload)
+    colouring = circulant_colouring(29, {d: 2 for d in difference_classes(29)})
+    text = list(serialize_colouring(colouring, 29))
+    text[0] = "1" if text[0] != "1" else "0"  # break exactly one edge
+    cert["payload"]["coloring"] = "".join(text)
+    cert["payload_sha256"] = payload_hash(cert["payload"])
+    result = verify_certificate(cert)
+    assert not result["ok"]
+    assert "not circulant" in result["reason"] or "not clean" in result["reason"]
+
+
+def test_an_unknown_row_that_records_a_crash_is_not_a_spent_budget():
+    """`unknown` means the budget ran out — not that the solver died.
+
+    A worker killed by its budget is reported as `unknown`; a worker that crashed
+    is reported with `no_verdict` and its exit code.  Both would otherwise look
+    like the same row, and the note attached to an `unknown` row says the budget
+    is what stopped it, so the crash has to be refused instead.
+    """
+    root = Path(__file__).resolve().parents[1]
+    source = root / "certs" / "circulant_multicolour" / "k96_3x3x3x4.json"
+    cert = json.loads(source.read_text(encoding="utf-8"))
+    assert cert["payload"]["status"] == "unknown"
+    # the stored row is an honest bounded attempt, and still verifies
+    assert verify_certificate(cert, base_dir=source.parent)["ok"]
+    assert "budget" in verify_certificate(cert, base_dir=source.parent)["note"]
+
+    crashed = json.loads(source.read_text(encoding="utf-8"))
+    crashed["payload"]["no_verdict"] = True
+    crashed["payload"]["exit_code"] = 3221225477  # STATUS_ACCESS_VIOLATION
+    crashed["payload_sha256"] = payload_hash(crashed["payload"])
+    result = verify_certificate(crashed, base_dir=source.parent)
+    assert not result["ok"]
+    assert "crash" in result["reason"] and "no verdict" in result["reason"]
+
+    # and the exit code alone is enough to tell the two apart
+    coded = json.loads(source.read_text(encoding="utf-8"))
+    coded["payload"]["exit_code"] = 1
+    coded["payload_sha256"] = payload_hash(coded["payload"])
+    assert not verify_certificate(coded, base_dir=source.parent)["ok"]
+
+
+def test_multicolour_circulant_verifier_checks_the_encoding_size():
+    cert = _mc_cert(30, (3, 3, 4), payload={"num_clauses": 999999})
+    result = verify_certificate(cert)
+    assert not result["ok"] and "clauses" in result["reason"]
+
+
+def test_stored_multicolour_certificates_verify_and_unknown_claims_nothing():
+    """Every stored `circulant_multicolour` certificate re-verifies.
+
+    The six `unknown` ones are recordings of a spent budget, so they may carry no
+    colouring and no claim; the counts here are the inventory quoted by
+    RESULTS.md 9 and the README table, and this is the guard against one of them
+    quietly turning into a result.
+    """
+    root = Path(__file__).resolve().parents[1]
+    paths = sorted((root / "certs" / "circulant_multicolour").glob("*.json"))
+    assert len(paths) == 24
+    seen: dict[str, int] = {}
+    for path in paths:
+        cert = json.loads(path.read_text(encoding="utf-8"))
+        # base_dir is what lets the nine proof-carrying rows resolve the DRAT trace
+        # they name; without it, a certificate that records one must fail, not pass
+        result = verify_certificate(cert, base_dir=path.parent)
+        assert result["ok"], f"{path.name}: {result.get('reason')}"
+        status = cert["claims"]["status"]
+        seen[status] = seen.get(status, 0) + 1
+        if status == "unknown":
+            assert "coloring" not in cert["payload"], path.name
+            assert "establishes" not in cert["claims"], path.name
+            assert not result["establishes"]
+            assert "budget" in result["note"]
+    assert seen == {"sat": 5, "unsat": 9, "obstructed": 4, "unknown": 6}
+
+
+def test_stored_cayley_certificates_verify_and_carry_their_group():
+    """Every stored `cayley_multicolour` certificate re-verifies, group and all.
+
+    Three `unsat` rows over *non-cyclic* groups and one arithmetic `obstructed` row —
+    statements the circulant store cannot hold, because over `Z_n` they are different
+    (and mostly open) ones.  Each row carries the group as data; the verifier checks
+    that table against the one rebuilt from the description, and each `unsat` row
+    resolves the DRAT trace it names against its own encoding.  The counts are the
+    inventory the README and RESULTS.md quote, so a row cannot quietly appear, vanish
+    or lose its proof.
+    """
+    root = Path(__file__).resolve().parents[1]
+    directory = root / "certs" / "cayley"
+    paths = sorted(directory.glob("*.json"))
+    assert len(paths) == 4
+    seen: dict[str, int] = {}
+    for path in paths:
+        cert = json.loads(path.read_text(encoding="utf-8"))
+        result = verify_certificate(cert, base_dir=path.parent)
+        assert result["ok"], f"{path.name}: {result.get('reason')}"
+        payload = cert["payload"]
+        seen[payload["status"]] = seen.get(payload["status"], 0) + 1
+        # the store is about constructions the circulant family cannot express: the
+        # cyclic rows live in certs/circulant_multicolour and are not duplicated here
+        assert payload["group"]["family"] != "abelian", path.name
+        # ... and the group travels with the certificate, checked against the
+        # description rather than taken from it
+        assert len(payload["table"]) == payload["n"], path.name
+        assert len(payload["inverse"]) == payload["n"], path.name
+        assert payload["clique_groups"], path.name
+        if payload["status"] == "unsat":
+            assert "DRAT proof replayed" in result["establishes"], path.name
+        elif payload["status"] == "obstructed":
+            assert "any group of order" in result["establishes"], path.name
+    assert seen == {"unsat": 3, "obstructed": 1}

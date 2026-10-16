@@ -1,0 +1,15 @@
+# drat-trim — the external checker the cross-check builds, pinned.
+#
+# `scripts/drat_trim_check.py` hashes the `drat-trim.c` it is handed and refuses to
+# report a verdict when it is not this one; `--require-pin` makes a missing or
+# absentminded source file a failure too (that is what CI passes).  The CI job
+# checks `commit` out and builds it, so this file decides which checker judges the
+# proofs, and changing it is a visible diff.
+#
+# To move the pin: check out the new commit, build it, re-run
+# `python scripts/drat_trim_check.py --source <path to drat-trim.c> --require-pin`
+# over the whole store, and only then edit the lines below.
+
+commit 2e3b2dc0ecf938addbd779d42877b6ed69d9a985
+source drat-trim.c
+sha256 d834b649f437e091597f5347f259b9f681087f89ca0844d0cee250a1a1a0c2ee

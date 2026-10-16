@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K17 with forbidden clique sizes [4, 4]: sat",
+  "payload": {
+    "n": 17,
+    "sizes": [
+      4,
+      4
+    ],
+    "status": "sat",
+    "classes": 8,
+    "num_vars": 16,
+    "num_clauses": 152,
+    "clique_groups": {
+      "4": 68
+    },
+    "solver": "cadical195",
+    "seconds": 0.0013952255249023438,
+    "coloring": "0010111001110100001011100111010001011100111010010111001110001011100111001011100110010111001001011100001011100010111001011001010010001000"
+  },
+  "claims": {
+    "n": 17,
+    "sizes": [
+      4,
+      4
+    ],
+    "status": "sat",
+    "monochromatic_cliques": [
+      0,
+      0
+    ],
+    "establishes": "R(4, 4) > 17"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 17 --sizes 4,4",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "6f1cad6cd2c8bb4fda1cf5b604859abe62c4444f21c127071925bc193f169dd0"
+}

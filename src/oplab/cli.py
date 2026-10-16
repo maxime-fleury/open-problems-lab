@@ -6,6 +6,10 @@ Commands
 ``search``     run one search and write a certificate
 ``sweep``      run a search for a range of sizes, with a comparison summary
 ``circulant``  exhaustive sweep of every circulant colouring of ``K_n``
+``mc-circulant``  decide the circulant sub-family of a multicolour instance
+``cayley``     decide the translation-invariant colourings of one named group
+``solvers``    probe the bundled SAT engines and report who answers
+``drat``       check a DRAT proof against a CNF, with no solver involved
 ``verify``     re-derive every claim in one certificate, a file or a directory
 ``report``     markdown table of the certificates on disk
 """
@@ -14,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import sys
 import time
@@ -22,8 +27,18 @@ from pathlib import Path
 
 import numpy as np
 
-from . import __version__, ramsey as R, references as REF, sat as SAT, sphere as S, unitdist as U
-from .verify import make_certificate, verify_path
+from . import (
+    __version__,
+    cayley as CY,
+    drat as DRAT,
+    multicolour as MC,
+    ramsey as R,
+    references as REF,
+    sat as SAT,
+    sphere as S,
+    unitdist as U,
+)
+from .verify import declared_instance, make_certificate, verify_path
 
 
 def _provenance(generator: str, **extra) -> dict:
@@ -386,6 +401,298 @@ def cmd_circulant(args) -> int:
     return 0
 
 
+def cmd_solvers(args) -> int:
+    """Report which bundled engines answer, instead of which ones import.
+
+    A wheel that imports but dies on its first clause is not an available engine:
+    it costs a campaign slot and, before the crash path was fixed, wrote a
+    `no_verdict` row that looked like a spent budget.  Exit status is non-zero
+    when any probed engine failed, so a campaign can check this first.
+    """
+    rows = MC.probe_solvers(seconds=args.seconds, names=args.solver or None)
+    width = max(len(row["solver"]) for row in rows)
+    print(f"{'engine'.ljust(width)}  status     seconds  detail")
+    for row in rows:
+        detail = row.get("reason") or (
+            f"sat={row.get('sat_ok')} unsat={row.get('unsat_ok')}" if row["status"] == "ok"
+            else f"exit={row.get('exit_code')}" if row.get("exit_code") is not None else ""
+        )
+        print(f"{row['solver'].ljust(width)}  {row['status']:<9}  "
+              f"{row.get('seconds', 0.0):>7.3f}  {detail}")
+    broken = [row["solver"] for row in rows if row["status"] != "ok"]
+    if broken:
+        print(f"\nnot answering: {', '.join(broken)}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_mc_circulant(args) -> int:
+    """Decide one multicolour instance inside the circulant sub-family."""
+    sizes = tuple(int(s) for s in args.sizes.split(","))
+    if not args.dimacs_only and not args.out:
+        print("--out is required unless --dimacs-only is used", file=sys.stderr)
+        return 2
+    if args.dimacs_only:
+        if not args.dimacs:
+            print("--dimacs-only needs --dimacs PATH", file=sys.stderr)
+            return 2
+        instance = MC.CirculantInstance(args.n, sizes)
+        started = time.time()
+        info = instance.write_dimacs(
+            args.dimacs,
+            comment=f"circulant multicolour Ramsey K_{args.n}, sizes={list(sizes)}",
+        )
+        size = Path(args.dimacs).stat().st_size
+        print(
+            f"{args.dimacs}: {info['clauses_written']} clauses, {info['num_vars']} vars, "
+            f"{size / 1e6:.1f} MB, written in {time.time() - started:.1f}s"
+        )
+        return 0
+    res = MC.circulant_solve(
+        args.n, sizes, seconds=args.seconds, solver=args.solver, dimacs_path=args.dimacs,
+        proof_path=args.proof,
+    )
+    if res.get("no_verdict"):
+        # the worker died without sending a verdict (this is how the Kissat wheel
+        # fails on Windows, with an access violation).  That is not a spent budget
+        # and not an experiment result, so no certificate is written: a stored
+        # `unknown` row has to mean "the budget ran out", or the frontier table
+        # would be recording crashes as negatives.
+        print(f"{args.solver} produced no verdict: the worker exited with "
+              f"{res.get('exit_code')} (a crash, not a spent budget). Nothing written; "
+              f"try another engine, e.g. --solver cadical195", file=sys.stderr)
+        return 2
+    instance = MC.CirculantInstance(args.n, sizes)
+    if res.get("proof") and args.proof:
+        # A trace is stored only after this repository's own checker has accepted
+        # it, and the certificate records how long that replay took — which is also
+        # what lets `verify` decide whether to replay it again by default.
+        proof_file = res["proof"]["file"]
+        replayed = DRAT.check_proof(instance.total_vars(), list(instance.clauses()),
+                                    DRAT.read_proof(proof_file))
+        if not replayed["ok"]:
+            print(f"{proof_file}: the emitted trace does not check: {replayed['reason']}",
+                  file=sys.stderr)
+            return 1
+        res["proof"]["replay_seconds"] = round(float(replayed["seconds"]), 2)
+        # the trace is stored next to the certificate and named relative to it, so
+        # the pair moves together
+        rel = os.path.relpath(proof_file, Path(args.out).parent).replace(os.sep, "/")
+        res["proof"]["file"] = rel
+    payload = {
+        "n": args.n,
+        "sizes": list(sizes),
+        "status": res["status"],
+        "classes": len(instance.classes),
+        "num_vars": instance.total_vars(),
+        "num_clauses": instance.clause_count(),
+        "clique_groups": {str(s): len(g) for s, g in instance.groups.items()},
+        "solver": args.solver,
+        "seconds": res["seconds"],
+    }
+    if res.get("budget_expired"):
+        # say *why* there is no verdict, instead of leaving it to be inferred
+        payload["budget_expired"] = True
+    if res["status"] == "sat":
+        payload["coloring"] = res["coloring"]
+    if "proof" in res:
+        payload["proof"] = res["proof"]
+    if "obstruction" in res:
+        payload["obstruction"] = {
+            "class": res["obstruction"]["class"],
+            "triangle": list(res["obstruction"]["triangle"]),
+            "triangles": res["obstruction"]["triangles"],
+        }
+    claims = {"n": args.n, "sizes": list(sizes), "status": res["status"]}
+    if res["status"] == "sat":
+        counts = res["verified"]["monochromatic_cliques"]
+        claims["monochromatic_cliques"] = counts
+        claims["establishes"] = f"R{tuple(sizes)} > {args.n}"
+    cert = make_certificate(
+        "circulant_multicolour",
+        f"circulant sub-family of K{args.n} with forbidden clique sizes {list(sizes)}: "
+        f"{res['status']}",
+        payload,
+        claims,
+        _provenance(f"oplab mc-circulant --n {args.n} --sizes {args.sizes}",
+                    solver=args.solver),
+    )
+    _write(Path(args.out), cert)
+    return 0
+
+
+# --------------------------------------------------------------------------
+# the CAYLEY sub-family: translation invariant over a named group
+# --------------------------------------------------------------------------
+def cmd_cayley(args) -> int:
+    """Decide one group's translation-invariant colourings, as a certificate.
+
+    The group is *named*, not described: ``--list`` prints the portfolio
+    ``cayley.groups_of_order`` builds, and ``--group`` picks one of those names, so a
+    certificate can be reproduced from its command line without retyping a nested
+    direct-product description (and so the family in the file is the one this
+    module builds, not whatever the caller remembered).
+
+    ``unsat`` is stored *with* its DRAT trace, replayed here by ``oplab.drat``
+    before the certificate is written; that replay is what makes the row a theorem
+    about one group rather than a solver verdict.
+    """
+    groups = CY.groups_of_order(args.n)
+    if not groups:
+        print(f"no group of order {args.n} is buildable here", file=sys.stderr)
+        return 2
+    if args.list:
+        for description in groups:
+            params = description["params"]
+            print(f"{description['name']:<14} {description['family']:<13} {params}")
+        return 0
+    if not args.sizes:
+        print("--sizes is required (or --list)", file=sys.stderr)
+        return 2
+    names = ", ".join(description["name"] for description in groups)
+    if not args.group:
+        print(f"--group is required (or --list).  Groups of order {args.n}: {names}",
+              file=sys.stderr)
+        return 2
+    chosen = [d for d in groups if d["name"] == args.group]
+    if not chosen:
+        print(f"no group named {args.group!r} of order {args.n}.  Available: {names}",
+              file=sys.stderr)
+        return 2
+    description = chosen[0]
+    sizes = tuple(int(s) for s in args.sizes.split(","))
+    if not args.dimacs_only and not args.out:
+        print("--out is required unless --dimacs-only is used", file=sys.stderr)
+        return 2
+    if args.dimacs_only:
+        if not args.dimacs:
+            print("--dimacs-only needs --dimacs PATH", file=sys.stderr)
+            return 2
+        instance = CY.CayleyInstance(description, sizes)
+        info = instance.write_dimacs(
+            args.dimacs,
+            comment=f"cayley multicolour Ramsey K_{args.n}, sizes={list(sizes)}, "
+                    f"group={description['name']}",
+        )
+        size = Path(args.dimacs).stat().st_size
+        print(f"{args.dimacs}: {info['clauses_written']} clauses, {info['num_vars']} vars, "
+              f"{size / 1e6:.1f} MB")
+        return 0
+
+    res = CY.cayley_solve(description, sizes, seconds=args.seconds, solver=args.solver,
+                          proof_path=args.proof, dimacs_path=args.dimacs)
+    if res["status"] in {"no_verdict", "no-solver", "error"}:
+        # the worker died without a verdict, or no engine is bundled: that is not a
+        # spent budget and not an experiment result, so nothing is written — a
+        # stored `unknown` row has to mean "the budget ran out"
+        print(f"{res['status']}: {res.get('reason', 'no verdict from ' + args.solver)} "
+              f"(nothing written)", file=sys.stderr)
+        return 2
+    instance = CY.CayleyInstance(description, sizes)
+    if res.get("proof") and args.proof:
+        # A trace is stored only after this repository's own checker has accepted it
+        # against this group's encoding, and the certificate records how long that
+        # replay took — which is also what lets `verify` decide whether to replay it
+        # again by default (and `drat-trim` is the second opinion on it).
+        checked = CY.replay_proof(description, sizes, args.proof, Path(args.out).parent)
+        if not checked["ok"]:
+            print(f"{args.proof}: the emitted trace does not check: {checked['reason']}",
+                  file=sys.stderr)
+            return 1
+        res["proof"] = {key: value for key, value in checked.items() if key != "ok"}
+    payload = {
+        "n": args.n,
+        "sizes": list(sizes),
+        "status": res["status"],
+        "group": description,
+        "classes": len(instance.classes),
+        "num_vars": instance.total_vars(),
+        "num_clauses": instance.clause_count(),
+        "solver": args.solver,
+        "seconds": res["seconds"],
+        # the group as data (table, inverse list, clique groups): checked against
+        # the description by `verify`, and what the Lean layer recomputes from
+        **instance.certificate_payload(),
+    }
+    if res.get("budget_expired"):
+        payload["budget_expired"] = True
+    if res["status"] == "sat":
+        payload["class_colors"] = {str(k): int(v) for k, v in res["class_colors"].items()}
+        payload["coloring"] = res["coloring"]
+    if "proof" in res:
+        payload["proof"] = res["proof"]
+    if "obstruction" in res:
+        payload["obstruction"] = {
+            "class_order": res["obstruction"]["class_order"],
+            "triangle": list(res["obstruction"]["triangle"]),
+            "triangles": res["obstruction"]["triangles"],
+        }
+    claims = {"n": args.n, "sizes": list(sizes), "status": res["status"]}
+    if res["status"] == "sat":
+        claims["monochromatic_cliques"] = res["verified"]["monochromatic_cliques"]
+        claims["establishes"] = f"R{tuple(sizes)} > {args.n}"
+    cert = make_certificate(
+        "cayley_multicolour",
+        f"translation-invariant colourings over {description['name']} "
+        f"(a group of order {args.n}), forbidden clique sizes {list(sizes)}: "
+        f"{res['status']}",
+        payload,
+        claims,
+        _provenance(f"oplab cayley --n {args.n} --sizes {args.sizes} "
+                    f"--group {description['name']}", solver=args.solver),
+    )
+    _write(Path(args.out), cert)
+    return 0
+
+
+# --------------------------------------------------------------------------
+# drat
+# --------------------------------------------------------------------------
+def cmd_drat(args) -> int:
+    """Check a DRAT trace against a CNF.  No solver is started here.
+
+    Either give the pair explicitly (``--cnf`` and ``--proof``) or point at a
+    certificate that records one (``--cert``): the CNF is then rebuilt from the
+    certificate's own payload, so the trace is checked against the encoding the
+    repository can regenerate — the circulant one or the group's, whichever family
+    the certificate declares — and not against a stale file.
+    """
+    if args.cert:
+        cert = json.loads(Path(args.cert).read_text(encoding="utf-8"))
+        recorded = cert.get("payload", {}).get("proof")
+        if not recorded:
+            print(f"{args.cert}: no DRAT trace is recorded", file=sys.stderr)
+            return 1
+        instance = declared_instance(cert)
+        num_vars, clauses = instance.total_vars(), list(instance.clauses())
+        proof_path = Path(args.cert).parent / recorded["file"]
+    elif args.cnf and args.proof:
+        num_vars, clauses = DRAT.parse_dimacs(args.cnf)
+        proof_path = Path(args.proof)
+    else:
+        print("give --cnf and --proof, or --cert", file=sys.stderr)
+        return 2
+
+    if not proof_path.exists():
+        print(f"{proof_path}: no such proof", file=sys.stderr)
+        return 1
+    lines = DRAT.read_proof(proof_path)
+    result = DRAT.check_proof(num_vars, clauses, lines)
+    verdict = "VERIFIED" if result["ok"] else "REJECTED"
+    print(
+        f"{verdict}  {proof_path}  [{len(clauses)} clauses, {num_vars} vars, "
+        f"{result.get('steps', len(lines))} steps, "
+        f"{result.get('seconds', 0.0):.2f}s]"
+    )
+    print(f"  sha256 {DRAT.proof_digest(lines)}")
+    if not result["ok"]:
+        print(f"  {result.get('reason')}", file=sys.stderr)
+        return 1
+    if result.get("missing_deletions"):
+        print(f"  note: {result['missing_deletions']} deletion(s) named a clause not present")
+    return 0
+
+
 # --------------------------------------------------------------------------
 # verify / report
 # --------------------------------------------------------------------------
@@ -498,6 +805,52 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--out", required=True)
     p.set_defaults(func=cmd_circulant)
+
+    p = sub.add_parser("mc-circulant", help="decide the circulant sub-family of a multicolour instance")
+    p.add_argument("--n", type=int, required=True)
+    p.add_argument("--sizes", required=True, help="forbidden clique size per colour, e.g. 3,3,5")
+    p.add_argument("--seconds", type=float, default=300.0)
+    p.add_argument("--solver", default="cadical195")
+    p.add_argument("--dimacs", default=None, help="also export the instance to this DIMACS path")
+    p.add_argument("--dimacs-only", action="store_true", help="only export DIMACS, do not solve")
+    p.add_argument("--proof", default=None,
+                   help="write the DRAT trace of an unsat run here; the name says "
+                        "the container: .drat/.bdrat (binary DRAT), optionally "
+                        ".gz or .xz")
+    p.add_argument("--out", default=None, help="certificate path (required unless exporting only)")
+    p.set_defaults(func=cmd_mc_circulant)
+
+    p = sub.add_parser("cayley", help="decide one group's translation-invariant colourings")
+    p.add_argument("--n", type=int, required=True, help="order of the group")
+    p.add_argument("--sizes", default=None,
+                   help="forbidden clique size per colour, e.g. 4,4 or 3,3,4 "
+                        "(required unless --list)")
+    p.add_argument("--group", default=None, help="which group of that order (see --list)")
+    p.add_argument("--list", action="store_true", help="print the portfolio and exit")
+    p.add_argument("--seconds", type=float, default=300.0)
+    p.add_argument("--solver", default="cadical195")
+    p.add_argument("--dimacs", default=None, help="also export the reduced CNF to this path")
+    p.add_argument("--dimacs-only", action="store_true", help="only export the CNF, do not solve")
+    p.add_argument("--proof", default=None,
+                   help="write the DRAT trace of an unsat run here; the name says the "
+                        "container: .drat/.bdrat (binary DRAT), optionally .gz or .xz")
+    p.add_argument("--out", default=None, help="certificate path (required unless exporting only)")
+    p.set_defaults(func=cmd_cayley)
+
+    p = sub.add_parser("solvers", help="probe the bundled SAT engines and report who answers")
+    p.add_argument("--seconds", type=float, default=10.0, help="budget per engine")
+    p.add_argument("--solver", action="append", default=None,
+                   help="probe only this engine (repeatable)")
+    p.set_defaults(func=cmd_solvers)
+
+    p = sub.add_parser("drat", help="check a DRAT proof against a CNF")
+    p.add_argument("--cnf", default=None, help="DIMACS CNF the trace was produced from")
+    p.add_argument("--proof", default=None,
+                   help="DRAT trace to check; the name says the container: "
+                        ".drat/.bdrat (binary DRAT), optionally .gz or .xz")
+    p.add_argument("--cert", default=None,
+                   help="a certificate that records the trace, instead of a CNF")
+    p.set_defaults(func=cmd_drat)
 
     p = sub.add_parser("verify", help="verify certificates")
     p.add_argument("paths", nargs="+")

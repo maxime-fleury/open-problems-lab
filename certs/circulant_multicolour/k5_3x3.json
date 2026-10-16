@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K5 with forbidden clique sizes [3, 3]: sat",
+  "payload": {
+    "n": 5,
+    "sizes": [
+      3,
+      3
+    ],
+    "status": "sat",
+    "classes": 2,
+    "num_vars": 4,
+    "num_clauses": 6,
+    "clique_groups": {
+      "3": 1
+    },
+    "solver": "cadical195",
+    "seconds": 0.0013475418090820312,
+    "coloring": "0110011010"
+  },
+  "claims": {
+    "n": 5,
+    "sizes": [
+      3,
+      3
+    ],
+    "status": "sat",
+    "monochromatic_cliques": [
+      0,
+      0
+    ],
+    "establishes": "R(3, 3) > 5"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 5 --sizes 3,3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "457da007cd6bd7cc013df7c42118f07621fec78493d2f3209e99785e46ff0b10"
+}

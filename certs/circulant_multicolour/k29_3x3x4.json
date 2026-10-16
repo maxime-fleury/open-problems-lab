@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K29 with forbidden clique sizes [3, 3, 4]: sat",
+  "payload": {
+    "n": 29,
+    "sizes": [
+      3,
+      3,
+      4
+    ],
+    "status": "sat",
+    "classes": 14,
+    "num_vars": 42,
+    "num_clauses": 623,
+    "clique_groups": {
+      "3": 70,
+      "4": 427
+    },
+    "solver": "cadical195",
+    "seconds": 0.0029349327087402344,
+    "coloring": "1021022001212222121002201201102102200121222212100220120102102200121222212100220121021022001212222121002201102102200121222212100220102102200121222212100221021022001212222121002102102200121222212100102102200121222212101021022001212222121102102200121222212102102200121222211021022001212222102102200121222102102200121221021022001212102102200121102102200121021022001102102200102102201021022102102102101021102101"
+  },
+  "claims": {
+    "n": 29,
+    "sizes": [
+      3,
+      3,
+      4
+    ],
+    "status": "sat",
+    "monochromatic_cliques": [
+      0,
+      0,
+      0
+    ],
+    "establishes": "R(3, 3, 4) > 29"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 29 --sizes 3,3,4",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "5fb44221fd4c3ff92293c5306d55df44ee267da30e4b06fc73ae480d809b68e7"
+}

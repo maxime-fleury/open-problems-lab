@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K6 with forbidden clique sizes [3, 3]: obstructed",
+  "payload": {
+    "n": 6,
+    "sizes": [
+      3,
+      3
+    ],
+    "status": "obstructed",
+    "classes": 3,
+    "num_vars": 6,
+    "num_clauses": 12,
+    "clique_groups": {
+      "3": 3
+    },
+    "solver": "cadical195",
+    "seconds": 0.0,
+    "obstruction": {
+      "class": 2,
+      "triangle": [
+        0,
+        2,
+        4
+      ],
+      "triangles": 2
+    }
+  },
+  "claims": {
+    "n": 6,
+    "sizes": [
+      3,
+      3
+    ],
+    "status": "obstructed"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 6 --sizes 3,3",
+    "created": "2026-10-15",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "cadical195"
+  },
+  "payload_sha256": "8213294d8bb0171cdea5e5b8907553bbe98b433afdf50227a73a889b2201e329"
+}

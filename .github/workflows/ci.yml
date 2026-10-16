@@ -22,6 +22,10 @@ jobs:
           pip install -e ".[dev,opt,sat]"
       - name: Tests
         run: python -m pytest tests -q
+      - name: The proof stores must match their manifests
+        run: |
+          python scripts/proof_manifest.py --check
+          python scripts/proof_manifest.py --certs certs/cayley --check
       - name: Re-verify every committed certificate
         run: python -m oplab.cli verify certs
       - name: Smoke-test the SAT encoder on a case with a known answer
@@ -42,6 +46,62 @@ jobs:
           pip install -e ".[dev,opt,sat]"
       - name: Re-run the exhaustive circulant sweeps from scratch
         run: python -m oplab.cli verify certs/circulant --deep --workers 4
+
+  proofs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,opt,sat]"
+      - name: Replay every stored DRAT trace and re-run those solvers
+        run: python -m oplab.cli verify certs/circulant_multicolour --deep --workers 4
+      # the group store is the same machinery on a different family: every trace
+      # replayed against the encoding of *that* group, then the solver re-run
+      - name: Same for the group store (translation-invariant colourings)
+        run: python -m oplab.cli verify certs/cayley --deep
+
+  drat-trim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,opt,sat]"
+      # The stored traces are checked by oplab.drat on every run; this job checks
+      # them again with an unrelated implementation, so the proofs do not rest on
+      # this repository's own checker.  Which commit that is comes from
+      # scripts/drat-trim.pin, and the step below hashes the source it compiled
+      # against the same file: a checker that changes under us would change what
+      # "verified" means, and both the change and its acceptance are a diff here.
+      - name: Build drat-trim (pinned commit)
+        run: |
+          PIN=$(sed -n 's/^commit //p' scripts/drat-trim.pin)
+          echo "building drat-trim at $PIN"
+          git clone --quiet https://github.com/marijnheule/drat-trim.git /tmp/drat-trim
+          cd /tmp/drat-trim
+          git checkout --quiet "$PIN"
+          git rev-parse HEAD
+          gcc -O2 drat-trim.c -o drat-trim
+      - name: Cross-check every stored DRAT trace with the pinned checker
+        run: |
+          python scripts/drat_trim_check.py --drat-trim /tmp/drat-trim/drat-trim \
+            --source /tmp/drat-trim/drat-trim.c --require-pin
+      # the tests that need a real checker skip in the test job (it is not on PATH
+      # there), so they are run here, against the build the pin just produced
+      - name: The cross-check's own tests, against that checker
+        env:
+          OPLAB_DRAT_TRIM: /tmp/drat-trim/drat-trim
+          OPLAB_DRAT_TRIM_SOURCE: /tmp/drat-trim/drat-trim.c
+        run: python -m pytest tests/test_drat_trim.py tests/test_proof_store.py -q
 
   lean:
     runs-on: ubuntu-latest
