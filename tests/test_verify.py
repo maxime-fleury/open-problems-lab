@@ -8,6 +8,11 @@ from oplab import multicolour as MC, ramsey as R, sphere as S, unitdist as U
 from oplab.cli import main
 from oplab.verify import make_certificate, payload_hash, verify_certificate, verify_path
 
+# The three multicolour-witness rows below re-solve an instance to build the row they
+# then verify, so they need the `python-sat` bindings — not merely an engine on PATH.
+needs_solver = pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                                  reason="python-sat is not installed")
+
 
 def _sphere_cert(system="d5"):
     P = S.root_system(system)
@@ -196,6 +201,7 @@ def _mc_cert(n, sizes, payload=None, claims=None):
 
 
 @pytest.mark.skipif(not MC.available_solvers(), reason="no bundled SAT solver")
+@needs_solver
 def test_multicolour_circulant_witness_and_obstruction_verify():
     """A witness re-counts; the obstruction is arithmetic; a wrong count is caught."""
     witness = _mc_cert(29, (3, 3, 4))
@@ -219,6 +225,7 @@ def test_multicolour_circulant_witness_and_obstruction_verify():
     assert not verify_certificate(mismatch)["ok"]
 
 
+@needs_solver
 def test_multicolour_circulant_verifier_rejects_a_non_circulant_witness():
     """A colouring that is not constant on the difference classes is not a witness."""
     from oplab.multicolour import circulant_colouring, difference_classes, serialize_colouring
@@ -266,6 +273,7 @@ def test_an_unknown_row_that_records_a_crash_is_not_a_spent_budget():
     assert not verify_certificate(coded, base_dir=source.parent)["ok"]
 
 
+@needs_solver
 def test_multicolour_circulant_verifier_checks_the_encoding_size():
     cert = _mc_cert(30, (3, 3, 4), payload={"num_clauses": 999999})
     result = verify_certificate(cert)

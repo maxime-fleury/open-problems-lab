@@ -23,7 +23,11 @@ from oplab import cayley as CY
 from oplab import multicolour as MC
 from oplab.verify import make_certificate, payload_hash, verify_certificate
 
-SOLVER = bool(MC.available_solvers())
+# `available_solvers()` also counts a Kissat binary on PATH, and these tests drive
+# the `python-sat` bindings directly: asking whether *an engine can start* skipped
+# nothing on a machine with a binary and no wheel, and failed with a
+# `ModuleNotFoundError` from a subprocess instead.
+SOLVER = MC.solver_backing("cadical195") == "wheel"
 
 
 def _sizes_cases():

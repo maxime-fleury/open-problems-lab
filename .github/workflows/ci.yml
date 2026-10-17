@@ -19,7 +19,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,opt,sat]"
+          pip install -e ".[dev,opt,sat,solvers]"
       - name: Tests
         run: python -m pytest tests -q
       - name: The proof stores must match their manifests
@@ -43,7 +43,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,opt,sat]"
+          pip install -e ".[dev,opt,sat,solvers]"
       - name: Re-run the exhaustive circulant sweeps from scratch
         run: python -m oplab.cli verify certs/circulant --deep --workers 4
 
@@ -57,7 +57,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,opt,sat]"
+          pip install -e ".[dev,opt,sat,solvers]"
       - name: Replay every stored DRAT trace and re-run those solvers
         run: python -m oplab.cli verify certs/circulant_multicolour --deep --workers 4
       # the group store is the same machinery on a different family: every trace
@@ -86,7 +86,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,opt,sat]"
+          pip install -e ".[dev,opt,sat,solvers]"
       # The stored traces are checked by oplab.drat on every run; this job checks
       # them again with an unrelated implementation, so the proofs do not rest on
       # this repository's own checker.  Which commit that is comes from

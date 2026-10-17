@@ -19,6 +19,12 @@ opt = ["scipy>=1.10"]
 # Optional: a SAT backend for the Ramsey encoding.  Without it, `oplab sat`
 # reports "no-solver" and the SAT tests are skipped; DIMACS export still works.
 sat = ["z3-solver>=4.12"]
+# Optional, and a different thing: the CDCL engines behind `oplab.multicolour`
+# (CaDiCaL, Kissat, Glucose, …).  `sat` is Z3 for the older `oplab sat` path; this is
+# the native C++ set the circulant/block campaigns and the `--deep` re-runs drive.
+# Without it those re-runs report "no-solver" and the engine tests skip — which is
+# how CI stayed green on jobs that were not actually re-running anything.
+solvers = ["python-sat>=1.8.dev0"]
 # Optional: the batched GPU tabu search (`oplab.gputabu`, scripts/gpu_tabu.py).
 # It is a *search* for witnesses, not a solver: without torch every SAT and
 # circulant path still decides, and the GPU tests are skipped.

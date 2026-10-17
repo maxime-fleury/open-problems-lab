@@ -29,7 +29,10 @@ from oplab.verify import payload_hash, verify_certificate
 
 CERT_DIR = Path(__file__).resolve().parents[1] / "certs" / "circulant_multicolour"
 
-needs_solver = pytest.mark.skipif(not MC.available_solvers(), reason="no bundled SAT solver")
+# `available_solvers()` also counts a Kissat binary on PATH; these tests drive the
+# `python-sat` bindings, so the wheel is what they need.
+needs_solver = pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                                  reason="python-sat is not installed")
 
 
 def _proof_lines(n, sizes):
@@ -252,8 +255,14 @@ def test_checker_validates_a_bigger_trace_with_deletions():
     assert result["missing_deletions"] == 0
 
 
+@needs_solver
 def test_stored_traces_replay_and_are_the_proofs_the_certificates_claim():
     """Every stored trace is replayed from scratch here where that is cheap.
+
+    The digests and the pairing are checked without an engine, but the `--deep`
+    re-run at the end re-solves the instance, so the engine has to be there: on a
+    machine without one this test used to fail with "deep re-run returned
+    'no-solver'" instead of skipping, which is not a fact about the traces.
 
     The traces are stored next to the certificates and pinned by sha256, so this
     test also pins the pairing: the file a certificate names is the file that

@@ -34,12 +34,21 @@ from oplab.multicolour import (
     parse_colouring,
     random_colouring,
     serialize_colouring,
+    solver_backing,
     solve,
     tabu_search,
     verify_colouring,
 )
 
 CASES = [(8, (3, 3, 3)), (9, (3, 3, 4)), (11, (4, 4)), (10, (3, 4)), (12, (3, 3, 3, 3))]
+
+# The engine tests run only where the `python-sat` bindings are installed.  The
+# predicate is `solver_backing`, not `available_solvers()`: the latter also counts a
+# real Kissat binary on `PATH`, and these tests drive the bindings directly — a machine
+# with a binary and no wheel used to fail them with a `ModuleNotFoundError` from a
+# subprocess instead of skipping.
+needs_solver = pytest.mark.skipif(solver_backing("cadical195") != "wheel",
+                                  reason="python-sat is not installed")
 
 
 def canonicalise(colouring):
@@ -218,6 +227,7 @@ def test_record_table_is_consistent():
 
 
 @pytest.mark.skipif(not available_solvers(), reason="no bundled SAT solver")
+@needs_solver
 def test_cdcl_solves_a_tiny_instance():
     """The CDCL path is exercised end to end, including the colouring decode."""
     result = solve(5, (3, 3, 3), seconds=20.0, solver="cadical195", symmetry=1)
@@ -313,6 +323,7 @@ def test_circulant_obstruction_is_arithmetic_and_forced():
 
 
 @pytest.mark.skipif(not available_solvers(), reason="no bundled SAT solver")
+@needs_solver
 def test_circulant_ladder_agrees_with_the_classical_values():
     """Small cases whose answers are known independently of the solver."""
     assert circulant_solve(5, (3, 3))["status"] == "sat"  # the 5-cycle
@@ -342,6 +353,7 @@ def test_circulant_witness_expands_to_a_verified_colouring():
 
 @pytest.mark.skipif(not available_solvers(), reason="no bundled SAT solver")
 @pytest.mark.parametrize("symmetry", [0, 1, 2])
+@needs_solver
 def test_symmetry_breaks_keep_a_satisfiable_instance_satisfiable(symmetry):
     """K8 is 3-colourable with no monochromatic triangle, so no break may refute it."""
     result = solve(8, (3, 3, 3), seconds=20.0, symmetry=symmetry)
@@ -353,6 +365,7 @@ def test_symmetry_breaks_keep_a_satisfiable_instance_satisfiable(symmetry):
 
 
 @pytest.mark.skipif(not available_solvers(), reason="no bundled SAT solver")
+@needs_solver
 def test_the_solver_budget_is_enforced():
     """The budget must bound the run: the bundled solvers hold the GIL.
 
@@ -371,6 +384,7 @@ def test_the_solver_budget_is_enforced():
         assert result.get("budget_expired") is True
 
 
+@needs_solver
 def test_the_multiplier_invariant_sub_family_is_empty_at_the_targets(tmp_path):
     """The structured candidates are empty at all six undecided sizes.
 
@@ -454,6 +468,7 @@ def test_mc_circulant_dimacs_export_is_the_hand_off(tmp_path):
     assert main(["mc-circulant", "--n", "96", "--sizes", "3,3,3,4"]) == 2
 
 
+@needs_solver
 def test_solver_probe_reports_broken_engines_instead_of_listing_them():
     """Being bundled is not being available, and the probe is what separates them.
 
@@ -492,6 +507,7 @@ def test_solver_probe_reports_broken_engines_instead_of_listing_them():
     assert MC.probe_solver("cadical195")["status"] == "ok"
 
 
+@needs_solver
 def test_solvers_command_exits_nonzero_when_an_engine_does_not_answer(capsys):
     """A campaign can check the engines first, and get a usable exit status."""
     from oplab.cli import main
@@ -506,6 +522,7 @@ def test_solvers_command_exits_nonzero_when_an_engine_does_not_answer(capsys):
     assert "not answering: not-a-solver" in out.err
 
 
+@needs_solver
 def test_the_colour_canonical_break_agrees_with_the_plain_encoding(tmp_path):
     """The relabelling break may not decide anything differently, anywhere.
 
@@ -526,6 +543,7 @@ def test_the_colour_canonical_break_agrees_with_the_plain_encoding(tmp_path):
     assert "clean=True" in result.stdout  # and the witness is re-counted clean
 
 
+@needs_solver
 def test_the_subgroup_sweep_finds_the_known_witnesses_and_invents_none():
     """Every distinct subgroup is decided; a witness is only accepted where one exists.
 
@@ -550,6 +568,7 @@ def test_the_subgroup_sweep_finds_the_known_witnesses_and_invents_none():
         assert any(blocked + ": no witness" in line for line in lines), result.stdout
 
 
+@needs_solver
 def test_a_sweep_row_that_timed_out_still_knows_which_family_it_was(tmp_path):
     """A killed run has no summary of its own, so the sweep has to stamp the identity.
 
@@ -693,6 +712,7 @@ def test_the_probe_rejects_a_wrong_verdict_and_names_its_backing(monkeypatch, tm
     assert absent["backend"] == "absent" and absent["reason"] == "not a bundled engine: not-a-solver"
 
 
+@needs_solver
 def test_the_engine_name_says_which_implementation_answered(monkeypatch):
     """A verdict without a backing cannot be reproduced, so the name carries it."""
     from oplab import multicolour as MC

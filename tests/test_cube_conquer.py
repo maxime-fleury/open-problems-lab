@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from oplab import multicolour as MC  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
@@ -409,6 +411,8 @@ def test_a_resumed_pass_is_combined_through_the_command_line(tmp_path):
 
 @pytest.mark.skipif(not _script_module().MC.available_solvers(),
                     reason="no bundled SAT solver to produce a model")
+@pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                    reason="python-sat is not installed")
 def test_a_satisfiable_leaf_becomes_a_witness_only_after_it_verifies():
     """The witness path, end to end: a model, the instance's decode, and the re-count.
 
@@ -450,13 +454,21 @@ def test_the_engine_is_refused_when_its_backing_is_not_the_one_asked_for(tmp_pat
     """
     driver = _script_module()
     from oplab import tools
+    from oplab.multicolour import solver_backing
 
     monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: None)
+    # Which implementation answers here depends on the machine: the `pysat` wheel
+    # where it is installed, and nothing at all where it is not.  The refusal is the
+    # same either way, so the test asks which one it *is* rather than assuming the
+    # wheel — asserting "wheel" made this pass on a laptop and fail in CI, where the
+    # engine package is not installed.
+    backing = solver_backing("kissat404")
+    assert backing != "binary", "the binary was just monkeypatched away"
     code = driver.main(["5:3,3", "--depth", "2", "--engine-backing", "binary",
                         "--out", str(tmp_path / "refused.json"),
                         "--workdir", str(tmp_path / "w")])
     assert code == 2
-    assert "is backed by wheel" in capsys.readouterr().err
+    assert f"is backed by {backing}, not binary" in capsys.readouterr().err
     assert not (tmp_path / "refused.json").exists(), "a refused run writes nothing"
 
     monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: ["kissat"])
