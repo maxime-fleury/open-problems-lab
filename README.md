@@ -822,6 +822,14 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   is now decided inside the circulant family, as verdicts rather than as a proof
   ([RESULTS.md](RESULTS.md) §9b).  `march_cu` also refutes instances outright while
   cubing, and that verdict (with its model) is reported as what it is.
+* **The family the record is written in is now searchable.**  `oplab.blocks` encodes
+  block-Cayley colourings — `b` blocks carrying an abelian group, plus free extra
+  vertices — checked against its own expansion by exhaustion and equal to the
+  circulant family at `b = 1`.  Three blocks of `Z_2^4` plus two extras reproduce the
+  published witness size (`R(3,3,3,3) > 50`, SAT in 527 s), a block whose order is
+  divisible by 3 is refuted by arithmetic with no solver at all, and the `K51`
+  shapes whose blocks avoid a factor of three are undecided: [RESULTS.md](RESULTS.md)
+  §9c.  No bound moves.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The

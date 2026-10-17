@@ -690,6 +690,66 @@ clauses, 192 variables — spent **768 s** and returned `unknown`
 `K538` in the same round).  The partition did in 93 minutes of wall clock what a
 768 s single run could not, which is the measurement this section exists for.
 
+## 9c. Block-Cayley colourings: the family the published witnesses live in
+
+The circulant rows above are empty at every target size (§9b decides one more of
+them), so no amount of them can move a published bound: the bounds are not
+circulant.  The next family out is the one the published witnesses are actually
+described in — Chung's four-colouring of `K50` is a **three-block block-Cayley
+colouring over a group of order 16, extended by two vertices**, and the SAT results
+that have moved multicolour lower bounds since 2015 (Rowley 2022; Wesley 2025) all
+impose a structure of that kind and let a solver fill it in.
+
+`oplab.blocks` is that family: `b` blocks carrying an abelian group of order `m`,
+plus `e` free extra vertices, one variable per (class, colour), one clause per
+(colour, clique class set).  At `b = 1` it is the circulant family, class for class
+(checked, not assumed), so it sits around the two families already swept rather than
+beside them.  The encoding is checked the same way: the classes partition the
+`C(n, 2)` edges on eight shapes, the clause set is satisfied by exactly those
+assignments whose expansion is clean on five instances small enough to exhaust, and
+the colour break — one class fixed to colour 0, `4! = 24` fewer searches — is proved
+not to cost a colouring when the forbidden sizes are equal, and refused for `(4, 6)`.
+
+**The family is the right one, and that is measured.**  Three blocks of `Z_2^4` plus
+two extras, the published witness's shape, is **SAT at `K50` in 527 s** (760
+variables, 14 871 clauses) and the colouring re-counts clean: `R(3,3,3,3) > 50`
+reproduced inside the family.  That is what makes the one-vertex extension a
+question worth asking, and it validates the decode as much as the family.  The group
+matters, not only the block order: the same three blocks of order 16 taken as `Z_16`
+(a subring family, 676 variables, 14 556 clauses) is still `unknown` at 900 s.
+
+**The obstruction comes back per block.**  `n = 51` escapes the circulant `n/3`
+argument because a block of `Z_17` has no difference 17 — but inside a block it
+returns: if `3 | m`, Cauchy gives an element `d` of order 3, and `{x, x+d, x+2d}` has
+all three differences in the class of `d`, so that block carries a monochromatic
+triangle whichever colour the class gets.  Three shapes are refuted by that argument
+in **under a second of wall clock, with no solver opened**, and `block_obstruction`
+now says so before the engine is started.
+
+**What the `K51` ladder measured.**  Every shape whose blocks avoid a factor of three:
+
+| shape | variables | clauses | verdict | time |
+|---|---|---|---|---|
+| 3 blocks of `Z_17` | 300 | 5 234 | `unknown` | 900 s |
+| 3 blocks of `Z_2^4` + 3 extras | 960 | 20 121 | `unknown` | 900 s |
+| 3 blocks of `Z_16` + 3 extras | 876 | 19 806 | `unknown` | 900 s |
+| 6 blocks of `Z_8` + 3 extras | 1 164 | 24 754 | `unknown` | 900 s |
+| 17 blocks of `Z_3` | 1 700 | 30 788 | **obstructed** | arithmetic |
+| 3 blocks of `Z_15` + 6 extras | 1 404 | 32 634 | **obstructed** | arithmetic |
+| 4 blocks of `Z_12` + 3 extras | 972 | 21 482 | **obstructed** | arithmetic |
+
+No witness, and no refutation either: four shapes are open after fifteen minutes of
+Kissat each.  And the one-vertex extension of the witness we do have is **dead**:
+with the `K50` colouring fixed, "colour the 50 edges to one new vertex" is a
+200-variable, 1 575-clause CSP, and it is UNSAT in **0.19 s**.  That is a fact about
+that colouring and not about `K51` — a clean `K51` would appear as an *extendable*
+clean `K50`, and there are astronomically many of those to draw from.
+
+So `R(3,3,3,3)` stays in `[51, 62]` and `K51` stays open.  What this section adds is
+the machinery to attack it in the family the record is written in, the measurement
+that the family contains the record size, one arithmetic obstruction that prunes the
+ladder, and one hard negative.  It is not a bound, and the tables say so.
+
 ## Limitations, stated plainly
 
 * **Only the circulant sweeps are exhaustive.** Everything else is a heuristic

@@ -1,0 +1,27 @@
+{
+  "n": 51,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "blocks": 6,
+  "group": [
+    8
+  ],
+  "extras": 3,
+  "solver": "kissat404",
+  "break_colours": true,
+  "classes": 291,
+  "class_sets": {
+    "3": 5679
+  },
+  "num_vars": 1164,
+  "num_clauses": 24754,
+  "seconds": 900.183,
+  "status": "unknown",
+  "note": "the budget ran out: wsl.exe -e timeout 900 /home/max/kissat/build/kissat /mnt/c/Users/Max/AppData/Local/Temp/tmp4sun72fn.cnf was stopped at 900s (exit 124)",
+  "produced_by": "scripts/block_hunt.py 51:3,3,3,3 --blocks 6 --group 8 --extras 3 --seconds 900 --solver kissat404 --break-colours",
+  "what": "block-Cayley family for K51 [3, 3, 3, 3]: 6 block(s), group [8], 3 extras"
+}

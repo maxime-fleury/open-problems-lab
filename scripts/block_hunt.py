@@ -99,6 +99,11 @@ def main(argv=None) -> int:
     if status == "sat-invalid":
         print(f"a model decoded but does not verify: {report['verify']}", file=sys.stderr)
         return 1
+    if status == "obstructed":
+        # decided by arithmetic, with no solver opened: the block carries its own
+        # monochromatic triangle whatever colour the class gets
+        print(report["obstruction"]["reason"] + " — no solver was run", file=sys.stderr)
+        return 0
     if status == "unsat":
         print("every member of that shape is coloured with a forbidden clique — the family "
               "is empty, which is not a bound and not a theorem", file=sys.stderr)
