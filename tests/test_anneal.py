@@ -303,6 +303,89 @@ def test_the_reported_assignment_reproduces_the_state_it_measured():
     assert sorted(report["blanks_at"]) == [int(p) for p in np.flatnonzero(A < 0)]
 
 
+def test_a_blank_classes_open_colours_are_exactly_its_safe_colours():
+    """``open_colours`` is a claim about the count, so it is checked against the count.
+
+    For a blank class ``p`` and a colour ``c``: ``c`` is open **iff** colouring ``p`` with
+    ``c`` leaves every set it belongs to unviolated.  The implementation derives that from
+    ``cnt`` instead of trying the colours, so the test tries them — on random states, at
+    every blank of each, including states with several blanks, where a set can no longer
+    reach ``need - 1``.
+    """
+    for instance in (B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2)),
+                     B.BlockInstance(51, (3, 3, 3, 3), blocks=3, group=(17,))):
+        problem = G.from_blocks(instance)
+        rng = np.random.default_rng(11)
+        for _ in range(4):
+            A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+            blanked = rng.choice(problem.nc, size=min(6, problem.nc), replace=False)
+            A[blanked] = AN.BLANK
+
+            cnt, _ = AN._counts(problem, A)
+            safe = _open_colours_bruteforce(problem, A)
+            for p in blanked:
+                got = AN.open_colours(problem, cnt, int(p))
+                assert got == safe[int(p)], (int(p), got, safe[int(p)])
+
+
+def _open_colours_bruteforce(problem, A):
+    """Which colours create no *new* violation when a blank class is given them.
+
+    Filling a blank class can only add violations — a blank class is absent from its
+    sets, so it was not holding any set unsatisfied — and it can only add them to sets it
+    belongs to.  A random state already holds violations elsewhere, so the comparison has
+    to be against the state as it is, on the sets ``p`` touches.
+    """
+    _, before = AN._counts(problem, A)
+    out = {}
+    for p in np.flatnonzero(A < 0):
+        region = problem.inc[p][problem.inc_mask[p]]
+        safe = []
+        for c in range(problem.k):
+            trial = A.copy()
+            trial[p] = c
+            _, viol = AN._counts(problem, trial)
+            if not (viol[region] & ~before[region]).any():
+                safe.append(c)
+        out[int(p)] = safe
+    return out
+
+
+def test_preferring_extendable_blanks_reaches_a_witness_in_fewer_steps():
+    """Same instance, same seed, same budget: which blanks the walk picks is the difference.
+
+    ``K13`` at ``(3,3,3)`` is satisfiable and both policies finish, so the comparison is
+    between step counts rather than wall-clock time: the greedy refill needs 2 053 class
+    moves to find a colouring, the most-constrained-first refill with backjumping 438.  A
+    run that reaches the witness stops there, so these counts are a property of the walk
+    and not of the machine it ran on.
+    """
+    problem = G.from_general(13, (3, 3, 3))
+    greedy = AN.partial(problem, seconds=20.0, seed=0, attempt_every=5000, backjump=False)
+    aware = AN.partial(problem, seconds=20.0, seed=0, attempt_every=5000)
+
+    assert greedy["status"] == aware["status"] == "sat"
+    assert greedy["verify"]["valid"] and aware["verify"]["valid"]
+    assert aware["steps"] < greedy["steps"], (aware["steps"], greedy["steps"])
+    assert aware["backjumps"] > 0
+
+
+def test_the_backjump_is_the_policy_that_finds_k14_where_the_greedy_one_stalls():
+    """``K14`` at ``(3,3,3)``: the greedy refill stalls, the backjump does not stay stalled.
+
+    On a 3 s budget the greedy policy ends with a class still blank and the other one
+    reaches a verified witness in 7 595 class moves, so this is the case the policy was
+    changed for: the blank set it settles on is the one that can be extended.
+    """
+    problem = G.from_general(14, (3, 3, 3))
+    report = AN.partial(problem, seconds=20.0, seed=0, attempt_every=5000)
+
+    assert report["status"] == "sat", report["status"]
+    assert report["verify"]["valid"]
+    assert report["backjumps"] > 0 and report["blanks"] == 0
+    assert report["locked"] == 0
+
+
 @pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
                     reason="python-sat is not installed")
 def test_the_support_script_stops_at_the_first_satisfiable_blank_count():
@@ -373,11 +456,13 @@ def test_a_repair_says_which_engine_answered():
 def test_the_driver_routes_the_partial_search():
     """``--partial`` must reach ``AN.partial``; a flag that falls through is decoration."""
     args = argparse.Namespace(partial=True, seconds=1.0, seed=0, blank_weight=1.0,
-                              noise=0.05, repair_seconds=1.0, attempt_every=1000)
+                              noise=0.05, repair_seconds=1.0, attempt_every=1000,
+                              no_backjump=False)
     instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
     report = anneal_hunt.search(G.from_blocks(instance), args)
     assert report["blank_weight"] == 1.0
     assert "assignment" in report and "support" in report
+    assert report["backjumps"] == 0 or report["status"] == "sat"
 
 
 def test_a_target_is_refused_until_the_gate_has_passed(tmp_path):

@@ -860,6 +860,14 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   blanked classes in 50 ms, so the engine and the encoding are not the obstacle: the
   obstruction is not carried by a few classes.  Blanking is the better detector, not a
   solver: [RESULTS.md](RESULTS.md) §9g.
+* **Choosing blanks that can be put back.**  A blank class's **open colours** — the ones
+  it could take without completing a set — are exact and cheap, so refilling runs
+  most-constrained-first and, when a blank has none, backjumps by blanking one of its
+  reasons.  On `K_n` (3,3,3) that finds the witness at `K14` where the greedy refill
+  stalls, and reaches the same witness in 3.7–4.7× fewer class moves at `K12`/`K13`.  On
+  the plateau it moves the fraction of locally dead blanks from 100 % to about 20 % and
+  changes nothing else: 62 re-insertions, still none satisfiable, because per-class slack
+  cannot see a global obstruction.  [RESULTS.md](RESULTS.md) §9h.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The

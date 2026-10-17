@@ -8,132 +8,94 @@
   ],
   "classes": 190,
   "class_sets": 13540,
-  "steps": 2868159,
+  "steps": 1867504,
   "seconds": 240.0,
-  "steps_per_second": 11950.7,
-  "violations": 2,
-  "blanks": 5,
-  "repairs": 131,
+  "steps_per_second": 7781.3,
+  "violations": 0,
+  "blanks": 6,
+  "repairs": 69,
   "support": null,
   "refused": [
     5,
     6,
     7,
     8,
-    9
+    10
   ],
   "assignment": [
     3,
-    3,
-    2,
-    3,
-    0,
-    0,
-    0,
     2,
     3,
     3,
-    2,
-    0,
-    0,
-    0,
-    0,
-    3,
+    1,
     3,
     2,
-    0,
-    0,
-    0,
-    0,
+    1,
+    3,
     -1,
-    3,
+    2,
+    1,
+    2,
+    2,
+    1,
     3,
     2,
-    0,
-    0,
     3,
-    0,
+    2,
+    1,
+    3,
+    2,
+    1,
+    3,
+    1,
+    2,
+    1,
     2,
     3,
     -1,
     3,
     2,
     0,
-    2,
+    3,
+    1,
+    0,
     2,
     1,
     1,
-    2,
-    0,
-    3,
-    0,
-    0,
-    0,
-    2,
-    0,
-    2,
-    3,
     -1,
     2,
+    0,
     2,
-    0,
-    0,
-    0,
-    0,
     3,
+    1,
+    3,
+    1,
+    2,
     -1,
+    2,
+    1,
+    -1,
+    1,
+    2,
     -1,
     3,
-    1,
-    1,
-    1,
-    1,
     2,
-    0,
-    0,
-    0,
+    1,
+    3,
     2,
     3,
     3,
+    0,
     2,
-    1,
-    1,
     0,
-    1,
-    0,
-    0,
-    0,
-    1,
     2,
-    1,
-    1,
     3,
     0,
-    0,
+    3,
     0,
     0,
     3,
     1,
-    1,
-    3,
-    1,
-    3,
-    1,
-    1,
-    1,
-    0,
-    0,
-    0,
-    2,
-    1,
-    1,
-    1,
-    0,
-    0,
-    2,
-    0,
-    0,
-    2,
     0,
     3,
     2,
@@ -141,69 +103,63 @@
     1,
     1,
     1,
-    1,
-    1,
-    0,
-    1,
-    1,
-    1,
-    1,
     3,
-    2,
+    3,
+    0,
+    3,
+    0,
     2,
     3,
     0,
-    3,
-    0,
-    0,
     2,
-    3,
     3,
     2,
     0,
     0,
     0,
-    0,
-    1,
-    1,
-    1,
-    1,
-    0,
-    1,
-    0,
-    0,
-    1,
-    3,
     2,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
     0,
     0,
     0,
     1,
+    0,
     2,
-    1,
-    1,
+    0,
     0,
     0,
     2,
-    1,
-    1,
-    1,
-    1,
-    1,
-    2,
-    3,
-    3,
-    2,
     0,
+    0,
+    0,
+    0,
+    0,
+    2,
     0,
     0,
     3,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    2,
+    0,
+    1,
+    1,
+    1,
+    3,
+    2,
+    3,
+    1,
+    2,
+    2,
+    3,
+    3,
+    2,
     3,
     2,
     2,
@@ -211,803 +167,548 @@
     0,
     0,
     0,
+    1,
     0,
-    3
+    0,
+    2,
+    1,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    1,
+    0,
+    2,
+    0,
+    0,
+    2,
+    0,
+    1,
+    2,
+    2,
+    3,
+    3,
+    2,
+    3,
+    2,
+    2,
+    3,
+    3,
+    1,
+    1,
+    3,
+    2,
+    1,
+    3,
+    2,
+    1
   ],
   "blanks_at": [
-    22,
-    32,
-    50,
-    58,
-    59
+    9,
+    29,
+    39,
+    48,
+    51,
+    54
   ],
   "min_blanks": 5,
+  "backjumps": 0,
+  "tabu_len": 200,
+  "locked": 6,
   "attempts": [
     {
       "steps": 20000,
-      "blanks": 9,
+      "blanks": 10,
+      "locked": 10,
       "verdict": "unsat",
-      "seconds": 0.026
+      "seconds": 0.027
     },
     {
       "steps": 40000,
-      "blanks": 9,
+      "blanks": 8,
+      "locked": 8,
       "verdict": "unsat",
       "seconds": 0.005
     },
     {
       "steps": 60000,
-      "blanks": 9,
-      "verdict": "unsat",
-      "seconds": 0.006
-    },
-    {
-      "steps": 80000,
-      "blanks": 9,
-      "verdict": "unsat",
-      "seconds": 0.005
-    },
-    {
-      "steps": 120000,
-      "blanks": 7,
+      "blanks": 8,
+      "locked": 8,
       "verdict": "unsat",
       "seconds": 0.004
     },
     {
-      "steps": 140000,
-      "blanks": 8,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 160000,
+      "steps": 80000,
       "blanks": 7,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.004
+    },
+    {
+      "steps": 100000,
+      "blanks": 8,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.004
+    },
+    {
+      "steps": 120000,
+      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
-      "steps": 180000,
+      "steps": 140000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
+      "steps": 160000,
+      "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 180000,
+      "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.003
+    },
+    {
       "steps": 200000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 220000,
+      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 240000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
-      "steps": 260000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
       "steps": 280000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 300000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 320000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 340000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 360000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
-      "steps": 380000,
+      "steps": 320000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.003
+    },
+    {
+      "steps": 360000,
+      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
+    },
+    {
+      "steps": 380000,
+      "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.003
     },
     {
       "steps": 400000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 420000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 440000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "steps": 460000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 480000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
+      "seconds": 0.004
     },
     {
       "steps": 500000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.003
+      "seconds": 0.005
     },
     {
       "steps": 520000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.003
+      "seconds": 0.004
     },
     {
       "steps": 540000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 560000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 580000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 600000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 620000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 640000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 660000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 680000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 700000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 720000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "steps": 740000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 760000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 780000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 800000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 820000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
-      "steps": 840000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 860000,
-      "blanks": 5,
+      "steps": 800000,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.004
     },
     {
-      "steps": 880000,
-      "blanks": 5,
+      "steps": 840000,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
+      "steps": 880000,
+      "blanks": 6,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.004
+    },
+    {
       "steps": 900000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 920000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 940000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 960000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 980000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 1000000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1020000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 1040000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.005
+      "seconds": 0.003
     },
     {
       "steps": 1060000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 1080000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1100000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 1120000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
-      "steps": 1160000,
+      "steps": 1140000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1180000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
-      "steps": 1200000,
+      "steps": 1160000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 1180000,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 1220000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
-      "steps": 1240000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
       "steps": 1260000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1280000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
+      "seconds": 0.004
     },
     {
       "steps": 1300000,
       "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1320000,
-      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 1340000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
       "steps": 1360000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 1400000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 1420000,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
-      "steps": 1420000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1440000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.005
-    },
-    {
       "steps": 1460000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 1480000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 1500000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 1520000,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
       "seconds": 0.003
     },
     {
-      "steps": 1520000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
       "steps": 1540000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "steps": 1560000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 1580000,
       "blanks": 5,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.002
+    },
+    {
+      "steps": 1600000,
+      "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
     },
     {
       "steps": 1620000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.004
     },
     {
       "steps": 1640000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.005
+      "seconds": 0.004
     },
     {
       "steps": 1660000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
-    },
-    {
-      "steps": 1680000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1700000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1720000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1740000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.005
     },
     {
       "steps": 1760000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
-      "seconds": 0.003
+      "seconds": 0.002
     },
     {
       "steps": 1780000,
-      "blanks": 5,
+      "blanks": 6,
+      "locked": 6,
       "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1800000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1820000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1840000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
+      "seconds": 0.003
     },
     {
       "steps": 1860000,
       "blanks": 5,
+      "locked": 5,
       "verdict": "unsat",
       "seconds": 0.002
-    },
-    {
-      "steps": 1880000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 1900000,
-      "blanks": 7,
-      "verdict": "unsat",
-      "seconds": 0.005
-    },
-    {
-      "steps": 1920000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1940000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1960000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 1980000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2020000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2060000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2080000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2100000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2120000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2140000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 2160000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2200000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2220000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.005
-    },
-    {
-      "steps": 2240000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.005
-    },
-    {
-      "steps": 2260000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2320000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2340000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2360000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2380000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2400000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 2420000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2440000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2460000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2480000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2500000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2520000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 2540000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2560000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2580000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 2640000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2660000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.004
-    },
-    {
-      "steps": 2680000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2700000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2720000,
-      "blanks": 7,
-      "verdict": "unsat",
-      "seconds": 0.006
-    },
-    {
-      "steps": 2740000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2760000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2780000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2800000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.003
-    },
-    {
-      "steps": 2820000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2840000,
-      "blanks": 5,
-      "verdict": "unsat",
-      "seconds": 0.002
-    },
-    {
-      "steps": 2860000,
-      "blanks": 6,
-      "verdict": "unsat",
-      "seconds": 0.003
     }
   ],
   "engines": [
@@ -1016,141 +717,141 @@
   "history": [
     {
       "t": 10.0,
-      "steps": 102674,
-      "violations": 0,
-      "blanks": 8
+      "steps": 76809,
+      "violations": 1,
+      "blanks": 7
     },
     {
       "t": 20.0,
-      "steps": 207796,
+      "steps": 164644,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 30.0,
-      "steps": 335296,
+      "steps": 263952,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 40.0,
-      "steps": 462359,
+      "steps": 357095,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 50.0,
-      "steps": 590881,
+      "steps": 445790,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 60.0,
-      "steps": 717148,
+      "steps": 512866,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 70.0,
-      "steps": 840563,
+      "steps": 584679,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 80.0,
-      "steps": 959602,
+      "steps": 655748,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 90.0,
-      "steps": 1085988,
+      "steps": 722892,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 100.0,
-      "steps": 1211765,
-      "violations": 0,
+      "steps": 792747,
+      "violations": 1,
       "blanks": 5
     },
     {
       "t": 110.0,
-      "steps": 1336091,
-      "violations": 0,
+      "steps": 869689,
+      "violations": 1,
       "blanks": 5
     },
     {
       "t": 120.0,
-      "steps": 1461890,
+      "steps": 952481,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 130.0,
-      "steps": 1585550,
+      "steps": 1038099,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 140.0,
-      "steps": 1712366,
+      "steps": 1120038,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 150.0,
-      "steps": 1835800,
+      "steps": 1207406,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 160.0,
-      "steps": 1958299,
-      "violations": 3,
-      "blanks": 4
+      "steps": 1280097,
+      "violations": 0,
+      "blanks": 6
     },
     {
       "t": 170.0,
-      "steps": 2081986,
+      "steps": 1354993,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 180.0,
-      "steps": 2194441,
+      "steps": 1430937,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 190.0,
-      "steps": 2295603,
-      "violations": 0,
-      "blanks": 5
+      "steps": 1505570,
+      "violations": 1,
+      "blanks": 4
     },
     {
       "t": 200.0,
-      "steps": 2405003,
+      "steps": 1579449,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 210.0,
-      "steps": 2518146,
+      "steps": 1650121,
       "violations": 0,
-      "blanks": 5
+      "blanks": 6
     },
     {
       "t": 220.0,
-      "steps": 2639601,
+      "steps": 1719337,
       "violations": 0,
       "blanks": 5
     },
     {
       "t": 230.0,
-      "steps": 2750772,
-      "violations": 0,
-      "blanks": 5
+      "steps": 1793953,
+      "violations": 2,
+      "blanks": 4
     }
   ],
   "seed": 0,
@@ -1158,7 +859,8 @@
   "noise": 0.05,
   "search_only": true,
   "what": "partial-colouring search over K_50 [3, 3, 3, 3]: 190 classes, 13540 class sets \u2014 'partial' is not a colouring and says nothing about whether the family is empty",
-  "status": "best-effort",
+  "status": "partial",
+  "note": "6 classes left blank with no violations: the engine did not re-insert them",
   "gate": "K50 in the block-Cayley family, from a random start",
   "gate_spec": {
     "n": 50,
@@ -1178,5 +880,5 @@
     "extras": 2
   },
   "passed": false,
-  "produced_by": "scripts/anneal_hunt.py --gate --partial --seconds 240 --attempt-every 20000 --repair-seconds 5 --gate-file runs/anneal/gate_partial_k50.json --out runs/anneal/partial_k50_gate.json"
+  "produced_by": "scripts/anneal_hunt.py --gate --partial --no-backjump --seconds 240 --attempt-every 20000 --repair-seconds 5 --gate-file runs/anneal/gate_partial_k50.json --out runs/anneal/partial_k50_gate.json"
 }

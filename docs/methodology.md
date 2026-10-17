@@ -528,6 +528,31 @@ the obstruction is not carried by a few classes.  The instrument for that second
 time, and records the blank count at which the engine stops saying unsat — a `timeout`
 row there is the honest end of the measurement, not a result (`RESULTS.md` §9g).
 
+**Which classes get blanked is the design decision, not an implementation detail.**  The
+first policy was greedy — a violated set donates the class whose blanking is cheapest — and
+the measurement showed the result was locally dead in every state it produced: at all 69
+re-insertion attempts on `K50`, *every* blank class was locked.  A blank `p` is locked when
+no colour can go there without completing a set, which is decidable from the incremental
+count alone: for each incident set, the only colour `p` can spoiler is that set's forbidden
+one, and `p` is blocked from it exactly when the set has one coloured member fewer than its
+`set_need` and every one of those carries that colour.  The colours left over are the
+blank's **open** colours.  `open_colours` is that test, and the suite checks it against
+brute force on random states rather than trusting the derivation — which is how it was
+caught blocking a colour whenever *any* incident set was one short of it, instead of only
+the sets that forbid it.
+
+The policy built on it runs most-constrained-first over a sample of the blanks (checking
+every blank costs more than the step), takes a random open colour when there is one, and on
+a locked blank **backjumps**: it blanks a class that is part of the reason, so the conflict
+moves outwards instead of being retried.  A tabu on refilling a class just blanked as a
+reason is what keeps the move from undoing itself.  This is the difference the request came
+from: on `K14` at `(3,3,3)` the greedy refill stalls at a partial state and this one finds
+a verified witness, and at `K12`/`K13` it reaches the same witness in 3.7–4.7× fewer class
+moves.  On `K50` it moves the locally-dead fraction from 100 % to about 20 % and changes
+nothing else — 62 re-insertions, none satisfiable — because each blank is fillable on its
+own and no order in which they can all be filled exists.  A per-class signal cannot see a
+global obstruction, and `RESULTS.md` §9h states that instead of selling the improvement.
+
 **A budget is a claim, so it has to be able to fire.**  The repair used `interrupt()`
 under a timer to bound a sub-instance that is nearly the whole search, and on the engine
 it used that call raises `NotImplementedError` *in the timer thread*: the budget was
@@ -545,6 +570,7 @@ python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900  # 
 python scripts/anneal_hunt.py --gate --repair-cap 120 --repair-seconds 5      # with repair
 python scripts/anneal_hunt.py --gate --partial --seconds 240                 # blank classes
 python scripts/partial_support.py 50:3,3,3,3 --blocks 3 --group 2,2,2,2 --extras 2
+python scripts/anneal_hunt.py --gate --partial --no-backjump --seconds 240   # greedy refill
 ```
 
 ## 7. Reproducing and extending

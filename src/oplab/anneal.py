@@ -543,10 +543,37 @@ def _counts(problem: Problem, A):
     return cnt, viol
 
 
+def open_colours(problem: Problem, cnt, p: int) -> list[int]:
+    """The colours class ``p`` can take *right now* without completing a set.
+
+    A class is only ever in the way of **one** colour per set — the colour that set
+    forbids (``set_col[s]``).  ``p`` is blank, so such a set has one coloured member fewer
+    than its ``set_need``, and putting ``p`` on the forbidden colour completes it exactly
+    when every other member already carries it: ``cnt[s, set_col[s]] == need - 1``.  A set
+    with a second blank in it never reaches ``need - 1`` and blocks nothing, which is why
+    this is cheap rather than a scan over the colours.
+
+    A blank with **no** open colour is a *local deadlock*: while the rest of the state
+    stays frozen, no colour can go there, and the walk has to blank a class that is part
+    of the reason instead of trying again.  That is the exact, cheap signal the refill
+    policy of :func:`partial` runs on, and it is the difference between a blank set that
+    is merely large and one that cannot extend.
+    """
+    k = int(problem.k)
+    touch = problem.inc[p][problem.inc_mask[p]]
+    colours = problem.set_col[touch]
+    if touch.size == 0:  # pragma: no cover - a class in no set is free to take anything
+        return list(range(k))
+    short = cnt[touch, colours] == problem.set_need[touch] - 1
+    blocked = set(int(c) for c in colours[short])
+    return [c for c in range(k) if c not in blocked]
+
+
 def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
             blank_weight: float = 1.0, noise: float = 0.05,
             repair_seconds: float = 5.0, attempt_every: int = 2000,
-            report_every: float = 10.0) -> dict:
+            report_every: float = 10.0, backjump: bool = True,
+            refill_probe: int = 3, tabu_len: int = 200) -> dict:
     """Search partial colourings — a class may be **blank** — and re-insert them.
 
     Both searches before this one stall two or three cliques from a witness, and
@@ -558,10 +585,21 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
 
     The objective is one scalar, ``violations + blank_weight * blanks``, and it is
     minimised by min-conflicts: a violated set is attacked by recolouring one of its
-    classes **or blanking it**, whichever is cheaper, and when no violation is left the
-    walk tries to refill a random blank class, accepting the refill only when it costs
-    nothing or by chance ``exp(-cost)``.  A witness is the global optimum, so the search
-    can be run for as long as its budget allows without a separate stopping rule.
+    classes **or blanking it**, whichever is cheaper.  A witness is the global optimum, so
+    the search can be run for as long as its budget allows without a stopping rule.
+
+    **Which blanks** is the part that decides whether the run is worth anything, and it is
+    not the greedy choice.  A blank class ``p`` is *forced* away from a set's forbidden
+    colour when every other member of that set already carries it; the colours left over
+    are its **open** colours (:func:`open_colours`), the ones it could take right now
+    without making a set monochromatic.  Refilling therefore runs most-constrained-first on a
+    sample of the blanks, takes a random open colour when there is one, and when a blank
+    has **no** open colour it backjumps: a class that is part of one of its reasons is
+    blanked instead, so the conflict moves outwards instead of being retried.  A blank
+    with no open colour is a *local deadlock* — provable without an engine — and
+    ``locked`` in the report counts them, which is the cheapest available signal for
+    "this blank set will not extend".  ``backjump=False`` restores the greedy policy
+    (fill at random, accept by chance) that the earlier measurement was made with.
 
     Every ``attempt_every`` steps at zero violations, the blank classes go to
     :func:`repair`.  ``support`` in the report is the blank count at which that finally
@@ -619,9 +657,36 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
                 best = (score, target)
         return best
 
+    def reason_backjump(p) -> bool:
+        """Blank a class that forces ``p`` away from a colour, so ``p`` can move later.
+
+        Every colour ``p`` is blocked from is blocked by a set whose *other* members are
+        all on that colour.  Blanking one of them removes the reason, which is the move a
+        greedy blank choice never makes: it keeps the state where it is and only pays for
+        the conflict it can see.  Returns whether a reason was found and blanked.
+        """
+        reasons = []
+        for s in inc[p][inc_mask[p]]:
+            need = int(set_need[s])
+            now = int(set_col[s])
+            if int(cnt[s, now]) != need - 1:
+                continue
+            reasons.extend(int(q) for q in set_cls[s] if q != nc and int(A[q]) == now)
+        if not reasons:
+            return False
+        q = reasons[int(rng.integers(len(reasons)))]
+        apply(q, BLANK)
+        tabu[q] = steps
+        return True
+
+    def open_now(p):
+        return open_colours(g, cnt, int(p))
+        return best
+
     targets = list(range(k)) + [BLANK]  # every move a class can be given
     colours = list(range(k))
-    steps = repairs = 0
+    steps = repairs = backjumps = 0
+    tabu: dict[int, int] = {}  # class -> step it was blanked by a backjump
     attempts: list[dict] = []
     refused: list[int] = []
     engines: list[str] = []
@@ -657,6 +722,8 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
                     "no-engine" if outcome.get("note", "").startswith("no engine")
                     else "timeout" if outcome.get("timeout") else "unsat")
                 attempts.append({"steps": steps, "blanks": int(blanks_now.size),
+                                 "locked": sum(1 for q in blanks_now
+                                               if not open_now(int(q))),
                                  "verdict": verdict,
                                  "seconds": round(outcome["seconds"], 3)})
                 if outcome["solved"]:
@@ -693,12 +760,37 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
                 break
             min_blanks = int(blanks.size) if min_blanks is None else \
                 min(min_blanks, int(blanks.size))
-            p = int(blanks[rng.integers(blanks.size)])
-            pick = cheapest(p, colours)
-            if pick is None:  # pragma: no cover - a single colour leaves nothing to try
-                break
-            if pick[0] <= 0 or rng.random() < math.exp(-pick[0]):
-                apply(p, pick[1])
+            if backjump:
+                # most-constrained-first over a sample (checking every blank would cost
+                # more than the step), and a blank with no open colour moves the conflict
+                # outwards.  A class just blanked as a *reason* must not be refilled on
+                # the next step or the walk undoes the move it just made: the tabu is
+                # what turns the backjump into a step forward instead of in place.
+                fresh = [int(q) for q in blanks
+                         if steps - tabu.get(int(q), -tabu_len - 1) > tabu_len]
+                pool = fresh or [int(q) for q in blanks]
+                sample = (rng.choice(pool, size=refill_probe, replace=False)
+                          if len(pool) > refill_probe else np.asarray(pool, dtype=np.int64))
+                fewest, p = min((len(open_now(int(q))), int(q)) for q in sample)
+                open_here = open_now(p)
+                if fewest == 0 and reason_backjump(p):
+                    backjumps += 1
+                    steps += 1
+                    continue
+                if open_here:
+                    # every open colour keeps the count at zero, so pick one at random
+                    # rather than fixing the first extension the state happens to allow
+                    apply(p, open_here[int(rng.integers(len(open_here)))])
+            else:
+                # the greedy policy the first measurement was made with: a random blank,
+                # accepted when it is free or by chance.  ``backjump=False`` restores it
+                # exactly, probe cost included, so an old report can be reproduced.
+                p = int(blanks[rng.integers(blanks.size)])
+                pick = cheapest(p, colours)
+                if pick is None:  # pragma: no cover - a single colour leaves nothing
+                    break
+                if pick[0] <= 0 or rng.random() < math.exp(-pick[0]):
+                    apply(p, pick[1])
         steps += 1
 
     elapsed = time.time() - started
@@ -712,7 +804,8 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
         # the state itself, so a run can be resumed or grown without re-walking it;
         # ``-1`` is a blank class, and a partial state is not a colouring
         "assignment": [int(x) for x in A], "blanks_at": [int(p) for p in blanks],
-        "min_blanks": min_blanks,
+        "min_blanks": min_blanks, "backjumps": backjumps, "tabu_len": tabu_len,
+        "locked": sum(1 for p in blanks if not open_now(int(p))),
         "attempts": attempts, "engines": sorted(set(engines)), "history": history,
         "seed": int(seed), "blank_weight": blank_weight, "noise": noise,
         "search_only": True,

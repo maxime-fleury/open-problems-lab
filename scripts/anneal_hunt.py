@@ -86,8 +86,10 @@ def _write(path: Path | None, report: dict) -> None:
 def _line(report: dict) -> str:
     if report.get("blank_weight") is not None:  # the partial-colouring search
         return (f"{report['status']}: {report['violations']} violation(s), "
-                f"{report['blanks']} class(es) blank, {report['steps']} steps in "
-                f"{report['seconds']} s ({report['steps_per_second']}/s); re-insertion "
+                f"{report['blanks']} class(es) blank ({report['locked']} locked), "
+                f"{report['steps']} steps in {report['seconds']} s "
+                f"({report['steps_per_second']}/s, {report['backjumps']} backjump); "
+                f"re-insertion "
                 f"{'succeeded at ' + str(report['support']) + ' blanks' if report['support'] else 'never succeeded'}"
                 f", refused at {report['refused']}")
     return (f"{report['status']}: {report['violations']} violation(s) at best, "
@@ -102,7 +104,8 @@ def search(problem, args) -> dict:
         return AN.partial(problem, seconds=args.seconds, seed=args.seed,
                           blank_weight=args.blank_weight, noise=args.noise,
                           repair_seconds=args.repair_seconds,
-                          attempt_every=args.attempt_every)
+                          attempt_every=args.attempt_every,
+                          backjump=not args.no_backjump)
     return AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
                      noise=args.noise, fan=args.fan, reject=args.reject,
                      t0=args.t0, tmin=args.tmin, stuck=args.stuck,
@@ -144,6 +147,9 @@ def main(argv=None) -> int:
                     help="cost of one blank class, in monochromatic cliques")
     ap.add_argument("--attempt-every", type=int, default=20000,
                     help="steps between two re-insertion attempts")
+    ap.add_argument("--no-backjump", action="store_true",
+                    help="fill blanks by chance instead of most-constrained-first (the "
+                         "greedy policy the first partial-colouring run was made with)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
 

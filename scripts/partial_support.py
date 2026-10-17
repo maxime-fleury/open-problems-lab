@@ -48,7 +48,8 @@ def clean_state(problem: G.Problem, args) -> dict:
         report = AN.partial(problem, seconds=args.seconds, seed=seed,
                             blank_weight=args.blank_weight, noise=args.noise,
                             repair_seconds=args.repair_seconds,
-                            attempt_every=args.attempt_every)
+                            attempt_every=args.attempt_every,
+                            backjump=not args.no_backjump)
         if report["violations"] == 0 and report["blanks"] > 0:
             report["walk_seed"] = seed
             return report
@@ -103,6 +104,8 @@ def main(argv=None) -> int:
     ap.add_argument("--blank-weight", type=float, default=1.0)
     ap.add_argument("--noise", type=float, default=0.05)
     ap.add_argument("--attempt-every", type=int, default=20000)
+    ap.add_argument("--no-backjump", action="store_true",
+                    help="grow from a state the greedy refill policy produced")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
 
@@ -126,6 +129,7 @@ def main(argv=None) -> int:
                                         "blanks", "support", "min_blanks", "refused")},
         "start_blanks": report["blanks"],
         "blank_weight": args.blank_weight, "step": args.step,
+        "backjump": not args.no_backjump,
         "repair_seconds": args.repair_seconds, "seed": args.seed,
         "growth": table,
         "search_only": True,

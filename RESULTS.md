@@ -982,47 +982,43 @@ knows which classes have to move has to hand in.
 
 **It dissolves the plateau in under a second.**  `K50`, 3×`Z_2^4`+2 (190 classes,
 13 540 class sets), seed 0, one re-insertion attempt per 20 000 steps; the second row is
-the gate run stored as `runs/anneal/partial_k50_gate.json`:
+the gate run stored as `runs/anneal/partial_k50_gate.json`, made with the greedy refill
+policy (`--no-backjump`) that §9h measures against its replacement:
 
 | walk | seconds | steps | steps/s | violations | blanks | re-insertions | SAT |
 |---|---|---|---|---|---|---|---|
 | §9e annealing + repair | 120 | 223 k | 1 858 | **3** | — | 1 100 | 0 |
-| partial colourings | 240 | 2 868 159 | 11 951 | **0** | **5** | 131 | **0** |
+| partial colourings | 240 | 1 867 504 | 7 781 | **0** | **5–6** | 69 | **0** |
 
-Zero violations at every ten-second report from `t = 20 s` to `t = 230 s`, at **5 blanks** —
-2.6 % of the instance — where the annealing of §9e never got below two cliques in two
-minutes.  The single blip is at `t = 160 s` (3 violations, 4 blanks) and it clears on the
-next report: the walk leaves the state and comes back, which is the churn the refill rule
-is for.  It stopped at `best-effort` with 2 violations because the clock ran out mid-cycle;
-that is the state it was in, not a plateau.  The dissolution works, and it is not a matter
-of tuning: at `blank_weight` 0.25, 0.5, 0.75 and 1.5 (90 s each) the walk lands at 5–8
-blanks every time and never more, because it only blanks a class when no recolouring of it
-is as cheap.
+Zero violations at every ten-second report, at **5–6 blanks** — 2.6–3.2 % of the instance —
+where the annealing of §9e never got below two cliques in two minutes.  The dissolution
+works, and it is not a matter of tuning: at `blank_weight` 0.25, 0.5, 0.75 and 1.5 (90 s
+each) the walk lands at 5–8 blanks every time and never more, because it only blanks a
+class when no recolouring of it is as cheap.
 
-**And every dissolved state is dead.**  All 131 re-insertions were unsatisfiable — 121 of
-them at exactly 5 blanks — and the engine was never the reason: 0 timeouts at a 5 s
-budget, answers in 0.02–0.05 s, all on `maplechrono`.  Growing the blank set from one such
-state — 5 blanks, zero violations, seed 0, `scripts/partial_support.py` — shows how far
-the support is:
+**And every dissolved state is dead.**  All 69 re-insertions were unsatisfiable, and the
+engine was never the reason: 0 timeouts at a 5 s budget, answers in 0.02–0.05 s, all on
+`maplechrono`.  Growing the blank set from one such state — 8 blanks, zero violations,
+seed 0, `scripts/partial_support.py --no-backjump` — shows how far the support is:
 
 | blanks | answer | time |
 |---|---|---|
-| 5 → 149 | UNSAT | 0.00–0.11 s |
-| 157 | UNSAT | 1.84 s |
-| 165 | timeout (6 s) | — |
+| 8 → 152 | UNSAT | 0.01–0.12 s |
+| 160 | UNSAT | 1.99 s |
+| 168 | timeout (6 s) | — |
 
 The same measurement from the **stored witness** says what a healthy state looks like:
 blanking 2, 4, 8, 16, 32, 64, 96 or 128 of its classes and re-inserting them takes at most
 0.05 s.  So a witness survives the loss of 128 of 190 classes (67 %), and the walk's
-near-complete state does not survive the loss of 157 (83 %) — and at 165 the sub-instance
+near-complete state does not survive the loss of 160 (84 %) — and at 168 the sub-instance
 is as hard as the full 527 s search it came from.
 
 The reading is not "blanking fails".  Blanking is a strictly better **detector** than a
-solver: it reaches zero violations almost immediately and hands over a state that is five
-classes short of complete, which is exactly the shape the plateau had.  What it also shows
-is that the obstruction is not carried by a few classes — the last five are unpinnable
-*for every colouring of the other 185*, so "find the recolouring of the last few" has no
-answer to find, and "free more of the instance" costs the whole search.  This is the
+solver: it reaches zero violations almost immediately and hands over a state that is a
+handful of classes short of complete, which is exactly the shape the plateau had.  What it
+also shows is that the obstruction is not carried by a few classes — the last handful are
+unpinnable *for every colouring of the other 185*, so "find the recolouring of the last
+few" has no answer to find, and "free more of the instance" costs the whole search.  This is the
 precise sense in which §9e and §9f were not local traps: they were complete partial
 colourings minus five classes, and no completion exists.  The dead state
 is the measurement: it says the plateau is not a coverage problem.
@@ -1050,6 +1046,79 @@ python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --partial --secon
 
 The gate applies here too, and for the same reason: `partial` can claim a witness, so it
 may not speak about `K51` until it has rediscovered the known `K50` one.  It had not.
+
+## 9h. Preferring blanks that can be extended — and the limit of a local signal
+
+§9g dissolves the plateau and then finds the blank set unextendable.  The blank set was
+chosen greedily: a violated set donates the class whose blanking is cheapest, so the
+classes that end up blank are the ones that happened to be in the way.  That is a choice,
+and it is a bad one, because *which* classes are blank decides whether anything can be
+put back.
+
+The signal that replaces it is exact and costs one look per incident set.  A blank class
+``p`` is **forced** away from the colour a set forbids when every other member of that set
+already carries it; the colours left over are its **open** colours — the ones it could take
+*right now* without completing a set.  A blank with no open colour is a **local
+deadlock**, provable without an engine.  `open_colours` in `oplab.anneal` computes this from
+the incremental count, and the tests check it against brute force on random states rather
+than trusting the derivation.
+
+The refill policy now runs on it: most-constrained-first over a sample of the blanks, a
+random open colour when there is one, and — when a blank has no open colour — a
+**backjump** that blanks a class which is part of its reason, so the conflict moves
+outwards instead of being retried.  A short tabu stops the walk from refilling the class
+it just blanked as a reason.  `--no-backjump` restores the greedy policy exactly.
+
+**It works where a completion is nearby.**  `K_n` at `(3,3,3)`, general colourings, 3 s,
+seed 0:
+
+| n | greedy | MRV + backjump |
+|---|---|---|
+| 9, 10 | `sat`, 6 and 13 steps | `sat`, same |
+| 12 | `sat`, 881 steps | `sat`, **239** |
+| 13 | `sat`, 2 053 steps | `sat`, **438** |
+| 14 | `partial`, 1 class blank | `sat`, 7 595 steps |
+| 15 | `partial`, 2 blanks | `partial`, 8 blanks |
+| 16 | `partial`, 4 blanks | `partial`, 33 blanks |
+
+`K14` is the case the change was made for: with the greedy refill the walk ends with a
+class still blank, and with backjumping it reaches a witness the verifier accepts.  Given
+twenty seconds the greedy policy gets there too — 59 520 class moves and 6.5 s against
+7 595 moves and 1.2 s, 7.8× fewer moves and 5.6× sooner, same seed, same verified witness.
+`K12` and `K13` say the same thing more cheaply: at a 3 s budget, 3.7× and 4.7× fewer class
+moves to the same answer.
+
+**And it does not rescue the plateau.**  `K50`, 240 s, seed 0, one re-insertion attempt per
+20 000 steps:
+
+| policy | steps | steps/s | blanks | locked | attempts | SAT |
+|---|---|---|---|---|---|---|
+| greedy (`--no-backjump`) | 1 867 504 | 7 781 | 5–6 | **all of them** | 69 | 0 |
+| MRV + backjump | 1 242 393 | 5 177 | 7–51 | 6–8 | 62 | 0 |
+
+Both arms refuse every re-insertion, and the columns say why the policy cannot help.  The
+greedy arm is worth looking at twice: **at every one of its 69 attempts, every blank class
+was locked** — 5 blanks, 5 locked; 6 blanks, 6 locked — so its states were locally dead in
+the strongest sense.  The new policy moves that number from 100 % to 6–8 of 30–42 blanks,
+which is exactly what it was built to do, and the engine still says UNSAT every time.  It
+also costs about a third of the throughput (7 781 → 5 177 steps/s) and half of its steps are
+backjumps, because on a globally dead instance every refill creates the next deadlock.  A class-level slack cannot see a **global** obstruction: each blank can
+be filled on its own, and there is no order in which they can all be filled.
+
+The support growth of §9g is unchanged under either policy: from a clean state with 8
+blanks it stays UNSAT at 160 blanks (1.99 s) and times out at 168.  The obstruction needs
+84 % of the instance free whichever way the blanks were chosen — which is the same
+conclusion as §9g, now with the choice of blanks eliminated as the explanation.
+
+```bash
+python scripts/anneal_hunt.py --gate --partial --no-backjump --seconds 240 \
+    --gate-file runs/anneal/gate_partial_k50.json --out runs/anneal/partial_k50_gate.json
+python scripts/anneal_hunt.py --gate --partial --seconds 240 \
+    --gate-file runs/anneal/gate_partial_k50_backjump.json \
+    --out runs/anneal/partial_k50_backjump.json
+python scripts/partial_support.py 50:3,3,3,3 --blocks 3 --group 2,2,2,2 --extras 2 \
+    --seconds 12 --step 8 --no-backjump --out runs/anneal/partial_k50_support.json
+```
 
 ## Limitations, stated plainly
 

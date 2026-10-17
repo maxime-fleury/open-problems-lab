@@ -1,0 +1,900 @@
+{
+  "n": 50,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "classes": 190,
+  "class_sets": 13540,
+  "steps": 1242393,
+  "seconds": 240.0,
+  "steps_per_second": 5176.6,
+  "violations": 0,
+  "blanks": 51,
+  "repairs": 62,
+  "support": null,
+  "refused": [
+    20,
+    22,
+    26,
+    28,
+    32,
+    34,
+    36,
+    38,
+    40,
+    42,
+    44,
+    46,
+    48,
+    50,
+    52,
+    54,
+    56,
+    62,
+    64,
+    66,
+    68,
+    70,
+    72,
+    74,
+    76
+  ],
+  "assignment": [
+    1,
+    -1,
+    1,
+    -1,
+    -1,
+    1,
+    -1,
+    1,
+    2,
+    1,
+    0,
+    2,
+    2,
+    -1,
+    2,
+    3,
+    3,
+    2,
+    2,
+    0,
+    3,
+    -1,
+    0,
+    0,
+    0,
+    3,
+    2,
+    -1,
+    2,
+    -1,
+    -1,
+    1,
+    1,
+    3,
+    -1,
+    1,
+    3,
+    3,
+    1,
+    0,
+    -1,
+    1,
+    -1,
+    -1,
+    0,
+    2,
+    -1,
+    2,
+    1,
+    -1,
+    0,
+    -1,
+    3,
+    2,
+    3,
+    3,
+    -1,
+    -1,
+    3,
+    -1,
+    1,
+    2,
+    3,
+    -1,
+    3,
+    -1,
+    -1,
+    -1,
+    2,
+    0,
+    0,
+    1,
+    0,
+    3,
+    1,
+    3,
+    -1,
+    3,
+    2,
+    0,
+    2,
+    0,
+    0,
+    0,
+    1,
+    -1,
+    -1,
+    -1,
+    2,
+    2,
+    3,
+    2,
+    1,
+    3,
+    3,
+    -1,
+    3,
+    3,
+    -1,
+    3,
+    3,
+    3,
+    -1,
+    3,
+    3,
+    0,
+    3,
+    0,
+    3,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    -1,
+    0,
+    -1,
+    1,
+    1,
+    -1,
+    1,
+    -1,
+    1,
+    1,
+    2,
+    2,
+    -1,
+    2,
+    2,
+    -1,
+    2,
+    2,
+    -1,
+    2,
+    1,
+    0,
+    -1,
+    2,
+    0,
+    2,
+    -1,
+    -1,
+    -1,
+    3,
+    3,
+    3,
+    3,
+    -1,
+    -1,
+    3,
+    3,
+    3,
+    3,
+    0,
+    3,
+    0,
+    -1,
+    1,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    -1,
+    1,
+    -1,
+    1,
+    1,
+    -1,
+    -1,
+    -1,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    -1,
+    -1,
+    0,
+    2,
+    0,
+    0
+  ],
+  "blanks_at": [
+    1,
+    3,
+    4,
+    6,
+    13,
+    21,
+    27,
+    29,
+    30,
+    34,
+    40,
+    42,
+    43,
+    46,
+    49,
+    51,
+    56,
+    57,
+    59,
+    63,
+    65,
+    66,
+    67,
+    76,
+    85,
+    86,
+    87,
+    95,
+    98,
+    102,
+    115,
+    117,
+    120,
+    122,
+    127,
+    130,
+    133,
+    137,
+    141,
+    142,
+    143,
+    148,
+    149,
+    157,
+    168,
+    170,
+    173,
+    174,
+    175,
+    184,
+    185
+  ],
+  "min_blanks": 7,
+  "backjumps": 621169,
+  "tabu_len": 200,
+  "locked": 11,
+  "attempts": [
+    {
+      "steps": 20000,
+      "blanks": 42,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.05
+    },
+    {
+      "steps": 40000,
+      "blanks": 46,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.021
+    },
+    {
+      "steps": 60000,
+      "blanks": 44,
+      "locked": 11,
+      "verdict": "unsat",
+      "seconds": 0.022
+    },
+    {
+      "steps": 80000,
+      "blanks": 34,
+      "locked": 9,
+      "verdict": "unsat",
+      "seconds": 0.015
+    },
+    {
+      "steps": 100000,
+      "blanks": 36,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.014
+    },
+    {
+      "steps": 120000,
+      "blanks": 68,
+      "locked": 10,
+      "verdict": "unsat",
+      "seconds": 0.029
+    },
+    {
+      "steps": 140000,
+      "blanks": 70,
+      "locked": 20,
+      "verdict": "unsat",
+      "seconds": 0.038
+    },
+    {
+      "steps": 160000,
+      "blanks": 42,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.017
+    },
+    {
+      "steps": 180000,
+      "blanks": 34,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.015
+    },
+    {
+      "steps": 200000,
+      "blanks": 40,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 220000,
+      "blanks": 54,
+      "locked": 11,
+      "verdict": "unsat",
+      "seconds": 0.018
+    },
+    {
+      "steps": 240000,
+      "blanks": 62,
+      "locked": 16,
+      "verdict": "unsat",
+      "seconds": 0.02
+    },
+    {
+      "steps": 260000,
+      "blanks": 32,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.013
+    },
+    {
+      "steps": 280000,
+      "blanks": 56,
+      "locked": 9,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 300000,
+      "blanks": 34,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.013
+    },
+    {
+      "steps": 320000,
+      "blanks": 70,
+      "locked": 13,
+      "verdict": "unsat",
+      "seconds": 0.03
+    },
+    {
+      "steps": 340000,
+      "blanks": 20,
+      "locked": 3,
+      "verdict": "unsat",
+      "seconds": 0.013
+    },
+    {
+      "steps": 360000,
+      "blanks": 42,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.025
+    },
+    {
+      "steps": 380000,
+      "blanks": 36,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.021
+    },
+    {
+      "steps": 400000,
+      "blanks": 64,
+      "locked": 14,
+      "verdict": "unsat",
+      "seconds": 0.023
+    },
+    {
+      "steps": 420000,
+      "blanks": 50,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.023
+    },
+    {
+      "steps": 440000,
+      "blanks": 40,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.014
+    },
+    {
+      "steps": 460000,
+      "blanks": 34,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.012
+    },
+    {
+      "steps": 480000,
+      "blanks": 34,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.014
+    },
+    {
+      "steps": 500000,
+      "blanks": 22,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.009
+    },
+    {
+      "steps": 520000,
+      "blanks": 70,
+      "locked": 10,
+      "verdict": "unsat",
+      "seconds": 0.024
+    },
+    {
+      "steps": 540000,
+      "blanks": 64,
+      "locked": 17,
+      "verdict": "unsat",
+      "seconds": 0.023
+    },
+    {
+      "steps": 560000,
+      "blanks": 44,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.016
+    },
+    {
+      "steps": 580000,
+      "blanks": 42,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 600000,
+      "blanks": 48,
+      "locked": 9,
+      "verdict": "unsat",
+      "seconds": 0.023
+    },
+    {
+      "steps": 620000,
+      "blanks": 52,
+      "locked": 18,
+      "verdict": "unsat",
+      "seconds": 0.024
+    },
+    {
+      "steps": 640000,
+      "blanks": 72,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.029
+    },
+    {
+      "steps": 660000,
+      "blanks": 38,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.016
+    },
+    {
+      "steps": 680000,
+      "blanks": 76,
+      "locked": 11,
+      "verdict": "unsat",
+      "seconds": 0.027
+    },
+    {
+      "steps": 700000,
+      "blanks": 40,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.015
+    },
+    {
+      "steps": 720000,
+      "blanks": 28,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.013
+    },
+    {
+      "steps": 740000,
+      "blanks": 46,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 760000,
+      "blanks": 40,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.017
+    },
+    {
+      "steps": 780000,
+      "blanks": 36,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 800000,
+      "blanks": 66,
+      "locked": 16,
+      "verdict": "unsat",
+      "seconds": 0.027
+    },
+    {
+      "steps": 820000,
+      "blanks": 40,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.016
+    },
+    {
+      "steps": 840000,
+      "blanks": 28,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.012
+    },
+    {
+      "steps": 860000,
+      "blanks": 36,
+      "locked": 3,
+      "verdict": "unsat",
+      "seconds": 0.015
+    },
+    {
+      "steps": 880000,
+      "blanks": 26,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.01
+    },
+    {
+      "steps": 900000,
+      "blanks": 32,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.013
+    },
+    {
+      "steps": 920000,
+      "blanks": 74,
+      "locked": 14,
+      "verdict": "unsat",
+      "seconds": 0.026
+    },
+    {
+      "steps": 940000,
+      "blanks": 32,
+      "locked": 9,
+      "verdict": "unsat",
+      "seconds": 0.012
+    },
+    {
+      "steps": 960000,
+      "blanks": 50,
+      "locked": 18,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 980000,
+      "blanks": 44,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.019
+    },
+    {
+      "steps": 1000000,
+      "blanks": 56,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.022
+    },
+    {
+      "steps": 1020000,
+      "blanks": 40,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.018
+    },
+    {
+      "steps": 1040000,
+      "blanks": 44,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.018
+    },
+    {
+      "steps": 1060000,
+      "blanks": 52,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.027
+    },
+    {
+      "steps": 1080000,
+      "blanks": 32,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.02
+    },
+    {
+      "steps": 1100000,
+      "blanks": 40,
+      "locked": 11,
+      "verdict": "unsat",
+      "seconds": 0.017
+    },
+    {
+      "steps": 1120000,
+      "blanks": 26,
+      "locked": 7,
+      "verdict": "unsat",
+      "seconds": 0.01
+    },
+    {
+      "steps": 1140000,
+      "blanks": 54,
+      "locked": 3,
+      "verdict": "unsat",
+      "seconds": 0.032
+    },
+    {
+      "steps": 1160000,
+      "blanks": 32,
+      "locked": 5,
+      "verdict": "unsat",
+      "seconds": 0.011
+    },
+    {
+      "steps": 1180000,
+      "blanks": 76,
+      "locked": 12,
+      "verdict": "unsat",
+      "seconds": 0.024
+    },
+    {
+      "steps": 1200000,
+      "blanks": 68,
+      "locked": 20,
+      "verdict": "unsat",
+      "seconds": 0.021
+    },
+    {
+      "steps": 1220000,
+      "blanks": 40,
+      "locked": 6,
+      "verdict": "unsat",
+      "seconds": 0.014
+    },
+    {
+      "steps": 1240000,
+      "blanks": 36,
+      "locked": 8,
+      "verdict": "unsat",
+      "seconds": 0.014
+    }
+  ],
+  "engines": [
+    "maplechrono"
+  ],
+  "history": [
+    {
+      "t": 10.0,
+      "steps": 51073,
+      "violations": 0,
+      "blanks": 59
+    },
+    {
+      "t": 20.0,
+      "steps": 98721,
+      "violations": 0,
+      "blanks": 33
+    },
+    {
+      "t": 30.0,
+      "steps": 144559,
+      "violations": 0,
+      "blanks": 53
+    },
+    {
+      "t": 40.0,
+      "steps": 193247,
+      "violations": 0,
+      "blanks": 49
+    },
+    {
+      "t": 50.0,
+      "steps": 245535,
+      "violations": 0,
+      "blanks": 61
+    },
+    {
+      "t": 60.0,
+      "steps": 306786,
+      "violations": 0,
+      "blanks": 50
+    },
+    {
+      "t": 70.0,
+      "steps": 351436,
+      "violations": 0,
+      "blanks": 46
+    },
+    {
+      "t": 80.0,
+      "steps": 399645,
+      "violations": 0,
+      "blanks": 69
+    },
+    {
+      "t": 90.0,
+      "steps": 457064,
+      "violations": 0,
+      "blanks": 70
+    },
+    {
+      "t": 100.0,
+      "steps": 513676,
+      "violations": 0,
+      "blanks": 42
+    },
+    {
+      "t": 110.0,
+      "steps": 570398,
+      "violations": 0,
+      "blanks": 54
+    },
+    {
+      "t": 120.0,
+      "steps": 615671,
+      "violations": 0,
+      "blanks": 69
+    },
+    {
+      "t": 130.0,
+      "steps": 667707,
+      "violations": 0,
+      "blanks": 77
+    },
+    {
+      "t": 140.0,
+      "steps": 721205,
+      "violations": 0,
+      "blanks": 67
+    },
+    {
+      "t": 150.0,
+      "steps": 771447,
+      "violations": 0,
+      "blanks": 45
+    },
+    {
+      "t": 160.0,
+      "steps": 823174,
+      "violations": 0,
+      "blanks": 30
+    },
+    {
+      "t": 170.0,
+      "steps": 875907,
+      "violations": 0,
+      "blanks": 35
+    },
+    {
+      "t": 180.0,
+      "steps": 927032,
+      "violations": 0,
+      "blanks": 42
+    },
+    {
+      "t": 190.0,
+      "steps": 979708,
+      "violations": 0,
+      "blanks": 54
+    },
+    {
+      "t": 200.0,
+      "steps": 1032206,
+      "violations": 0,
+      "blanks": 36
+    },
+    {
+      "t": 210.0,
+      "steps": 1077297,
+      "violations": 0,
+      "blanks": 33
+    },
+    {
+      "t": 220.0,
+      "steps": 1126387,
+      "violations": 0,
+      "blanks": 33
+    },
+    {
+      "t": 230.0,
+      "steps": 1181496,
+      "violations": 0,
+      "blanks": 56
+    }
+  ],
+  "seed": 0,
+  "blank_weight": 1.0,
+  "noise": 0.05,
+  "search_only": true,
+  "what": "partial-colouring search over K_50 [3, 3, 3, 3]: 190 classes, 13540 class sets \u2014 'partial' is not a colouring and says nothing about whether the family is empty",
+  "status": "partial",
+  "note": "51 classes left blank with no violations: the engine did not re-insert them",
+  "gate": "K50 in the block-Cayley family, from a random start",
+  "gate_spec": {
+    "n": 50,
+    "sizes": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "blocks": 3,
+    "group": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "extras": 2
+  },
+  "passed": false,
+  "produced_by": "scripts/anneal_hunt.py --gate --partial --seconds 240 --attempt-every 20000 --repair-seconds 5 --gate-file runs/anneal/gate_partial_k50_backjump.json --out runs/anneal/partial_k50_backjump.json"
+}
