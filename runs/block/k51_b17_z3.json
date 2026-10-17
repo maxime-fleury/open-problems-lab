@@ -1,0 +1,26 @@
+{
+  "n": 51,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "blocks": 17,
+  "group": [
+    3
+  ],
+  "extras": 0,
+  "solver": "kissat404",
+  "break_colours": true,
+  "classes": 425,
+  "class_sets": {
+    "3": 6953
+  },
+  "num_vars": 1700,
+  "num_clauses": 30788,
+  "seconds": 0.243,
+  "status": "unsat",
+  "produced_by": "scripts/block_hunt.py 51:3,3,3,3 --blocks 17 --group 3 --extras 0 --seconds 900 --solver kissat404 --break-colours",
+  "what": "block-Cayley family for K51 [3, 3, 3, 3]: 17 block(s), group [3], 0 extras"
+}
