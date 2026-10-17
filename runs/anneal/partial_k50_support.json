@@ -1,0 +1,139 @@
+{
+  "n": 50,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "family": "block-Cayley Ramsey K_50 [3, 3, 3, 3]: 3 block(s) of [2, 2, 2, 2], 2 extra vertices, 190 classes",
+  "classes": 190,
+  "class_sets": 13540,
+  "walk": {
+    "walk_seed": 0,
+    "steps": 116985,
+    "seconds": 12.0,
+    "violations": 0,
+    "blanks": 5,
+    "support": null,
+    "min_blanks": 5,
+    "refused": [
+      5,
+      7
+    ]
+  },
+  "start_blanks": 5,
+  "blank_weight": 1.0,
+  "step": 8,
+  "repair_seconds": 6.0,
+  "seed": 0,
+  "growth": [
+    [
+      5,
+      "unsat",
+      0.003
+    ],
+    [
+      13,
+      "unsat",
+      0.005
+    ],
+    [
+      21,
+      "unsat",
+      0.008
+    ],
+    [
+      29,
+      "unsat",
+      0.011
+    ],
+    [
+      37,
+      "unsat",
+      0.014
+    ],
+    [
+      45,
+      "unsat",
+      0.016
+    ],
+    [
+      53,
+      "unsat",
+      0.021
+    ],
+    [
+      61,
+      "unsat",
+      0.028
+    ],
+    [
+      69,
+      "unsat",
+      0.029
+    ],
+    [
+      77,
+      "unsat",
+      0.024
+    ],
+    [
+      85,
+      "unsat",
+      0.027
+    ],
+    [
+      93,
+      "unsat",
+      0.034
+    ],
+    [
+      101,
+      "unsat",
+      0.033
+    ],
+    [
+      109,
+      "unsat",
+      0.034
+    ],
+    [
+      117,
+      "unsat",
+      0.051
+    ],
+    [
+      125,
+      "unsat",
+      0.04
+    ],
+    [
+      133,
+      "unsat",
+      0.043
+    ],
+    [
+      141,
+      "unsat",
+      0.05
+    ],
+    [
+      149,
+      "unsat",
+      0.114
+    ],
+    [
+      157,
+      "unsat",
+      1.837
+    ],
+    [
+      165,
+      "timeout",
+      6.157
+    ]
+  ],
+  "search_only": true,
+  "what": "support growth from a clean partial state of block-Cayley Ramsey K_50 [3, 3, 3, 3]: 3 block(s) of [2, 2, 2, 2], 2 extra vertices, 190 classes: the blank count at which re-insertion first stops saying unsat"
+}

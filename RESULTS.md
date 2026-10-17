@@ -940,7 +940,8 @@ Not one of the 1 207 sub-instances was satisfiable.  The reason is measurable an
 not the encoding: the violated sets at this plateau have a **one-hop neighbourhood of 159
 of the 190 classes**, so "free the classes around them" and "free the instance" are the
 same request at any cap above 159 — and below it the engine returns UNSAT, not a timeout
-(0 timeouts in the run).  The last three cliques are therefore not a local trap: there
+(0 timeouts in the run; §9g explains why that field could not have been non-zero, and
+repeats the run on a budget that can actually fire: 1 100 repairs, 0 solved, 0 timeouts).  The last three cliques are therefore not a local trap: there
 is no recolouring of 120 of the 190 classes that removes them without creating others.
 The search that would succeed on that neighbourhood is the full 527 s CDCL run, which is
 where this started.
@@ -961,6 +962,94 @@ python scripts/anneal_hunt.py --gate --seconds 120 --repair-cap 120 \
     --repair-seconds 5 --gate-file runs/anneal/gate_repair_k50.json \
     --out runs/anneal/repair_k50.json
 ```
+
+## 9g. Blanking instead of recolouring: the plateau dissolves, and the state is dead
+
+§9f closes the neighbourhood route: at the plateau, freeing 120 of the 190 classes is not
+enough, and the neighbourhood that *would* be enough is the instance.  So the next thing
+to change is not the neighbourhood but the **encoding** — and the smallest change that
+loosens the last classes is to stop insisting that they have a colour at all.
+
+`oplab.anneal.partial` searches partial colourings.  A class may be left **blank**, a
+blank class is masked out of every set it belongs to (so a set is never monochromatic
+through it), and the objective is one scalar, `violations + blank_weight × blanks`,
+minimised by min-conflicts: a violated set is attacked by recolouring one of its classes
+**or by blanking it**, whichever is cheaper, and when no violation is left the walk tries
+to refill a random blank class, accepting the refill when it is free or by chance
+`exp(-cost)`.  Every `attempt_every` steps at zero violations, the blank classes go to
+`repair` exactly — `free` now takes an explicit set, which is what a caller who already
+knows which classes have to move has to hand in.
+
+**It dissolves the plateau in under a second.**  `K50`, 3×`Z_2^4`+2 (190 classes,
+13 540 class sets), seed 0, one re-insertion attempt per 20 000 steps; the second row is
+the gate run stored as `runs/anneal/partial_k50_gate.json`:
+
+| walk | seconds | steps | steps/s | violations | blanks | re-insertions | SAT |
+|---|---|---|---|---|---|---|---|
+| §9e annealing + repair | 120 | 223 k | 1 858 | **3** | — | 1 100 | 0 |
+| partial colourings | 240 | 2 868 159 | 11 951 | **0** | **5** | 131 | **0** |
+
+Zero violations at every ten-second report from `t = 20 s` to `t = 230 s`, at **5 blanks** —
+2.6 % of the instance — where the annealing of §9e never got below two cliques in two
+minutes.  The single blip is at `t = 160 s` (3 violations, 4 blanks) and it clears on the
+next report: the walk leaves the state and comes back, which is the churn the refill rule
+is for.  It stopped at `best-effort` with 2 violations because the clock ran out mid-cycle;
+that is the state it was in, not a plateau.  The dissolution works, and it is not a matter
+of tuning: at `blank_weight` 0.25, 0.5, 0.75 and 1.5 (90 s each) the walk lands at 5–8
+blanks every time and never more, because it only blanks a class when no recolouring of it
+is as cheap.
+
+**And every dissolved state is dead.**  All 131 re-insertions were unsatisfiable — 121 of
+them at exactly 5 blanks — and the engine was never the reason: 0 timeouts at a 5 s
+budget, answers in 0.02–0.05 s, all on `maplechrono`.  Growing the blank set from one such
+state — 5 blanks, zero violations, seed 0, `scripts/partial_support.py` — shows how far
+the support is:
+
+| blanks | answer | time |
+|---|---|---|
+| 5 → 149 | UNSAT | 0.00–0.11 s |
+| 157 | UNSAT | 1.84 s |
+| 165 | timeout (6 s) | — |
+
+The same measurement from the **stored witness** says what a healthy state looks like:
+blanking 2, 4, 8, 16, 32, 64, 96 or 128 of its classes and re-inserting them takes at most
+0.05 s.  So a witness survives the loss of 128 of 190 classes (67 %), and the walk's
+near-complete state does not survive the loss of 157 (83 %) — and at 165 the sub-instance
+is as hard as the full 527 s search it came from.
+
+The reading is not "blanking fails".  Blanking is a strictly better **detector** than a
+solver: it reaches zero violations almost immediately and hands over a state that is five
+classes short of complete, which is exactly the shape the plateau had.  What it also shows
+is that the obstruction is not carried by a few classes — the last five are unpinnable
+*for every colouring of the other 185*, so "find the recolouring of the last few" has no
+answer to find, and "free more of the instance" costs the whole search.  This is the
+precise sense in which §9e and §9f were not local traps: they were complete partial
+colourings minus five classes, and no completion exists.  The dead state
+is the measurement: it says the plateau is not a coverage problem.
+
+**A budget that was never enforced.**  Found while measuring this, and it matters for
+§9f: `Cadical195.interrupt` raises `NotImplementedError` *from the timer thread*, so
+`solve_limited` there runs to completion and a "bounded" repair was not bounded at all —
+one given 2 s ran for 86 s.  §9f's `repairs_timeout = 0` was therefore a guarantee of the
+code path rather than a measurement: the counter could not have been non-zero.  The
+bounded path now picks an engine whose interrupt works (`maplechrono`, `glucose4`,
+`minisat22`; CaDiCaL stays the choice when nothing has to be stopped), every repair
+reports `engine` and `budget_enforced`, and §9f's run was repeated on a real budget:
+1 100 repairs, **0 solved, 0 timeouts**, 3 violations, 223 k steps — the same conclusion,
+now resting on a timer that can fire.  The suite pins it by handing a pigeonhole formula
+to a 0.3 s call and demanding the timeout arrives.
+
+```bash
+python scripts/anneal_hunt.py --gate --partial --seconds 240 \
+    --gate-file runs/anneal/gate_partial_k50.json \
+    --out runs/anneal/partial_k50_gate.json
+python scripts/partial_support.py 50:3,3,3,3 --blocks 3 --group 2,2,2,2 --extras 2 \
+    --seconds 12 --step 8 --repair-seconds 6 --out runs/anneal/partial_k50_support.json
+python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --partial --seconds 900
+```
+
+The gate applies here too, and for the same reason: `partial` can claim a witness, so it
+may not speak about `K51` until it has rediscovered the known `K50` one.  It had not.
 
 ## Limitations, stated plainly
 

@@ -1,0 +1,121 @@
+{
+  "n": 50,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "classes": 190,
+  "class_sets": 13540,
+  "steps": 222973,
+  "seconds": 120.0,
+  "steps_per_second": 1858.1,
+  "violations": 3,
+  "history": [
+    {
+      "t": 10.0,
+      "best": 7,
+      "steps": 22356,
+      "violations": 18
+    },
+    {
+      "t": 20.0,
+      "best": 6,
+      "steps": 43790,
+      "violations": 17
+    },
+    {
+      "t": 30.0,
+      "best": 3,
+      "steps": 62958,
+      "violations": 13
+    },
+    {
+      "t": 40.0,
+      "best": 3,
+      "steps": 78954,
+      "violations": 46
+    },
+    {
+      "t": 50.0,
+      "best": 3,
+      "steps": 97754,
+      "violations": 11
+    },
+    {
+      "t": 60.0,
+      "best": 3,
+      "steps": 116154,
+      "violations": 20
+    },
+    {
+      "t": 70.0,
+      "best": 3,
+      "steps": 133154,
+      "violations": 21
+    },
+    {
+      "t": 80.0,
+      "best": 3,
+      "steps": 149811,
+      "violations": 7
+    },
+    {
+      "t": 90.0,
+      "best": 3,
+      "steps": 167132,
+      "violations": 32
+    },
+    {
+      "t": 100.0,
+      "best": 3,
+      "steps": 185354,
+      "violations": 57
+    },
+    {
+      "t": 110.0,
+      "best": 3,
+      "steps": 204451,
+      "violations": 15
+    }
+  ],
+  "seed": 0,
+  "search_only": true,
+  "recount_drift": 0,
+  "kempe_steps": 1139,
+  "repairs": 1100,
+  "repairs_solved": 0,
+  "repair_cap": 120,
+  "repairs_timeout": 0,
+  "repair_seconds": 5.0,
+  "lam": 2.0,
+  "noise": 0.05,
+  "reject": false,
+  "t0": 1.0,
+  "kempe": 0.005,
+  "fan": 1,
+  "stuck": 200,
+  "what": "guided annealing over K_50 [3, 3, 3, 3]: 190 classes, 13540 class sets \u2014 a search, not a decision: 'best-effort' says nothing about whether the family is empty",
+  "status": "best-effort",
+  "gate": "K50 in the block-Cayley family, from a random start",
+  "gate_spec": {
+    "n": 50,
+    "sizes": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "blocks": 3,
+    "group": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "extras": 2
+  },
+  "passed": false,
+  "produced_by": "scripts/anneal_hunt.py --gate --seconds 120 --repair-cap 120 --repair-seconds 5 --gate-file runs/anneal/gate_repair_k50.json --out C:/Users/Max/AppData/Local/Temp/anneal_repair_fixed.json"
+}

@@ -14,9 +14,11 @@ These are CPU tests: unlike the GPU tabu, nothing here needs a card, so they alw
 
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +33,7 @@ from oplab import gputabu as G  # noqa: E402
 from oplab import multicolour as MC  # noqa: E402
 
 import anneal_hunt  # noqa: E402
+import partial_support  # noqa: E402
 
 
 def _recount(problem, A):
@@ -154,7 +157,7 @@ def test_a_repair_without_an_engine_refuses_rather_than_improvising(monkeypatch)
     rng = np.random.default_rng(0)
     A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
     _, viol = _recount(problem, A)
-    monkeypatch.setattr(AN, "_cdcl", lambda: None)
+    monkeypatch.setattr(AN, "_cdcl", lambda **kwargs: None)
 
     outcome = AN.repair(problem, A, viol, rng, cap=problem.nc)
     assert outcome["solved"] is False
@@ -208,8 +211,175 @@ def test_a_witness_the_verifier_rejects_is_a_bug_and_not_a_result(monkeypatch):
 
 
 # --------------------------------------------------------------------------
+# partial colourings: a blank class is absent, never a colour
+# --------------------------------------------------------------------------
+def test_the_partial_counter_agrees_with_the_complete_one_when_nothing_is_blank():
+    """With no blanks the two counters must be the same function, not two opinions."""
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    rng = np.random.default_rng(5)
+    for _ in range(5):
+        A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+        cnt, viol = AN._counts(problem, A)
+        truth_cnt, truth_viol = _recount(problem, A)
+        assert np.array_equal(cnt, truth_cnt)
+        assert np.array_equal(viol, truth_viol)
+
+
+def test_a_blank_class_is_masked_out_of_every_set_it_belongs_to():
+    """The whole mechanism in one assertion: a blank class cannot colour a set.
+
+    ``_counts`` pads the assignment with an extra slot so a blank index cannot be read
+    as colour ``-1`` and silently join the count of whichever class is indexed last —
+    the bug the complete-colouring counter would have.  Each set the blank class appears
+    in is therefore counted over its other members only.
+    """
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    rng = np.random.default_rng(0)
+    A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+    blank = problem.nc // 2
+    A[blank] = AN.BLANK
+
+    cnt, viol = AN._counts(problem, A)
+    touched = problem.inc[blank][problem.inc_mask[blank]]
+    assert touched.size > 0
+    assert not viol[touched].any(), "a set with a blank class is not monochromatic"
+    for s in touched:
+        rest = [int(p) for p in problem.set_cls[s]
+                if p != problem.nc and int(p) != blank]
+        for c in range(problem.k):
+            assert cnt[s, c] == sum(1 for p in rest if A[p] == c)
+
+
+def test_the_partial_search_finds_a_known_witness_and_the_verifier_accepts_it():
+    """The positive control: ``K8`` at ``(3,3,3)`` has an answer and the walk finds one."""
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    report = AN.partial(problem, seconds=10.0, seed=0)
+
+    assert report["status"] == "sat", report.get("note")
+    assert report["violations"] == 0 and report["blanks"] == 0
+    assert report["verify"]["valid"]
+    assert report["establishes"].startswith("R(3, 3, 3) > 8")
+    assert "partial-colouring search" in report["establishes"]
+
+
+def test_a_partial_state_is_named_partial_and_carries_no_colouring():
+    """``R(3,3) = 6``: there is nothing to fill, and the report must not imply there is.
+
+    The walk can reach zero violations here only by leaving a class blank, and the engine
+    refuses to put it back.  That is a *partial* state — not a colouring, not a bound —
+    and the report says so in its own words and with no ``coloring`` key at all.  The walk
+    keeps churning after that first clean state, so the run may end a step away from it:
+    both endings are honest and the test pins the contract, not the last coin flip.
+    """
+    instance = B.BlockInstance(6, (3, 3), blocks=1, group=(6,))
+    problem = G.from_blocks(instance)
+    report = AN.partial(problem, seconds=5.0, seed=0, attempt_every=2000,
+                        repair_seconds=2.0)
+
+    assert report["status"] in ("partial", "best-effort"), report["status"]
+    assert "coloring" not in report and "establishes" not in report
+    assert report["support"] is None
+    assert report["refused"], "the engine must have been asked and refused"
+    assert "not a colouring" in report["what"]
+    if report["status"] == "partial":
+        assert report["violations"] == 0 and report["blanks"] >= 1
+
+
+def test_the_reported_assignment_reproduces_the_state_it_measured():
+    """A ``partial`` row is resumable: the assignment and the blanks agree on a recount."""
+    instance = B.BlockInstance(6, (3, 3), blocks=1, group=(6,))
+    problem = G.from_blocks(instance)
+    report = AN.partial(problem, seconds=3.0, seed=0, attempt_every=2000,
+                        repair_seconds=2.0)
+
+    A = np.array(report["assignment"], dtype=np.int8)
+    assert A.shape == (problem.nc,)
+    cnt, viol = AN._counts(problem, A)
+    assert int(viol.sum()) == report["violations"]
+    assert int((A < 0).sum()) == report["blanks"] == len(report["blanks_at"])
+    assert sorted(report["blanks_at"]) == [int(p) for p in np.flatnonzero(A < 0)]
+
+
+@pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                    reason="python-sat is not installed")
+def test_the_support_script_stops_at_the_first_satisfiable_blank_count():
+    """The growth loop reports *where* re-insertion stops saying unsat, and stops there.
+
+    The state here is a witness with two classes blanked, so the first row must be ``sat``
+    — the loop's job on a healthy state is to say so immediately, not to keep growing.
+    """
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    clean = AN.anneal(problem, seconds=10.0, seed=0)
+    assert clean["status"] == "sat"
+    A = _classes_of(problem, MC.parse_colouring(clean["coloring"], 8))
+    blanked = [0, 1]
+    A[blanked] = AN.BLANK
+
+    args = argparse.Namespace(step=2, seed=0, repair_seconds=2.0)
+    table = partial_support.grow(problem, {"assignment": A.tolist(), "blanks_at": blanked},
+                                 args)
+    assert len(table) == 1, table
+    assert table[0][0] == 2 and table[0][1] == "sat"
+
+
+# --------------------------------------------------------------------------
+# the budget: a bounded call that cannot be interrupted is not bounded
+# --------------------------------------------------------------------------
+@pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                    reason="python-sat is not installed")
+def test_a_bounded_repair_really_is_bounded():
+    """The bug this pins: CaDiCaL's ``interrupt`` raises, so the timer did nothing.
+
+    Measured on the ``K50`` plateau, a repair given 2 s ran for 86 s and the run's
+    ``repairs_timeout`` field could never have been non-zero.  A bounded call now picks an
+    engine whose interrupt works, and this test hands it a pigeonhole formula — hard
+    enough that a 0.3 s budget cannot possibly be enough — and demands the timeout is
+    reported *and* arrives.
+    """
+    from pysat.examples.genhard import PHP
+
+    solver = AN._cdcl(bounded=True)
+    assert solver is not None
+    assert solver.engine in AN.INTERRUPTIBLE_ENGINES
+    assert solver.budget_enforced is True
+
+    clauses = PHP(nof_holes=10).clauses
+    started = time.time()
+    assert solver(clauses, 0.3) == "timeout"
+    assert time.time() - started < 10.0, "the budget was ignored"
+
+
+@pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                    reason="python-sat is not installed")
+def test_a_repair_says_which_engine_answered():
+    """A verdict with no provenance cannot be reproduced: every repair names its engine."""
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    rng = np.random.default_rng(0)
+    A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+    _, viol = _recount(problem, A)
+    outcome = AN.repair(problem, A, viol, rng, cap=4, seconds=5.0)
+    assert outcome["engine"] == "maplechrono"
+    assert outcome.get("budget_enforced", True) is True
+
+
+# --------------------------------------------------------------------------
 # the gate
 # --------------------------------------------------------------------------
+def test_the_driver_routes_the_partial_search():
+    """``--partial`` must reach ``AN.partial``; a flag that falls through is decoration."""
+    args = argparse.Namespace(partial=True, seconds=1.0, seed=0, blank_weight=1.0,
+                              noise=0.05, repair_seconds=1.0, attempt_every=1000)
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    report = anneal_hunt.search(G.from_blocks(instance), args)
+    assert report["blank_weight"] == 1.0
+    assert "assignment" in report and "support" in report
+
+
 def test_a_target_is_refused_until_the_gate_has_passed(tmp_path):
     """The driver's whole point: no gate, no run — and it says so with exit code 2."""
     gate = tmp_path / "gate.json"

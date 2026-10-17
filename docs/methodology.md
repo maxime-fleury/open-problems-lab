@@ -508,10 +508,43 @@ an improvised answer.  Measured on the `K50` plateau it changes nothing (1 207
 sub-instances, 0 satisfiable) and costs 45 % of the steps, which is why it is off by
 default; `RESULTS.md` §9f has the numbers and the geometry that explains them.
 
+**Changing the encoding: blank classes.**  When the neighbourhood is the instance, the
+next lever is the question rather than the search, so `oplab.anneal.partial` lets a class
+be **uncoloured**.  A blank class is masked out of every set it appears in, so it cannot
+make a set monochromatic, and the walk minimises a single scalar — `violations +
+blank_weight × blanks` — by min-conflicts: attack a violated set by recolouring a member
+or by blanking it, and when nothing is violated try to refill a blank, accepting the
+refill when it is free or with probability `exp(-cost)`.  Every `attempt_every` steps at
+zero violations the blanks go to `repair`, which is why `repair` takes an explicit `free`
+set.  A blank is not a colour and a partial state is not a colouring: the report says
+`partial`, carries no `coloring` key, and measures nothing about the family.  It does
+carry the assignment and the blank indices, so a state can be resumed or grown without
+re-walking it — and it carries `support`, `refused` and `min_blanks`, which is where the
+result lives: the walk dissolves the plateau to five blanks in under a second, and every
+one of those states is unextendable until 157 of the 190 classes are free.  A genuine
+witness re-inserts 128 blanked classes in 50 ms.  Blanking is the better *detector*;
+the obstruction is not carried by a few classes.  The instrument for that second half is
+`scripts/partial_support.py`: it grows the blank set from a clean state, one step at a
+time, and records the blank count at which the engine stops saying unsat — a `timeout`
+row there is the honest end of the measurement, not a result (`RESULTS.md` §9g).
+
+**A budget is a claim, so it has to be able to fire.**  The repair used `interrupt()`
+under a timer to bound a sub-instance that is nearly the whole search, and on the engine
+it used that call raises `NotImplementedError` *in the timer thread*: the budget was
+decoratively inert and a "2 s" repair could run for 86 s.  The bounded path now selects
+an engine whose interrupt works (`maplechrono`, `glucose4`, `minisat22`) and reports
+`engine` plus `budget_enforced` with every answer, CaDiCaL remains the unbounded choice,
+and a test hands a pigeonhole formula to a 0.3 s call and requires the timeout to arrive.
+Any counter that measured the old path — `repairs_timeout`, in §9f — was reading a code
+path that could not produce a non-zero value, which is the general shape of a metric that
+has never fired.
+
 ```bash
 python scripts/anneal_hunt.py --gate --seconds 120 --seed 0
 python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900  # refused
 python scripts/anneal_hunt.py --gate --repair-cap 120 --repair-seconds 5      # with repair
+python scripts/anneal_hunt.py --gate --partial --seconds 240                 # blank classes
+python scripts/partial_support.py 50:3,3,3,3 --blocks 3 --group 2,2,2,2 --extras 2
 ```
 
 ## 7. Reproducing and extending

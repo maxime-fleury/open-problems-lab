@@ -52,7 +52,7 @@ import numpy as np
 from . import multicolour as MC
 from .gputabu import Problem
 
-__all__ = ["anneal", "repair"]
+__all__ = ["anneal", "partial", "repair"]
 
 
 def _engine_clauses(problem, A, free):
@@ -103,7 +103,7 @@ def _engine_clauses(problem, A, free):
 
 
 def repair(problem: Problem, A, viol, rng, cap: int = 64, solver=None,
-           seconds: float = 5.0) -> dict:
+           seconds: float = 5.0, free=None) -> dict:
     """Let a CDCL engine recolour the neighbourhood around the violated sets.
 
     This is the move the local searches cannot make.  A walk that is two cliques from a
@@ -120,68 +120,115 @@ def repair(problem: Problem, A, viol, rng, cap: int = 64, solver=None,
     unsatisfiable there), when the budget ran out, or when no engine is installed.
     ``solver`` is injectable so the encoding can be tested without one: it takes the
     clause list and the budget and returns a model, ``None`` for unsatisfiable, or
-    ``"timeout"``.
+    ``"timeout"``.  ``free`` overrides the neighbourhood entirely — :func:`partial`
+    hands in the blank classes, which is the case where the caller already knows which
+    classes have to move.
+
+    Every answer names the engine behind it (``engine``, and ``budget_enforced`` when a
+    budget was given), because a verdict that cannot name its solver cannot be
+    reproduced.  A bounded call is made on an engine whose interrupt works —
+    :func:`_cdcl` picks one, and the docstring there records why CaDiCaL cannot be that
+    engine: its ``interrupt`` raises, so a "bounded" call on it is not bounded at all.
     """
     started = time.time()
     g = problem
-    bad = np.flatnonzero(viol)
-    if bad.size == 0:
-        return {"free": 0, "solved": False, "seconds": 0.0}
-    seed = np.unique(g.set_cls[bad][g.set_cls[bad] != g.nc]).astype(np.int64)
-    near = np.unique(g.inc[seed][g.inc_mask[seed]])
-    near = np.unique(g.set_cls[near][g.set_cls[near] != g.nc]).astype(np.int64)
-    near = np.setdiff1d(near, seed)
-    take = int(min(max(0, cap - seed.size), near.size))
-    free = list(seed) + ([] if take == 0 else rng.choice(near, size=take, replace=False).tolist())
+    if free is None:
+        bad = np.flatnonzero(viol)
+        if bad.size == 0:
+            return {"free": 0, "solved": False, "seconds": 0.0}
+        seed = np.unique(g.set_cls[bad][g.set_cls[bad] != g.nc]).astype(np.int64)
+        near = np.unique(g.inc[seed][g.inc_mask[seed]])
+        near = np.unique(g.set_cls[near][g.set_cls[near] != g.nc]).astype(np.int64)
+        near = np.setdiff1d(near, seed)
+        take = int(min(max(0, cap - seed.size), near.size))
+        free = list(seed) + ([] if take == 0
+                             else rng.choice(near, size=take, replace=False).tolist())
+    else:
+        free = [int(p) for p in free]
+        if not free:
+            return {"free": 0, "solved": False, "seconds": 0.0}
     built = _engine_clauses(g, A, free)
     if built is None:  # pragma: no cover - a violated set is free by construction
         return {"free": len(free), "solved": False, "seconds": time.time() - started}
     clauses, index, k = built
     if solver is None:
-        solver = _cdcl()
+        solver = _cdcl(bounded=bool(seconds))
         if solver is None:
             return {"free": len(free), "solved": False, "seconds": time.time() - started,
-                    "timeout": False, "note": "no engine installed (python-sat)"}
+                    "timeout": False, "engine": None,
+                    "note": "no engine installed (python-sat)"}
+    engine = getattr(solver, "engine", "injected")
+    refused = {"free": len(free), "solved": False,
+               "seconds": time.time() - started, "engine": engine}
+    if seconds and not getattr(solver, "budget_enforced", True):
+        refused["budget_enforced"] = False
+        refused["note"] = (f"{engine} cannot be interrupted, so the {seconds:g} s budget "
+                          f"was not enforced")
     model = solver(clauses, seconds)
     if model == "timeout":
-        return {"free": len(free), "solved": False, "seconds": time.time() - started,
-                "timeout": True}
+        return {**refused, "timeout": True}
     if not model:
-        return {"free": len(free), "solved": False, "seconds": time.time() - started,
-                "timeout": False}
+        return {**refused, "timeout": False}
     truth = set(model)
     for p, i in index.items():
         for c in range(k):
             if (i + 1) * k + c + 1 in truth:
                 A[p] = c
                 break
-    return {"free": len(free), "solved": True, "seconds": time.time() - started,
-            "timeout": False}
+    return {**refused, "solved": True, "timeout": False}
 
 
-def _cdcl():
-    """A ``python-sat`` solver as a bounded clause-in/answer-out function, or ``None``.
+#: ``python-sat`` engines whose ``interrupt`` actually stops a search, best-first.
+#: CaDiCaL is deliberately absent: ``Cadical195.interrupt`` raises
+#: ``NotImplementedError`` *from the timer thread*, so ``solve_limited`` there runs to
+#: completion and a "bounded" call is not bounded.  Measured on the ``K50`` plateau, a
+#: repair given 2 s took 86 s, which is how this got found.
+INTERRUPTIBLE_ENGINES = ("maplechrono", "glucose4", "minisat22")
+_CLASS_NAMES = {"maplechrono": "MapleChrono", "glucose4": "Glucose4",
+                "minisat22": "Minisat22", "cadical195": "Cadical195"}
+
+
+def _cdcl(bounded: bool = False):
+    """A ``python-sat`` solver as a clause-in/answer-out function, or ``None``.
 
     The budget matters: a repair is a sub-instance of the *same* problem, so on a
     neighbourhood that is nearly the whole instance the engine can be as slow as the
     full search (500 s at ``K50``).  A walk cannot wait for that, so the call is
     interrupted and reported as a timeout instead of silently hanging the campaign.
+
+    ``bounded`` therefore picks an engine that can be interrupted (:data:`INTERRUPTIBLE_ENGINES`)
+    instead of CaDiCaL, which cannot.  The unbounded path still prefers CaDiCaL, because
+    when nothing has to be stopped it is the better engine.  The answer is otherwise the
+    same one ``repair`` always gave: ``None`` for unsatisfiable, a model for satisfiable,
+    and the function carries ``.engine`` and ``.budget_enforced`` so the caller can say
+    which implementation produced the verdict.
     """
     try:
-        from pysat.solvers import Cadical195  # noqa: PLC0415 - optional dependency
+        import pysat.solvers as PS  # noqa: PLC0415 - optional dependency
     except Exception:  # pragma: no cover - depends on the installation
         return None
     import threading
 
+    order = (INTERRUPTIBLE_ENGINES if bounded else ()) + ("cadical195",) + INTERRUPTIBLE_ENGINES
+    for name in order:
+        engine_class = getattr(PS, _CLASS_NAMES[name], None)
+        if engine_class is not None:
+            break
+    else:  # pragma: no cover - depends on the installation
+        return None
+
     def solve(clauses, seconds=None):
-        engine = Cadical195(bootstrap_with=clauses)
+        engine = engine_class(bootstrap_with=clauses)
         timer = None
         try:
             if seconds:
                 timer = threading.Timer(seconds, engine.interrupt)
                 timer.daemon = True
                 timer.start()
-            answer = engine.solve_limited(expect_interrupt=True) if seconds else engine.solve()
+            if seconds and name in INTERRUPTIBLE_ENGINES:
+                answer = engine.solve_limited(expect_interrupt=True)
+            else:
+                answer = engine.solve()
             if answer is None:
                 return "timeout"
             return engine.get_model() if answer else None
@@ -190,6 +237,8 @@ def _cdcl():
                 timer.cancel()
             engine.delete()
 
+    solve.engine = name
+    solve.budget_enforced = name in INTERRUPTIBLE_ENGINES
     return solve
 
 
@@ -455,4 +504,230 @@ def anneal(problem: Problem, seconds: float = 60.0, seed: int = 0, lam: float = 
         report["status"] = "sat-invalid"
         report["note"] = ("the walk reached zero but the verifier disagrees: a bug in "
                           "this module, not a result")
+    return report
+
+
+# --------------------------------------------------------------------------
+# partial colourings: a class may be blank, so the plateau can dissolve
+# --------------------------------------------------------------------------
+#: What a blank class is in the assignment array.  Not a colour: no set counts it, so a
+#: set with a blank class is never monochromatic.
+BLANK = -1
+
+
+def _counts(problem: Problem, A):
+    """``cnt`` and the violated mask of a *partial* assignment; ``-1`` means blank.
+
+    The complete-colouring counter treats every entry as a colour, so a blank would be
+    read as colour ``-1`` and quietly join the count of whichever class is indexed last.
+    Here the blank classes are masked out of every set they touch, which is exactly the
+    property the search exploits: an uncoloured class cannot make a set monochromatic.
+    """
+    g = problem
+    coloured = np.zeros(g.nc + 1, dtype=bool)  # index g.nc is the padding slot
+    coloured[:g.nc] = A >= 0
+    pad = np.zeros(g.nc + 1, dtype=np.int8)
+    pad[:g.nc] = np.where(A >= 0, A, 0)
+    members = pad[g.set_cls]
+    valid = coloured[g.set_cls]
+    cnt = np.zeros((g.n_sets, g.k), dtype=np.int8)
+    for c in range(g.k):
+        cnt[:, c] = ((members == c) & valid).sum(axis=1)
+    viol = cnt[np.arange(g.n_sets), g.set_col] == g.set_need
+    return cnt, viol
+
+
+def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
+            blank_weight: float = 1.0, noise: float = 0.05,
+            repair_seconds: float = 5.0, attempt_every: int = 2000,
+            report_every: float = 10.0) -> dict:
+    """Search partial colourings — a class may be **blank** — and re-insert them.
+
+    Both searches before this one stall two or three cliques from a witness, and
+    :func:`repair` measured why: there the violated classes have a one-hop neighbourhood
+    of 159 classes of 190, so the neighbourhood that could fix them is the instance.
+    Blanking changes the question instead of the neighbourhood.  An uncoloured class
+    makes every set it belongs to non-monochromatic, so the walk can *dissolve* a
+    violation it cannot satisfy, and hand the blank classes to the engine to be put back.
+
+    The objective is one scalar, ``violations + blank_weight * blanks``, and it is
+    minimised by min-conflicts: a violated set is attacked by recolouring one of its
+    classes **or blanking it**, whichever is cheaper, and when no violation is left the
+    walk tries to refill a random blank class, accepting the refill only when it costs
+    nothing or by chance ``exp(-cost)``.  A witness is the global optimum, so the search
+    can be run for as long as its budget allows without a separate stopping rule.
+
+    Every ``attempt_every`` steps at zero violations, the blank classes go to
+    :func:`repair`.  ``support`` in the report is the blank count at which that finally
+    succeeded, ``refused`` the blank counts at which the engine said unsatisfiable, and
+    ``min_blanks`` the fewest blanks the walk ever stood at with no violations — a lower
+    bound on the support if nothing succeeded.
+
+    ``status`` is ``"sat"`` only for a complete colouring the verifier accepts,
+    ``"partial"`` for zero violations with classes still blank, and ``"best-effort"`` for
+    violations left.  A partial state is **not** a colouring and the report says so by
+    name: nothing here is evidence that the family is empty.
+    """
+    g = problem
+    k, nc = int(g.k), int(g.nc)
+    set_cls, set_need, set_col = g.set_cls, g.set_need, g.set_col
+    inc, inc_mask = g.inc, g.inc_mask
+    rng = np.random.default_rng(int(seed))
+
+    A = rng.integers(0, k, size=nc).astype(np.int8)
+    cnt, viol = _counts(g, A)
+
+    def delta(p, target):
+        """(violations, blanks) change when class ``p`` is set to ``target``."""
+        touch = inc[p][inc_mask[p]]
+        old = int(A[p])
+        col_s = set_col[touch]
+        need_s = set_need[touch]
+        was = 0
+        if old >= 0:
+            was = int(((col_s == old) & (cnt[touch, old] == need_s)).sum())
+        now = 0
+        if target >= 0 and target != old:
+            now = int(((col_s == target) & (cnt[touch, target] + 1 == need_s)).sum())
+        return now - was, int(target < 0) - int(old < 0)
+
+    def apply(p, target):
+        old = int(A[p])
+        touch = inc[p][inc_mask[p]]
+        if old >= 0:
+            cnt[touch, old] -= 1
+        if target >= 0:
+            cnt[touch, target] += 1
+        A[p] = target
+        viol[touch] = cnt[touch, set_col[touch]] == set_need[touch]
+
+    def cheapest(p, targets):
+        """The target with the lowest cost, or ``None`` when every target is excluded."""
+        best = None
+        for target in targets:
+            if target == int(A[p]):
+                continue
+            dv, db = delta(int(p), target)
+            score = dv + blank_weight * db
+            if best is None or score < best[0]:
+                best = (score, target)
+        return best
+
+    targets = list(range(k)) + [BLANK]  # every move a class can be given
+    colours = list(range(k))
+    steps = repairs = 0
+    attempts: list[dict] = []
+    refused: list[int] = []
+    engines: list[str] = []
+    history = []
+    support = None
+    min_blanks = None
+    next_attempt = attempt_every
+    started = time.time()
+    next_report = report_every
+    complete = False
+
+    while True:
+        now = time.time()
+        elapsed = now - started
+        if elapsed >= seconds:
+            break
+        if elapsed >= next_report:
+            history.append({"t": round(elapsed, 1), "steps": steps,
+                            "violations": int(viol.sum()), "blanks": int((A < 0).sum())})
+            next_report += report_every
+        if steps >= next_attempt:
+            next_attempt = steps + attempt_every
+            blanks_now = np.flatnonzero(A < 0)
+            if blanks_now.size and not viol.any():
+                min_blanks = int(blanks_now.size) if min_blanks is None else \
+                    min(min_blanks, int(blanks_now.size))
+                outcome = repair(g, A, viol, rng, free=blanks_now,
+                                 seconds=min(repair_seconds, max(0.1, seconds - elapsed)))
+                repairs += 1
+                if outcome.get("engine"):
+                    engines.append(outcome["engine"])
+                verdict = "sat" if outcome["solved"] else (
+                    "no-engine" if outcome.get("note", "").startswith("no engine")
+                    else "timeout" if outcome.get("timeout") else "unsat")
+                attempts.append({"steps": steps, "blanks": int(blanks_now.size),
+                                 "verdict": verdict,
+                                 "seconds": round(outcome["seconds"], 3)})
+                if outcome["solved"]:
+                    support = int(blanks_now.size)
+                    cnt, viol = _counts(g, A)  # recount rather than trust the hand-off
+                    break
+                if verdict == "unsat":
+                    refused.append(int(blanks_now.size))
+                if verdict == "no-engine":
+                    break
+                cnt, viol = _counts(g, A)
+        bad = np.flatnonzero(viol)
+        if bad.size:
+            s = int(bad[rng.integers(bad.size)])
+            members = set_cls[s][set_cls[s] != g.nc]
+            if rng.random() < noise:
+                p = int(members[rng.integers(members.size)])
+                options = [t for t in targets if t != int(A[p])]
+                apply(p, options[int(rng.integers(len(options)))])
+            else:
+                # the cheapest move anywhere in the set, not only on one member
+                best = None
+                for p in members:
+                    candidate = cheapest(int(p), targets)
+                    if candidate is not None and (best is None or candidate[0] < best[0]):
+                        best = (candidate[0], int(p), candidate[1])
+                if best is None:  # pragma: no cover - k == 1 leaves no move at all
+                    break
+                apply(best[1], best[2])
+        else:
+            blanks = np.flatnonzero(A < 0)
+            if blanks.size == 0:
+                complete = True
+                break
+            min_blanks = int(blanks.size) if min_blanks is None else \
+                min(min_blanks, int(blanks.size))
+            p = int(blanks[rng.integers(blanks.size)])
+            pick = cheapest(p, colours)
+            if pick is None:  # pragma: no cover - a single colour leaves nothing to try
+                break
+            if pick[0] <= 0 or rng.random() < math.exp(-pick[0]):
+                apply(p, pick[1])
+        steps += 1
+
+    elapsed = time.time() - started
+    blanks = np.flatnonzero(A < 0)
+    report = {
+        "n": g.n, "sizes": list(g.sizes), "classes": nc, "class_sets": g.n_sets,
+        "steps": steps, "seconds": round(elapsed, 3),
+        "steps_per_second": round(steps / elapsed, 1) if elapsed else None,
+        "violations": int(viol.sum()), "blanks": int(blanks.size), "repairs": repairs,
+        "support": support, "refused": sorted(set(refused)),
+        # the state itself, so a run can be resumed or grown without re-walking it;
+        # ``-1`` is a blank class, and a partial state is not a colouring
+        "assignment": [int(x) for x in A], "blanks_at": [int(p) for p in blanks],
+        "min_blanks": min_blanks,
+        "attempts": attempts, "engines": sorted(set(engines)), "history": history,
+        "seed": int(seed), "blank_weight": blank_weight, "noise": noise,
+        "search_only": True,
+        "what": (f"partial-colouring search over {g.describe()} — 'partial' is not a "
+                 f"colouring and says nothing about whether the family is empty"),
+    }
+    if complete and not viol.any():
+        colouring = g.serialize(A)
+        verify = MC.verify_colouring(g.n, g.sizes, colouring)
+        report.update({"coloring": colouring, "verify": verify})
+        if verify.get("valid"):
+            report["status"] = "sat"
+            report["establishes"] = (f"R{tuple(g.sizes)} > {g.n}, witness found by the "
+                                     f"partial-colouring search")
+        else:
+            report["status"] = "sat-invalid"
+            report["note"] = ("the walk ended complete but the verifier disagrees: a bug "
+                              "in this module, not a result")
+        return report
+    report["status"] = "partial" if not viol.any() else "best-effort"
+    if report["status"] == "partial":
+        report["note"] = (f"{int(blanks.size)} classes left blank with no violations: "
+                          f"the engine did not re-insert them")
     return report

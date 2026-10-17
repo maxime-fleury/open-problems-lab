@@ -8,6 +8,12 @@ parameters, must rediscover the **known** witness at ``K50`` in the block-Cayley
 
     python scripts/anneal_hunt.py --gate --seconds 60 --seed 0
     python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900
+    python scripts/anneal_hunt.py --gate --partial --seconds 240
+
+``--partial`` runs ``oplab.anneal.partial`` instead: a class may be left blank, the walk
+minimises ``violations + blank_weight × blanks``, and the blank classes are handed to the
+engine for re-insertion every ``--attempt-every`` steps.  Its ``partial`` rows are not
+colourings and establish nothing; a ``sat`` row is a witness and needs the same gate.
 
 The gate writes ``runs/anneal/gate_k50.json``.  Any other target refuses to run unless
 that file records a ``sat`` on the same instance, so "we ran it anyway" is a deliberate
@@ -78,10 +84,30 @@ def _write(path: Path | None, report: dict) -> None:
 
 
 def _line(report: dict) -> str:
+    if report.get("blank_weight") is not None:  # the partial-colouring search
+        return (f"{report['status']}: {report['violations']} violation(s), "
+                f"{report['blanks']} class(es) blank, {report['steps']} steps in "
+                f"{report['seconds']} s ({report['steps_per_second']}/s); re-insertion "
+                f"{'succeeded at ' + str(report['support']) + ' blanks' if report['support'] else 'never succeeded'}"
+                f", refused at {report['refused']}")
     return (f"{report['status']}: {report['violations']} violation(s) at best, "
             f"{report['steps']} steps in {report['seconds']} s "
             f"({report['steps_per_second']}/s, drift {report['recount_drift']}, "
             f"kempe {report['kempe_steps']})")
+
+
+def search(problem, args) -> dict:
+    """Run the search the flags asked for.  Both report the same status vocabulary."""
+    if args.partial:
+        return AN.partial(problem, seconds=args.seconds, seed=args.seed,
+                          blank_weight=args.blank_weight, noise=args.noise,
+                          repair_seconds=args.repair_seconds,
+                          attempt_every=args.attempt_every)
+    return AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
+                     noise=args.noise, fan=args.fan, reject=args.reject,
+                     t0=args.t0, tmin=args.tmin, stuck=args.stuck,
+                     kempe=args.kempe, repair_cap=args.repair_cap,
+                     repair_seconds=args.repair_seconds)
 
 
 def main(argv=None) -> int:
@@ -112,6 +138,12 @@ def main(argv=None) -> int:
                     help="classes freed for the CDCL repair on a stall (0 disables it)")
     ap.add_argument("--repair-seconds", type=float, default=5.0,
                     help="budget per repair: a sub-instance can be nearly the whole one")
+    ap.add_argument("--partial", action="store_true",
+                    help="search partial colourings: a class may be left blank")
+    ap.add_argument("--blank-weight", type=float, default=1.0,
+                    help="cost of one blank class, in monochromatic cliques")
+    ap.add_argument("--attempt-every", type=int, default=20000,
+                    help="steps between two re-insertion attempts")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
 
@@ -120,11 +152,7 @@ def main(argv=None) -> int:
 
     if args.gate:
         problem = gate_problem()
-        report = AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
-                           noise=args.noise, fan=args.fan, reject=args.reject,
-                           t0=args.t0, tmin=args.tmin, stuck=args.stuck,
-                           kempe=args.kempe, repair_cap=args.repair_cap,
-                           repair_seconds=args.repair_seconds)
+        report = search(problem, args)
         report.update({"gate": "K50 in the block-Cayley family, from a random start",
                        "gate_spec": GATE_SPEC, "passed": report["status"] == "sat",
                        "produced_by": "scripts/anneal_hunt.py " + " ".join(argv)})
@@ -134,8 +162,8 @@ def main(argv=None) -> int:
             print(f"gate passed: K50 witness verified in {report['seconds']} s")
             return 0
         print("gate FAILED: the search did not rediscover the known K50 witness "
-              f"({report['violations']} violation(s) left); no target will run on it",
-              file=sys.stderr)
+              f"({report['status']}, {report['violations']} violation(s) left); no "
+              f"target will run on it", file=sys.stderr)
         return 1
 
     if not args.spec:
@@ -167,10 +195,7 @@ def main(argv=None) -> int:
             _write(Path(args.out) if args.out else None, report)
             return 3
 
-    report = AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
-                       noise=args.noise, fan=args.fan, reject=args.reject,
-                       t0=args.t0, tmin=args.tmin, stuck=args.stuck, kempe=args.kempe,
-                       repair_cap=args.repair_cap, repair_seconds=args.repair_seconds)
+    report = search(problem, args)
     report.update({"spec": args.spec, "family": family, "general": args.general,
                    "blocks": args.blocks, "group": args.group, "extras": args.extras,
                    "gate": {"file": str(gate_path),
@@ -182,7 +207,7 @@ def main(argv=None) -> int:
     _write(Path(args.out) if args.out else None, report)
     if args.out:
         print(args.out)
-    return 0 if report["status"] in ("sat", "best-effort") else 1
+    return 0 if report["status"] in ("sat", "best-effort", "partial") else 1
 
 
 if __name__ == "__main__":  # pragma: no cover
