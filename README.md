@@ -855,7 +855,7 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   be left **blank**, so the plateau can dissolve before an engine is asked to put it
   back.  It dissolves in under a second — zero violations and 5 blanks of 190, where two
   minutes of annealing stayed at two cliques — and every one of those states is *dead*:
-  131 re-insertions, none satisfiable, and growing the blank set stays UNSAT until 157 of
+  186 re-insertions, none satisfiable, and growing the blank set stays UNSAT until 157 of
   the 190 classes are free.  The same measurement from the known witness re-inserts 128
   blanked classes in 50 ms, so the engine and the encoding are not the obstacle: the
   obstruction is not carried by a few classes.  Blanking is the better detector, not a
@@ -866,7 +866,7 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   reasons.  On `K_n` (3,3,3) that finds the witness at `K14` where the greedy refill
   stalls, and reaches the same witness in 3.7–4.7× fewer class moves at `K12`/`K13`.  On
   the plateau it moves the fraction of locally dead blanks from 100 % to about 20 % and
-  changes nothing else: 62 re-insertions, still none satisfiable, because per-class slack
+  changes nothing else: 70 re-insertions, still none satisfiable, because per-class slack
   cannot see a global obstruction.  [RESULTS.md](RESULTS.md) §9h.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general

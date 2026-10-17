@@ -988,15 +988,15 @@ policy (`--no-backjump`) that §9h measures against its replacement:
 | walk | seconds | steps | steps/s | violations | blanks | re-insertions | SAT |
 |---|---|---|---|---|---|---|---|
 | §9e annealing + repair | 120 | 223 k | 1 858 | **3** | — | 1 100 | 0 |
-| partial colourings | 240 | 1 867 504 | 7 781 | **0** | **5–6** | 69 | **0** |
+| partial colourings | 240 | 3 741 630 | 15 590 | **0** | **3** | 186 | **0** |
 
-Zero violations at every ten-second report, at **5–6 blanks** — 2.6–3.2 % of the instance —
-where the annealing of §9e never got below two cliques in two minutes.  The dissolution
-works, and it is not a matter of tuning: at `blank_weight` 0.25, 0.5, 0.75 and 1.5 (90 s
-each) the walk lands at 5–8 blanks every time and never more, because it only blanks a
-class when no recolouring of it is as cheap.
+Zero violations at every ten-second report, at **single-digit blanks** — 3 to 7 across the
+attempts — where the annealing of §9e never got below two cliques in two minutes.  The
+dissolution works, and it is not a matter of tuning: at `blank_weight` 0.25, 0.5, 0.75 and
+1.5 (90 s each) the walk stays in single digits too, because it only blanks a class when
+no recolouring of it is as cheap.
 
-**And every dissolved state is dead.**  All 69 re-insertions were unsatisfiable, and the
+**And every dissolved state is dead.**  All 186 re-insertions were unsatisfiable, and the
 engine was never the reason: 0 timeouts at a 5 s budget, answers in 0.02–0.05 s, all on
 `maplechrono`.  Growing the blank set from one such state — 8 blanks, zero violations,
 seed 0, `scripts/partial_support.py --no-backjump` — shows how far the support is:
@@ -1093,15 +1093,15 @@ moves to the same answer.
 
 | policy | steps | steps/s | blanks | locked | attempts | SAT |
 |---|---|---|---|---|---|---|
-| greedy (`--no-backjump`) | 1 867 504 | 7 781 | 5–6 | **all of them** | 69 | 0 |
-| MRV + backjump | 1 242 393 | 5 177 | 7–51 | 6–8 | 62 | 0 |
+| greedy (`--no-backjump`) | 3 741 630 | 15 590 | 3–7 | **all of them** | 186 | 0 |
+| MRV + backjump | 1 412 945 | 5 887 | 7–48 | 3–7 | 70 | 0 |
 
 Both arms refuse every re-insertion, and the columns say why the policy cannot help.  The
-greedy arm is worth looking at twice: **at every one of its 69 attempts, every blank class
-was locked** — 5 blanks, 5 locked; 6 blanks, 6 locked — so its states were locally dead in
-the strongest sense.  The new policy moves that number from 100 % to 6–8 of 30–42 blanks,
-which is exactly what it was built to do, and the engine still says UNSAT every time.  It
-also costs about a third of the throughput (7 781 → 5 177 steps/s) and half of its steps are
+greedy arm is worth looking at twice: **at every one of its 186 attempts, every blank class
+was locked** — 3 blanks, 3 locked; 5 and 5; 6 and 6 — so its states were locally dead in
+the strongest sense.  The new policy moves that to 3–7 locked out of states of 13 to 48
+blanks, which is exactly what it was built to do, and the engine still says UNSAT every
+time.  It also costs throughput (15 590 → 5 887 steps/s) and half of its steps are
 backjumps, because on a globally dead instance every refill creates the next deadlock.  A class-level slack cannot see a **global** obstruction: each blank can
 be filled on its own, and there is no order in which they can all be filled.
 

@@ -808,6 +808,9 @@ def partial(problem: Problem, seconds: float = 60.0, seed: int = 0,
         "locked": sum(1 for p in blanks if not open_now(int(p))),
         "attempts": attempts, "engines": sorted(set(engines)), "history": history,
         "seed": int(seed), "blank_weight": blank_weight, "noise": noise,
+        # which refill policy produced the state: the two are not interchangeable, and a
+        # report that does not say which one it is cannot be compared with another
+        "backjump": bool(backjump), "refill_probe": int(refill_probe),
         "search_only": True,
         "what": (f"partial-colouring search over {g.describe()} — 'partial' is not a "
                  f"colouring and says nothing about whether the family is empty"),

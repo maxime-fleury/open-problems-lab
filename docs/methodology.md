@@ -549,7 +549,7 @@ reason is what keeps the move from undoing itself.  This is the difference the r
 from: on `K14` at `(3,3,3)` the greedy refill stalls at a partial state and this one finds
 a verified witness, and at `K12`/`K13` it reaches the same witness in 3.7–4.7× fewer class
 moves.  On `K50` it moves the locally-dead fraction from 100 % to about 20 % and changes
-nothing else — 62 re-insertions, none satisfiable — because each blank is fillable on its
+nothing else — 70 re-insertions, none satisfiable — because each blank is fillable on its
 own and no order in which they can all be filled exists.  A per-class signal cannot see a
 global obstruction, and `RESULTS.md` §9h states that instead of selling the improvement.
 
