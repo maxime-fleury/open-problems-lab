@@ -1,0 +1,16 @@
+{
+  "n": 51,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "solver": "kissat404",
+  "symmetry": 2,
+  "num_vars": 193950,
+  "num_clauses": 470222,
+  "solver_time": 3060.581688642502,
+  "status": "unknown",
+  "seconds": 3062.0200753211975
+}
