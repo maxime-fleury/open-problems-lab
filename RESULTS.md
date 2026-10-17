@@ -907,6 +907,61 @@ python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900
 # -> refused with exit code 2 while the gate file does not record a verified K50 witness
 ```
 
+## 9f. The repair move: exact inside a neighbourhood, and still not enough
+
+§9e leaves a question a plateau cannot answer on its own: is the last two or three
+cliques a **local** trap that a coordinated move would escape, or is it a wall?  A
+third move settles it, and it is the strongest one available — hand the neighbourhood to
+a CDCL engine and let it find the recolouring exactly.
+
+`oplab.anneal.repair` frees the classes of the violated sets plus a random sample of the
+classes they touch, freezes everything else, and builds the instance's own clause for
+every set that a free class appears in.  The construction is exact inside the
+neighbourhood, and that has a consequence worth stating: **no satisfying assignment can
+create a violation**, because every set touched by a free class is in the sub-CNF and
+every set with no free class is untouched.  So the repair can only lower the count, and
+the tests pin that rather than assume it.
+
+**It works where a repair exists.**  On `K8` at `(3,3,3)` a perturbed witness is fixed in
+0.02–0.06 s at neighbourhoods of 24 to 128 classes (4 monochromatic cliques → 0), which
+is the positive control the suite runs.  On `K50` the same code, starting from the
+*stored* witness perturbed to 4 cliques, repairs it at every cap from 24 to 128 in under
+0.07 s.
+
+**It does nothing on the plateau.**  The walk of §9e, with `repair_cap = 120` and a 5 s
+budget per attempt:
+
+| run | steps | repairs | solved | best |
+|---|---|---|---|---|
+| annealing, no repair | 441 451 | — | — | 3 |
+| annealing + repair | 244 040 | 1 207 | **0** | 3 |
+
+Not one of the 1 207 sub-instances was satisfiable.  The reason is measurable and it is
+not the encoding: the violated sets at this plateau have a **one-hop neighbourhood of 159
+of the 190 classes**, so "free the classes around them" and "free the instance" are the
+same request at any cap above 159 — and below it the engine returns UNSAT, not a timeout
+(0 timeouts in the run).  The last three cliques are therefore not a local trap: there
+is no recolouring of 120 of the 190 classes that removes them without creating others.
+The search that would succeed on that neighbourhood is the full 527 s CDCL run, which is
+where this started.
+
+The step budget says the same thing from the other side: 1 207 repairs cost 45 % of the
+steps (441 k → 244 k) and bought nothing, so the move is not merely useless here — it is
+expensive, and the default is off (`repair_cap = 0`).
+
+**One bug, caught by measuring rather than by reading.**  The first version had the
+clause polarity backwards — it encoded "every class of this set keeps the forbidden
+colour", which the engine satisfied by keeping the violations.  Nothing crashed: the
+repair reported `solved` 364 times and the count never moved, which is exactly how a
+wrong constraint announces itself when the count is recounted after every move.  The
+fixed version is what the tables above measure.
+
+```bash
+python scripts/anneal_hunt.py --gate --seconds 120 --repair-cap 120 \
+    --repair-seconds 5 --gate-file runs/anneal/gate_repair_k50.json \
+    --out runs/anneal/repair_k50.json
+```
+
 ## Limitations, stated plainly
 
 * **Only the circulant sweeps are exhaustive.** Everything else is a heuristic
@@ -915,7 +970,10 @@ python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900
   `best-effort` rows are statements about the walk, and their own calibration instance
   (`K50`, where a witness exists) ends at two or three monochromatic cliques.  The
   annealing has not passed its gate, so it has said nothing at all about `K51`; that is
-  a limitation of the tool, and §9e reports it as one.
+  a limitation of the tool, and §9e reports it as one.  The repair move of §9f is exact
+  inside its neighbourhood but that neighbourhood is a choice, and on the `K50` plateau
+  every choice up to 120 of 190 classes is unsatisfiable — so "not locally repairable"
+  is a statement about that state, not about the family.
 * **No record was broken.** The best Tammes configurations found are 0.03°–0.13°
   short of the published values, and no kissing configuration with 41 points in
   dimension 5 was found.

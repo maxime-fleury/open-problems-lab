@@ -28,6 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from oplab import anneal as AN  # noqa: E402
 from oplab import blocks as B  # noqa: E402
 from oplab import gputabu as G  # noqa: E402
+from oplab import multicolour as MC  # noqa: E402
 
 import anneal_hunt  # noqa: E402
 
@@ -89,6 +90,75 @@ def test_the_state_after_a_kempe_swap_equals_a_recount():
     truth_cnt, truth_viol = _recount(problem, A)
     assert np.array_equal(cnt, truth_cnt)
     assert np.array_equal(viol, truth_viol)
+
+
+
+# --------------------------------------------------------------------------
+# the repair: an exact move inside a frozen neighbourhood
+# --------------------------------------------------------------------------
+def _classes_of(problem, colouring):
+    """The class assignment behind an expanded colouring (each class is one colour)."""
+    instance = problem.edges_of
+    return np.array([colouring[instance[p][0]] for p in range(problem.nc)], dtype=np.int8)
+
+
+@pytest.mark.skipif(MC.solver_backing("cadical195") != "wheel",
+                    reason="python-sat is not installed")
+def test_a_repair_cannot_create_a_violation():
+    """The sub-CNF covers every set a free class touches, so the count can only fall.
+
+    The instance is ``K8`` at ``(3,3,3)`` — small enough to recount by hand, and
+    satisfiable, so a perturbed witness has a repair to find.
+    """
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    clean = AN.anneal(problem, seconds=10.0, seed=0)
+    assert clean["status"] == "sat"
+    A = _classes_of(problem, MC.parse_colouring(clean["coloring"], 8))
+    _, viol = _recount(problem, A)
+    assert not viol.any(), "the witness this starts from must be clean"
+
+    rng = np.random.default_rng(3)
+    q = int(rng.integers(problem.nc))
+    A[q] = (A[q] + 1) % problem.k
+    _, viol = _recount(problem, A)
+    before = int(viol.sum())
+    assert before >= 1, "the perturbation has to break something for this to test anything"
+
+    outcome = AN.repair(problem, A, viol, rng, cap=problem.nc, seconds=10)
+    assert outcome["solved"] is True and outcome["timeout"] is False
+    _, after = _recount(problem, A)
+    assert int(after.sum()) <= before, "a repair raised the count it was asked to lower"
+    assert int(after.sum()) == 0
+
+
+def test_a_repair_that_times_out_changes_nothing_and_says_so():
+    """A budget that ran out is not a result: the assignment is left exactly as it was."""
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    rng = np.random.default_rng(0)
+    A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+    _, viol = _recount(problem, A)
+    keep = A.copy()
+
+    outcome = AN.repair(problem, A, viol, rng, cap=problem.nc,
+                        solver=lambda clauses, seconds: "timeout")
+    assert outcome["timeout"] is True and outcome["solved"] is False
+    assert np.array_equal(A, keep)
+
+
+def test_a_repair_without_an_engine_refuses_rather_than_improvising(monkeypatch):
+    """No `python-sat` means no repair, and the report says which package is missing."""
+    instance = B.BlockInstance(8, (3, 3, 3), blocks=2, group=(2, 2))
+    problem = G.from_blocks(instance)
+    rng = np.random.default_rng(0)
+    A = rng.integers(0, problem.k, size=problem.nc).astype(np.int8)
+    _, viol = _recount(problem, A)
+    monkeypatch.setattr(AN, "_cdcl", lambda: None)
+
+    outcome = AN.repair(problem, A, viol, rng, cap=problem.nc)
+    assert outcome["solved"] is False
+    assert "python-sat" in outcome["note"]
 
 
 # --------------------------------------------------------------------------

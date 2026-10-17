@@ -108,6 +108,10 @@ def main(argv=None) -> int:
     ap.add_argument("--tmin", type=float, default=0.1)
     ap.add_argument("--stuck", type=int, default=200)
     ap.add_argument("--kempe", type=float, default=0.005)
+    ap.add_argument("--repair-cap", type=int, default=0,
+                    help="classes freed for the CDCL repair on a stall (0 disables it)")
+    ap.add_argument("--repair-seconds", type=float, default=5.0,
+                    help="budget per repair: a sub-instance can be nearly the whole one")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
 
@@ -119,7 +123,8 @@ def main(argv=None) -> int:
         report = AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
                            noise=args.noise, fan=args.fan, reject=args.reject,
                            t0=args.t0, tmin=args.tmin, stuck=args.stuck,
-                           kempe=args.kempe)
+                           kempe=args.kempe, repair_cap=args.repair_cap,
+                           repair_seconds=args.repair_seconds)
         report.update({"gate": "K50 in the block-Cayley family, from a random start",
                        "gate_spec": GATE_SPEC, "passed": report["status"] == "sat",
                        "produced_by": "scripts/anneal_hunt.py " + " ".join(argv)})
@@ -164,7 +169,8 @@ def main(argv=None) -> int:
 
     report = AN.anneal(problem, seconds=args.seconds, seed=args.seed, lam=args.lam,
                        noise=args.noise, fan=args.fan, reject=args.reject,
-                       t0=args.t0, tmin=args.tmin, stuck=args.stuck, kempe=args.kempe)
+                       t0=args.t0, tmin=args.tmin, stuck=args.stuck, kempe=args.kempe,
+                       repair_cap=args.repair_cap, repair_seconds=args.repair_seconds)
     report.update({"spec": args.spec, "family": family, "general": args.general,
                    "blocks": args.blocks, "group": args.group, "extras": args.extras,
                    "gate": {"file": str(gate_path),

@@ -493,16 +493,33 @@ monochromatic cliques, flat from the second ten-second report.  So no `K51` run 
 with this tool, and `RESULTS.md` §9e says so instead of reporting a plateau as if it
 were a measurement of the family.
 
+**The repair move, and what it has to be trusted to do.**  A walk that is two cliques
+from a witness is not short of better single moves; it is short of a coordinated one.
+`oplab.anneal.repair` frees the classes of the violated sets plus a random sample of
+their neighbours, freezes the rest, and hands the resulting sub-CNF to CaDiCaL.  Two
+properties make the result usable rather than merely plausible: every set touched by a
+free class appears in the sub-CNF, so **no model can create a violation**, and every set
+with no free class is untouched — the repair can only lower the count.  The call is
+budgeted (`repair_seconds`, `interrupt()` under the hood) because a neighbourhood that is
+nearly the whole instance is nearly the whole search.  The tests check the property on a
+perturbed witness, check that a timeout leaves the assignment exactly as it was, and
+check that a machine without `python-sat` gets a refusal naming the package rather than
+an improvised answer.  Measured on the `K50` plateau it changes nothing (1 207
+sub-instances, 0 satisfiable) and costs 45 % of the steps, which is why it is off by
+default; `RESULTS.md` §9f has the numbers and the geometry that explains them.
+
 ```bash
 python scripts/anneal_hunt.py --gate --seconds 120 --seed 0
 python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900  # refused
+python scripts/anneal_hunt.py --gate --repair-cap 120 --repair-seconds 5      # with repair
 ```
 
 ## 7. Reproducing and extending
 
 ```bash
 pip install -e ".[dev,opt]"      # numpy + pytest + scipy (optional polish)
-python -m pytest tests -q
+pip install -e ".[solvers]"      # python-sat: the CDCL engines the campaigns drive
+python -m pytest tests -q        # engine tests skip without them, they do not fail
 python -m oplab.cli verify certs --deep --workers 8
 bash scripts/run_full.sh          # regenerates every certificate in certs/
 

@@ -632,7 +632,8 @@ Exit status is `1` as soon as one certificate fails, which is what CI relies on.
 ## 7. Quick start and reproduction
 
 ```bash
-pip install -e ".[dev,opt]"     # numpy, pytest, and optionally scipy for the polish step
+pip install -e ".[dev,opt,solvers]"   # + python-sat for the CDCL campaigns
+pip install -e ".[dev,opt]"           # numpy, pytest, and optionally scipy for the polish step
 python -m pytest tests -q       # ~2 minutes, no network
 python -m oplab.cli verify certs
 
@@ -843,6 +844,13 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   not: four seeds, 440 k class moves each, still 2–3 cliques away.  Two independent
   methods plateauing on a known-satisfiable instance is the useful result, and no `K51`
   run was made: [RESULTS.md](RESULTS.md) §9e.
+* **A repair move that is exact and still not enough.**  `anneal.repair` hands the
+  classes around the violated sets to CaDiCaL, and no model it returns can create a
+  violation — the sub-CNF covers every set a free class touches.  It fixes a perturbed
+  witness in 0.06 s, and on the `K50` plateau it changed nothing: 1 207 sub-instances,
+  none satisfiable, because the violated sets' one-hop neighbourhood is 159 of the 190
+  classes.  The last three cliques are not a local trap; they are the whole problem:
+  [RESULTS.md](RESULTS.md) §9f.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The
