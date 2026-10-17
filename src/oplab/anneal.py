@@ -37,6 +37,12 @@ empty.  ``sat`` means the walk reached zero **and** the expanded colouring survi
 :func:`oplab.multicolour.verify_colouring`; a witness that fails that check is
 ``sat-invalid``, a bug in this file.
 
+:func:`partial` changes the encoding rather than the walk: a class may be left **blank**,
+so a violation can be dissolved instead of recoloured, and the blank classes are then
+handed to the engine through :func:`repair`.  Its ``partial`` status is not a colouring
+and not a bound — it says zero violations with some classes uncoloured, which is a
+statement about the state the walk reached and about nothing else.
+
 The gate lives in ``scripts/anneal_hunt.py``: this search is only allowed to speak
 about ``K51`` after it has rediscovered the *known* witness at ``K50`` from a random
 start.  It has not, and ``RESULTS.md`` §9e records that instead of hiding it.
