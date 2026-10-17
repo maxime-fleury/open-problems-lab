@@ -399,6 +399,68 @@ verdicts go (RESULTS.md §9b).  The claim is committed with the rows it rests on
 the `proofs` CI job re-reads the two passes the same way and fails if a row, a cube
 file or a report stops adding up — the check runs no solver and takes seconds.
 
+### The GPU: a lever for witnesses, not for decisions
+
+The two halves of this repository's work are not the same kind of computation, and the
+GPU helps exactly one of them.
+
+**Deciding** — "is this CNF satisfiable" — is CDCL: one lineage of decisions, clause
+learning, restarts chosen from conflict history.  It is sequential by nature, there is
+no credible GPU port, and the bottleneck is the shape of the search tree rather than
+arithmetic throughput.  Every `unknown` in these results came from that engine, and a
+card changes none of them: a factor of ten on a problem whose cost doubles per vertex
+buys about one size class, and only if the hardness scales that gently.
+
+**Finding a witness** — "produce one clean colouring" — is a different job, and it is
+arithmetic: count, for many skeletons at once, how many forbidden cliques are
+monochromatic.  That kernel is \(24\) to \(35\) times faster on the card than
+vectorised numpy, and, more importantly, it runs thousands of independent skeletons in
+flight instead of sixteen.
+
+| instance | CPU (numpy) | GPU | gain |
+|---|---|---|---|
+| `K51` family 3×`Z_17` (75 classes) | 46–56 k evals/s | 1 130–1 640 k/s | ×24–29 |
+| `K50` family 3×`Z_2^4`+2 (190 classes) | 12–17 k/s | 395–605 k/s | ×24–35 |
+| `K51` general (1 275 edges, 20 825 triangles) | 9.5–10 k/s | ~200 k/s | ×20 |
+
+The two paths were checked against each other rather than trusted: on 4 096 shared
+skeletons the host count and the device count agree on all three instances.  The
+timings measure a full recount, which is an upper bound on the cost of the incremental
+step the walk actually takes.
+
+`oplab.gputabu` is that walk — TABUCOL batched over a population, each skeleton with
+its own tabu list, restarting when it stops improving — and it is explicitly *not* a
+solver.  A run that ends with violations left reports `best-effort` and a count; it
+never says `unsat`, because a heuristic has no way to know.  A run that reaches zero
+expands the class assignment and hands it to `verify_colouring`; anything else is
+reported as `sat-invalid`, which is a bug in the module and not a result.
+
+The incremental counter is the part that had to be earned, not assumed.  The step moves
+the violation count by the delta of the move just applied, so a delta taken from a move
+that was *not* applied — a tabu move with no alternative, in an instance with only two
+colours — silently corrupts every number downstream.  The walk therefore recounts from
+scratch every `recount_every` steps and reports the disagreements in `recount_drift`;
+the tests demand it be zero.  It found two real bugs: the delta of a move that was never
+applied, and a gather one element past the end of a row, because a class set shorter
+than the widest one is padded with an index `A` did not have a column for.  The second
+is invisible on the elementary-abelian instances — in characteristic two a triangle
+cannot be isoceles, so nothing is ever padded — and it aborts the device on `Z_17`,
+where 96 of 4 708 sets are.
+
+What it measures, honestly, is a ceiling rather than a promise: `K_5` and `K_29`
+(two and four colours) are solved in seconds with verified witnesses, `K_44` general
+stalls at 68 monochromatic cliques, and `K_50` inside the block-Cayley family — where
+Kissat found a witness in 527 s — reaches **2** in ten minutes and stops there.  A
+search that cannot close the instance it is calibrated on has not earned a claim about
+the one above it.
+
+```bash
+pip install -e ".[gpu]"          # torch with CUDA; every other path works without it
+python scripts/gpu_tabu.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 1200 \
+    --walks 4096 --pick-every 8 --out runs/block/gputabu_k51_b3_z17.json
+python scripts/gpu_tabu.py 51:3,3,3,3 --general --seconds 1200
+```
+
 ## 7. Reproducing and extending
 
 ```bash

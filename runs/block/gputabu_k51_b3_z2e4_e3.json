@@ -1,0 +1,276 @@
+{
+  "n": 51,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "classes": 240,
+  "class_sets": 18440,
+  "walks": 4096,
+  "steps": 104281,
+  "flips": 427134976,
+  "seconds": 1200.018,
+  "flips_per_second": 355940.6,
+  "violations": 3,
+  "history": [
+    {
+      "t": 30.0,
+      "best": 3,
+      "steps": 2668,
+      "flips": 10928128
+    },
+    {
+      "t": 60.0,
+      "best": 3,
+      "steps": 5402,
+      "flips": 22126592
+    },
+    {
+      "t": 90.0,
+      "best": 3,
+      "steps": 8119,
+      "flips": 33255424
+    },
+    {
+      "t": 120.0,
+      "best": 3,
+      "steps": 10830,
+      "flips": 44359680
+    },
+    {
+      "t": 150.0,
+      "best": 3,
+      "steps": 13528,
+      "flips": 55410688
+    },
+    {
+      "t": 180.0,
+      "best": 3,
+      "steps": 16209,
+      "flips": 66392064
+    },
+    {
+      "t": 210.0,
+      "best": 3,
+      "steps": 18896,
+      "flips": 77398016
+    },
+    {
+      "t": 240.0,
+      "best": 3,
+      "steps": 21509,
+      "flips": 88100864
+    },
+    {
+      "t": 270.0,
+      "best": 3,
+      "steps": 23970,
+      "flips": 98181120
+    },
+    {
+      "t": 300.0,
+      "best": 3,
+      "steps": 26444,
+      "flips": 108314624
+    },
+    {
+      "t": 330.0,
+      "best": 3,
+      "steps": 28982,
+      "flips": 118710272
+    },
+    {
+      "t": 360.0,
+      "best": 3,
+      "steps": 31573,
+      "flips": 129323008
+    },
+    {
+      "t": 390.0,
+      "best": 3,
+      "steps": 34185,
+      "flips": 140021760
+    },
+    {
+      "t": 420.0,
+      "best": 3,
+      "steps": 36826,
+      "flips": 150839296
+    },
+    {
+      "t": 450.0,
+      "best": 3,
+      "steps": 39485,
+      "flips": 161730560
+    },
+    {
+      "t": 480.0,
+      "best": 3,
+      "steps": 42142,
+      "flips": 172613632
+    },
+    {
+      "t": 510.0,
+      "best": 3,
+      "steps": 44772,
+      "flips": 183386112
+    },
+    {
+      "t": 540.0,
+      "best": 3,
+      "steps": 47351,
+      "flips": 193949696
+    },
+    {
+      "t": 570.0,
+      "best": 3,
+      "steps": 49903,
+      "flips": 204402688
+    },
+    {
+      "t": 600.0,
+      "best": 3,
+      "steps": 52449,
+      "flips": 214831104
+    },
+    {
+      "t": 630.0,
+      "best": 3,
+      "steps": 55006,
+      "flips": 225304576
+    },
+    {
+      "t": 660.0,
+      "best": 3,
+      "steps": 57590,
+      "flips": 235888640
+    },
+    {
+      "t": 690.0,
+      "best": 3,
+      "steps": 60172,
+      "flips": 246464512
+    },
+    {
+      "t": 720.0,
+      "best": 3,
+      "steps": 62790,
+      "flips": 257187840
+    },
+    {
+      "t": 750.0,
+      "best": 3,
+      "steps": 65416,
+      "flips": 267943936
+    },
+    {
+      "t": 780.0,
+      "best": 3,
+      "steps": 68042,
+      "flips": 278700032
+    },
+    {
+      "t": 810.0,
+      "best": 3,
+      "steps": 70648,
+      "flips": 289374208
+    },
+    {
+      "t": 840.0,
+      "best": 3,
+      "steps": 73225,
+      "flips": 299929600
+    },
+    {
+      "t": 870.0,
+      "best": 3,
+      "steps": 75800,
+      "flips": 310476800
+    },
+    {
+      "t": 900.0,
+      "best": 3,
+      "steps": 78363,
+      "flips": 320974848
+    },
+    {
+      "t": 930.0,
+      "best": 3,
+      "steps": 80942,
+      "flips": 331538432
+    },
+    {
+      "t": 960.0,
+      "best": 3,
+      "steps": 83528,
+      "flips": 342130688
+    },
+    {
+      "t": 990.0,
+      "best": 3,
+      "steps": 86117,
+      "flips": 352735232
+    },
+    {
+      "t": 1020.0,
+      "best": 3,
+      "steps": 88721,
+      "flips": 363401216
+    },
+    {
+      "t": 1050.0,
+      "best": 3,
+      "steps": 91321,
+      "flips": 374050816
+    },
+    {
+      "t": 1080.0,
+      "best": 3,
+      "steps": 93921,
+      "flips": 384700416
+    },
+    {
+      "t": 1110.0,
+      "best": 3,
+      "steps": 96518,
+      "flips": 395337728
+    },
+    {
+      "t": 1140.0,
+      "best": 3,
+      "steps": 99113,
+      "flips": 405966848
+    },
+    {
+      "t": 1170.0,
+      "best": 3,
+      "steps": 101697,
+      "flips": 416550912
+    }
+  ],
+  "device": "cuda",
+  "seed": 11,
+  "tenure": 12,
+  "stale": 20000,
+  "recount_drift": 0,
+  "search_only": true,
+  "what": "batched tabu over K_51 [3, 3, 3, 3]: 240 classes, 18440 class sets \u2014 a search, not a decision: 'best-effort' says nothing about whether the family is empty",
+  "status": "best-effort",
+  "spec": "51:3,3,3,3",
+  "family": "block-Cayley Ramsey K_51 [3, 3, 3, 3]: 3 block(s) of [2, 2, 2, 2], 3 extra vertices, 240 classes",
+  "general": false,
+  "blocks": 3,
+  "group": "2,2,2,2",
+  "extras": 3,
+  "device_info": {
+    "available": true,
+    "name": "NVIDIA GeForce RTX 4060 Ti",
+    "memory_mib": 16379,
+    "torch": "2.10.0+cu130",
+    "cuda": "13.0"
+  },
+  "produced_by": "scripts/gpu_tabu.py 51:3,3,3,3 --seconds 1200 --walks 4096 --seed 11 --pick-every 8 --out runs/block/gputabu_k51_b3_z2e4_e3.json --blocks 3 --group 2,2,2,2 --extras 3",
+  "wall_seconds": 1200.6
+}

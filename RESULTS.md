@@ -762,10 +762,89 @@ the machinery to attack it in the family the record is written in, the measureme
 that the family contains the record size, one arithmetic obstruction that prunes the
 ladder, and one hard negative.  It is not a bound, and the tables say so.
 
+## 9d. A GPU search for a witness: the ceiling, measured
+
+The `K51` rows above are `unknown` because the engine is CDCL, and CDCL is sequential:
+one lineage of decisions, no GPU port worth the name, and a bottleneck that is the
+shape of the search tree rather than arithmetic.  Finding a *witness* is the other
+kind of computation — count, for many skeletons at once, how many forbidden cliques
+are monochromatic — and that one is arithmetic a card does well.  `oplab.gputabu` is
+that search, so the claim resting on it can be measured instead of guessed.
+
+**The kernel is fast, and the fast part is not the hard part.**  Counting the
+monochromatic cliques of 4 096 colourings at once runs 24–35× faster than vectorised
+numpy on this machine (46→1 130 k evaluations/s at `K51` 3×`Z_17`, 10→200 k/s on the
+whole of `K51`), and both paths were checked against each other on shared skeletons
+rather than trusted (`docs/methodology.md`).  The walk built on it is TABUCOL over a
+population of 4 096 skeletons, each with its own tabu list, at **0.34–0.69 million
+flips per second**.
+
+**It is a search, and the report says so.**  A run that stops with violations left is
+`best-effort` with a count; it never says `unsat`, because a heuristic has no way to
+know.  A run that reaches zero is expanded and handed to `verify_colouring` — and a
+run that claims zero and fails that check is `sat-invalid`, a bug in the module and
+not a result.  The incremental counter is itself checked: the walk recounts from
+scratch every 2 000 steps and reports the disagreements in `recount_drift`, which is
+**0 in every run below**.  That check earned its keep — it caught a delta taken from a
+tabu move that was never applied, and a gather one element past the end of a row on
+the padded class sets of `Z_17` (in characteristic two a triangle cannot be isoceles,
+so the elementary-abelian instances never exercised that path).
+
+**The calibration is the part that matters.**  Before any `K51` run means anything,
+the same walk was pointed at instances whose answer is known:
+
+| instance | status of the instance | best found | time |
+|---|---|---|---|
+| `K5` (3,3) | has a clean colouring (`R(3,3) = 6`) | **0**, witness verified | 0.1 s |
+| `K29` (3,3,3,3) | has one (circulant, §3) | **0**, witness verified | 1.3 s |
+| `K44` (3,3,3,3) general | has one (circulant) | 68 | 45 s |
+| `K50` 3×`Z_2^4`+2, the family | **SAT, decided by Kissat in 527 s** (§9c) | **2** | 600 s |
+
+That last row is the whole story.  On an instance where a witness provably exists, in
+the family the witness lives in, with ten minutes and 264 million flips, the walk
+gets to two monochromatic cliques and stops.  A searcher that cannot close the
+smaller, known-satisfiable instance has earned no claim about the larger one.
+
+**What the twenty minutes per shape actually measured.**  Four shapes, 4 096 walks
+each, `pick-every 8`, seed 11:
+
+| shape | classes | class sets | best | steps | flips | rate | drift |
+|---|---|---|---|---|---|---|---|
+| 3 blocks of `Z_17` | 75 | 4 708 | **3** | 201 038 | 823 451 648 | 686 k/s | 0 |
+| 3 blocks of `Z_2^4` + 3 | 240 | 18 440 | **3** | 104 281 | 427 134 976 | 356 k/s | 0 |
+| 3 blocks of `Z_16` + 3 | 219 | 18 272 | **3** | 100 423 | 411 332 608 | 343 k/s | 0 |
+| 6 blocks of `Z_8` + 3 | 291 | 22 716 | **6** | 114 286 | 468 115 456 | 390 k/s | 0 |
+
+**The population was not the lever either.**  On 3×`Z_17` at a fixed 120 s, 4 096
+walks got 17 897 steps each and 16 384 got 5 230 — both ended at 3 — while the
+aggregate rate moved only from 611 k to 714 k flips/s.  Four times the skeletons,
+three and a half times less depth each, the same answer: what this walk needs is
+*per-walk* progress, and the card buys multiplicity, not progress.  A million walks
+does not fit in the first place: the counts are `S x k` bytes per walk, 18.4 KiB on
+this shape, so 17.5 GiB for the *smallest* of the four against 15 GiB on the card —
+and four times that on the six-block shape.
+
+**2.13 billion flips, eighty minutes, no witness** — and no `sat-invalid` either, so
+the counting is sound; the runs simply ended where they ended.  The reported figure is
+the smallest value in each run's 30-second history, so it is a record and not a
+snapshot.  For the record the numbers are *not* an argument that these families are
+empty: `K50` is the proof that a plateau in this walk says nothing about existence.
+What the section establishes is narrower and worth having — the GPU is the right tool
+for the witness side and the wrong tool for the decision side, the machinery now
+exists and is tested, and on this platform it is **not** sufficient for `K51`.
+
+```bash
+python scripts/gpu_tabu.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 1200 \
+    --walks 4096 --pick-every 8
+```
+
 ## Limitations, stated plainly
 
 * **Only the circulant sweeps are exhaustive.** Everything else is a heuristic
-  with a seed and a time budget.
+  with a seed and a time budget — including the GPU tabu search of §9d, which is a
+  search for witnesses that never refutes anything: its `best-effort` rows are
+  statements about the walk, and its own calibration instance (`K50`, where a witness
+  exists) ends at two monochromatic cliques.
 * **No record was broken.** The best Tammes configurations found are 0.03°–0.13°
   short of the published values, and no kissing configuration with 41 points in
   dimension 5 was found.

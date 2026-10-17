@@ -19,6 +19,10 @@ opt = ["scipy>=1.10"]
 # Optional: a SAT backend for the Ramsey encoding.  Without it, `oplab sat`
 # reports "no-solver" and the SAT tests are skipped; DIMACS export still works.
 sat = ["z3-solver>=4.12"]
+# Optional: the batched GPU tabu search (`oplab.gputabu`, scripts/gpu_tabu.py).
+# It is a *search* for witnesses, not a solver: without torch every SAT and
+# circulant path still decides, and the GPU tests are skipped.
+gpu = ["torch>=2.4"]
 
 [project.scripts]
 oplab = "oplab.cli:main"

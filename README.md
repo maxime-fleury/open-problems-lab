@@ -830,6 +830,12 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   divisible by 3 is refuted by arithmetic with no solver at all, and the `K51`
   shapes whose blocks avoid a factor of three are undecided: [RESULTS.md](RESULTS.md)
   §9c.  No bound moves.
+* **A GPU search for witnesses, with its ceiling measured.**  `oplab.gputabu` runs
+  batched tabu over the same instances: 24–35× the counting throughput of vectorised
+  numpy and thousands of skeletons in flight.  It is a search and says so — `K5` and
+  `K29` come back with verified witnesses in seconds, `K50` inside the family stalls at
+  2 monochromatic cliques where Kissat found one in 527 s, and no `best-effort` row is
+  ever a refutation.  CDCL gains nothing from the card, and the section measures why.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The
