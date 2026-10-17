@@ -612,6 +612,7 @@ needs_kissat_binary = pytest.mark.skipif(
     reason="no Kissat binary (set OPLAB_KISSAT, or build ~/kissat/build/kissat under WSL)")
 
 
+@needs_kissat_binary
 def test_the_binary_engine_answers_the_instances_that_kill_the_wheel():
     """The engine named ``kissat404`` is only repaired if it survives *these*.
 

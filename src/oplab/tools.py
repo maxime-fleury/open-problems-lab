@@ -84,9 +84,14 @@ def is_wsl(command) -> bool:
     """Whether a command runs under WSL (so its file paths need converting).
 
     Only the *first* word decides: a wrapper that happens to mention ``wsl``
-    later is a native command.
+    later is a native command.  The separator is normalised first, because the
+    command may have been written on Windows, where the separator is a backslash
+    and `os.path.basename` on a POSIX host does not treat it as one.
     """
-    return bool(command) and os.path.basename(command[0]).lower() in ("wsl", "wsl.exe")
+    if not command:
+        return False
+    first = str(command[0]).replace("\\", "/")
+    return os.path.basename(first).lower() in ("wsl", "wsl.exe")
 
 
 def wsl_path(path) -> str:
