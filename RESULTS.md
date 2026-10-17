@@ -715,8 +715,9 @@ two extras, the published witness's shape, is **SAT at `K50` in 527 s** (760
 variables, 14 871 clauses) and the colouring re-counts clean: `R(3,3,3,3) > 50`
 reproduced inside the family.  That is what makes the one-vertex extension a
 question worth asking, and it validates the decode as much as the family.  The group
-matters, not only the block order: the same three blocks of order 16 taken as `Z_16`
-(a subring family, 676 variables, 14 556 clauses) is still `unknown` at 900 s.
+matters, not only the block order: the same three blocks of order 16 taken cyclically
+(`Z_16`, 676 variables, 14 556 clauses) is still `unknown` at 900 s, while the
+elementary-abelian shape was decided.
 
 **The obstruction comes back per block.**  `n = 51` escapes the circulant `n/3`
 argument because a block of `Z_17` has no difference 17 — but inside a block it
@@ -737,9 +738,20 @@ now says so before the engine is started.
 | 17 blocks of `Z_3` | 1 700 | 30 788 | **obstructed** | arithmetic |
 | 3 blocks of `Z_15` + 6 extras | 1 404 | 32 634 | **obstructed** | arithmetic |
 | 4 blocks of `Z_12` + 3 extras | 972 | 21 482 | **obstructed** | arithmetic |
+| 3 blocks of `Z_17`, one hour | 300 | 5 234 | `unknown` | 3 600 s |
+| 3 blocks of `Z_2^4` + 3 extras, one hour | 960 | 20 121 | `unknown` | 3 600 s |
+| `K51` general, `symmetry=2`, one hour | 193 950 | 470 222 | `unknown` | 3 060 s |
 
 No witness, and no refutation either: four shapes are open after fifteen minutes of
-Kissat each.  And the one-vertex extension of the witness we do have is **dead**:
+Kissat each.  Buying two of them an hour instead — the purest shape (3 blocks of
+`Z_17`, 300 variables) and the largest (3 blocks of `Z_2^4` plus 3 extras, 960) —
+returned `unknown` again at **3 600 s**: four times the budget, the same non-verdict.
+And the general instance, not the family, was given its own hour: `K51` as a whole,
+193 950 variables and 470 222 clauses with the `symmetry=2` break, ran 3 060 s and
+came back `unknown` too.  More time is not the lever; a partition or a better
+encoding is.
+
+And the one-vertex extension of the witness we do have is **dead**:
 with the `K50` colouring fixed, "colour the 50 edges to one new vertex" is a
 200-variable, 1 575-clause CSP, and it is UNSAT in **0.19 s**.  That is a fact about
 that colouring and not about `K51` — a clean `K51` would appear as an *extendable*
