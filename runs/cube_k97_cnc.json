@@ -1,0 +1,73 @@
+{
+  "what": "cube-and-conquer over the circulant instance K97 [3, 3, 3, 4], combined from 2 passes",
+  "produced_by": "scripts/cube_conquer.py --combine runs/cube_k97_d12.json --combine runs/cube_k97_d12_pass2.json",
+  "spec": "97:3,3,3,4",
+  "n": 97,
+  "sizes": [
+    3,
+    3,
+    3,
+    4
+  ],
+  "sources": [
+    {
+      "report": "runs/cube_k97_d12.json",
+      "cubes_file": "runs\\cube_k97_d12\\k97_d12.icnf",
+      "cubes": 4096,
+      "cover": {
+        "complete": true,
+        "cubes": 4096,
+        "leaves": 4096,
+        "depth": 12
+      },
+      "engine": "kissat404",
+      "backing": "binary",
+      "budget_seconds": 60.0,
+      "counts": {
+        "unsat": 4000,
+        "unknown": 96
+      },
+      "shard_seconds": 4783.0
+    },
+    {
+      "report": "runs/cube_k97_d12_pass2.json",
+      "cubes_file": "runs\\cube_k97_d12\\k97_unresolved.icnf",
+      "cubes": 96,
+      "cover": {
+        "complete": false,
+        "cubes": 96,
+        "leaves": 0,
+        "depth": 12,
+        "reason": "a node does not branch on one variable, both ways: it has 1 child(ren), and 0 complete leaves were found"
+      },
+      "engine": "kissat404",
+      "backing": "binary",
+      "budget_seconds": 900.0,
+      "counts": {
+        "unsat": 96
+      },
+      "shard_seconds": 817.8
+    }
+  ],
+  "encoding": {
+    "num_vars": 192,
+    "num_clauses": 21016,
+    "classes": 48
+  },
+  "cover": {
+    "complete": true,
+    "cubes": 4096,
+    "leaves": 4096,
+    "depth": 12
+  },
+  "cubes": 4096,
+  "depth": 12,
+  "counts": {
+    "unsat": 4096
+  },
+  "decided": 4096,
+  "unresolved": 0,
+  "errors": 0,
+  "verdict": "refuted-cover",
+  "establishes": "no colouring of K97 in the circulant family: the 4096 leaves of one complete decision tree at depth 12 are exactly the cubes the 2 passes decided, and every one was refuted \u2014 kissat404 (binary) at 60 s per leaf refuted 4000; kissat404 (binary) at 900 s per leaf refuted 96.  These are solver verdicts and not proofs: re-refuting the same leaves with an engine that emits a DRAT trace, and replaying them here, is what would make it a theorem."
+}

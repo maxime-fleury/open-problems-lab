@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K161 with forbidden clique sizes [3, 3, 3, 3, 3]: unknown",
+  "payload": {
+    "n": 161,
+    "sizes": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "status": "unknown",
+    "classes": 80,
+    "num_vars": 400,
+    "num_clauses": 11680,
+    "clique_groups": {
+      "3": 2160
+    },
+    "solver": "kissat404",
+    "seconds": 767.1697471141815
+  },
+  "claims": {
+    "n": 161,
+    "sizes": [
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "status": "unknown"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 161 --sizes 3,3,3,3,3",
+    "created": "2026-10-17",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "kissat404"
+  },
+  "payload_sha256": "d84ab8674e835ad614bc8d6902de7dc2624cf5b18ce6c852183fceac56a420aa"
+}

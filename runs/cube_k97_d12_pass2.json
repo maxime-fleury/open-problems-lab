@@ -1,0 +1,161 @@
+{
+  "what": "cube-and-conquer over the circulant instance K97 [3, 3, 3, 4]",
+  "produced_by": "scripts/cube_conquer.py 97:3,3,3,4 --depth 12 --budget 900 --workers 10 --engine kissat404",
+  "spec": "97:3,3,3,4",
+  "n": 97,
+  "sizes": [
+    3,
+    3,
+    3,
+    4
+  ],
+  "encoding": {
+    "num_vars": 192,
+    "num_clauses": 21016,
+    "classes": 48
+  },
+  "engine": {
+    "name": "kissat404",
+    "backing": "binary",
+    "command": "wsl.exe -e /home/max/kissat/build/kissat",
+    "budget_seconds": 900.0,
+    "budget_enforced_per_cube": true
+  },
+  "depth": 12,
+  "cnf": "runs\\cube_k97_d12\\k97.cnf",
+  "cubing": {
+    "cubes_file": "runs\\cube_k97_d12\\k97_unresolved.icnf",
+    "reused": true
+  },
+  "cubes": 96,
+  "cover": {
+    "complete": false,
+    "cubes": 96,
+    "leaves": 0,
+    "depth": 12,
+    "reason": "a node does not branch on one variable, both ways: it has 1 child(ren), and 0 complete leaves were found"
+  },
+  "shards": 817.8,
+  "workers": 10,
+  "rows_dir": "runs\\cube_k97_d12_pass2\\rows",
+  "shard_summaries": [
+    {
+      "shard": 0,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 719.29,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 1,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 736.446,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 2,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 732.65,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 3,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 744.713,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 4,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 800.103,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 5,
+      "cubes": 10,
+      "unsat": 10,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 816.628,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 6,
+      "cubes": 9,
+      "unsat": 9,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 576.011,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 7,
+      "cubes": 9,
+      "unsat": 9,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 711.414,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 8,
+      "cubes": 9,
+      "unsat": 9,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 687.467,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 9,
+      "cubes": 9,
+      "unsat": 9,
+      "sat": 0,
+      "unknown": 0,
+      "error": 0,
+      "seconds": 760.381,
+      "witness": null,
+      "killed": false
+    }
+  ],
+  "counts": {
+    "unsat": 96
+  },
+  "decided": 96,
+  "errors": 0,
+  "unresolved": 0,
+  "verdict": "refuted-fragment",
+  "establishes": "every one of the 96 leaves in runs\\cube_k97_d12\\k97_unresolved.icnf was refuted by kissat404 (binary) \u2014 a fragment of a cover, not a cover, so it is a piece of the answer and nothing more.  Each leaf is still a verdict and not a proof."
+}

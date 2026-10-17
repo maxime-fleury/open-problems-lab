@@ -283,13 +283,137 @@ because there are two stores — `certs/circulant_multicolour/MANIFEST.txt` and
 * **Symmetry breaking that is not re-tested.** If you add a layer, add a
   satisfiable instance to the soundness tests in the same commit — see §4b.
 
-## 6. Reproducing and extending
+## 6. External engines: the repaired Kissat, and cube-and-conquer
+
+Two jobs are done by a binary rather than by a Python binding, and the revisions
+are pinned in [`docs/tools.pin`](tools.pin).  `oplab.tools` finds them — the
+environment variable first (a whole command line, so a native build, a wrapper or
+`wsl -e …` all name one), then the name on `PATH`, then a from-source build at
+`$HOME/kissat/build/kissat` or `$HOME/march-cu/march_cu` inside WSL — and
+`oplab solvers` reports which implementation answered.
+
+### Why a binary: the bundled Kissat wheel is broken here, and not only by crashing
+
+`python-sat` ships Kissat 4.0.4 inside `pysolvers.cp314-win_amd64.pyd`.  On this
+platform that binding answers the first trivial instances and then fails, and the
+second failure is the one that matters:
+
+| instance | `cadical195` (wheel) | `kissat404` (wheel) | `kissat404` (binary) |
+|---|---|---|---|
+| `[[1]]` | `sat` | `sat` | `sat` |
+| `[[1], [2]]` | `sat` | `sat` | `sat` |
+| `[[1, 2], [-1]]` | `sat` | **access violation**, exit 3221225477 | `sat` |
+| `[[1], [-1]]` | `unsat` | **access violation** | `unsat` |
+| `[[1, 2], [-1, 2], [1, -2], [-1, -2]]` | `unsat` | **`sat`**, with a model that satisfies no clause | `unsat` |
+
+A crash is visible; a `sat` that satisfies nothing is visible only once something
+re-checks the model.  Nothing in Python repairs this — the fault is inside the
+compiled binding — so version 4.0.4 is built from upstream and driven as a process
+(`oplab.multicolour.KissatBinary`).  `_solver_class` resolves the name to one
+implementation or the other, `solver_backing` says which, and every probe row
+carries it, because a verdict that does not say which of two same-named engines
+produced it cannot be reproduced.
+
+The adapter refuses three things on purpose:
+
+* `unsat` without the solver's own `s UNSATISFIABLE` — a signal, an empty output or
+  a parse error is `None` (unknown) with the reason kept in `note`, which is
+  exactly the case that used to be filed as a verdict;
+* a model that does not satisfy the clauses it was given: `sat` is not taken on the
+  solver's word, so an interface bug cannot invent a witness;
+* `with_proof=True` (and `get_proof`): Kissat emits no DRAT trace, so a
+  proof-carrying row has to come from an engine that does (CaDiCaL).
+
+### cube-and-conquer: a partition, then a verdict per part
+
+A CDCL solver on the frontier instances spends a long budget and returns `unknown`,
+not because the search is hard everywhere but because the *top* of the search tree
+is unguided.  `scripts/cube_conquer.py` replaces that top with an explicit
+look-ahead partition (`march_cu`), then runs one process per leaf, in parallel,
+with a per-leaf budget — the boundary a wheel cannot give you, since a solver holds
+the interpreter for its whole run:
+
+```bash
+python scripts/cube_conquer.py 97:3,3,3,4 --depth 12 --budget 60 --workers 16 \
+    --engine kissat404 --engine-backing binary --out runs/cube_k97_d12.json
+```
+
+Two independent things decide what the run may claim.
+
+**The cover is checked here, not taken from the cuber's word.**  A leaf list is a
+complete decision tree exactly when the trie over the leaves is full: every internal
+node branches on one variable, both ways, every leaf is one of the cubes, and the
+cubes are all the same length (`cube_cover`).  With that, any assignment agrees with
+exactly one leaf path — and a cube file that was filtered, truncated, hand-written
+or is simply the *undecided* leaves of another run is reported as what it is.  That
+is why `--cubes` (a resumption) can yield `refuted-fragment` and never
+`refuted-cover` unless the list actually closes.
+
+**A witness is decoded and re-counted by the repository's own code.**  A `sat` leaf
+is decoded with the instance class and passed to `verify_colouring`; a model that
+decodes but is not clean is a failure of the run (`sat-invalid`, exit 1), not a
+result.  The driver counts nothing itself.
+
+The verdicts, in the terms the report uses:
+
+| verdict | what it means | exit |
+|---|---|---|
+| `sat` | a verified colouring was found — for the circulant family a witness is a witness, so it is also a colouring of `K_n` | 0 |
+| `refuted-cover` | every leaf refuted **and** the cover closes: that CNF is unsatisfiable *as far as the engine's verdicts go* | 0 |
+| `refuted-fragment` | every leaf of an input cube list refuted, where that list is a fragment of a cover | 0 |
+| `refuted-by-cuber` | `march_cu` decided the instance itself while cubing (it is a solver too); its model is decoded and re-counted like any other | 0 |
+| `incomplete` | some leaf undecided, or the cover does not close: nothing is claimed, and the undecided cubes are written out for a second pass with a larger `--budget` | 2 |
+
+`refuted-cover` is a statement about the leaves' **verdicts**.  It becomes a theorem
+only when each leaf's refutation is a replayed trace (CaDiCaL writes DRAT; the
+in-repo checker replays it against that leaf's CNF), and the cover check above is
+what makes the collection of leaf theorems a theorem about the instance.  Until
+then the report says so in its own words, and so do the results.
+
+### Combining passes: the claim no single run can make
+
+A cover that a small budget only half refuted is not a refutation, and the pass
+that finishes the job is a *fragment* — so neither report can say what the two did
+together.  `--combine` is that step, and it is a check rather than an addition: it
+re-reads the reports, re-runs the cover test on the complete cube file, re-reads
+every pass's rows **from disk** (not from the summaries), and refuses the claim
+unless the cover's leaves are exactly the cubes the passes decided, each one
+refuted:
+
+```bash
+python scripts/cube_conquer.py 97:3,3,3,4 --combine runs/cube_k97_d12.json \
+    runs/cube_k97_d12_pass2.json --out runs/cube_k97_cnc.json
+```
+
+Four refusals are worth knowing, because each one is a way a stack of reports can
+look like an answer: a leaf no pass decided, a cube a pass decided that is **not** a
+leaf of the cover, two passes about different instances (or different encodings of
+one), and two passes returning *different verdicts* for one leaf (`conflict`, exit
+1).  A budget that ran out is not a disagreement — being superseded is what a
+second pass is for — so `unknown` never blocks the claim; only two answers do.
+What comes out is the same report shape a run writes, with the passes it was built
+from in `sources`, so the claim carries its own evidence.  `K97` at `(3,3,3,4)` is
+the worked case: 4 096 leaves at depth 12, 4 000 refuted at 60 s per leaf and the
+other 96 at 900 s, accepted by `--combine` as a refutation of that CNF as far as
+verdicts go (RESULTS.md §9b).  The claim is committed with the rows it rests on, so
+the `proofs` CI job re-reads the two passes the same way and fails if a row, a cube
+file or a report stops adding up — the check runs no solver and takes seconds.
+
+## 7. Reproducing and extending
 
 ```bash
 pip install -e ".[dev,opt]"      # numpy + pytest + scipy (optional polish)
 python -m pytest tests -q
 python -m oplab.cli verify certs --deep --workers 8
 bash scripts/run_full.sh          # regenerates every certificate in certs/
+
+python -m oplab.cli solvers       # which engines answer here, and on what backing
+# the two external tools (docs/tools.pin), then a cube-and-conquer run:
+export OPLAB_KISSAT="wsl -e /home/me/kissat/build/kissat"
+python scripts/cube_conquer.py 97:3,3,3,4 --depth 12 --budget 60 --workers 16
+# then the undecided leaves at a larger budget, and both passes read as one claim:
+python scripts/cube_conquer.py 97:3,3,3,4 --cubes <the unresolved file> --budget 900
+python scripts/cube_conquer.py 97:3,3,3,4 --combine <pass 1 report> <pass 2 report>
 ```
 
 To add a target: add a builder or search to a module, add a branch to

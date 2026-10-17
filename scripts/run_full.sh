@@ -22,10 +22,13 @@ run () { echo "+ $*" | tee -a "$LOG"; "$@" 2>&1 | tee -a "$LOG"; }
 # ------------------------------------------------------------- engine health
 step "the bundled engines, probed rather than assumed"
 # A wheel that imports and a wheel that answers are different things: the bundled
-# Kissat dies here on its first clause (exit 3221225477).  This prints the table
-# first, so a dead engine is visible before it takes a campaign slot; a non-zero
-# exit is not fatal, because CaDiCaL — the engine every certificate here rests on
-# — is reported separately.
+# Kissat dies on its first two-clause instance (exit 3221225477) and answers `sat`
+# with an invalid model on a four-clause contradiction, so `kissat404` is only
+# trusted when `oplab.tools` finds a real binary for it (see docs/tools.pin) — the
+# table's `backing` column says which one answered.  This prints the table first,
+# so a dead engine is visible before it takes a campaign slot; a non-zero exit is
+# not fatal, because CaDiCaL — the engine every certificate here rests on — is
+# reported separately.
 run python -m oplab.cli solvers --seconds 20 || true
 
 # ---------------------------------------------------------------- exact builds

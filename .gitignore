@@ -28,6 +28,16 @@ htmlcov/
 !runs/full_run.log
 !runs/hunt_driver.log
 
+# A cube-and-conquer workdir: the CNF is regenerated from the instance in under a
+# second, so it is not kept, while the cube file (the partition, which is what the
+# cover check reads back) and the per-leaf rows are — the rows are what `--combine`
+# re-reads, so a campaign whose result is quoted has to keep them to stay
+# checkable offline.  The one exception below is the K97 run of RESULTS.md §9b.
+runs/*/*.cnf
+runs/*/rows/
+!runs/cube_k97_d12/rows/
+!runs/cube_k97_d12_pass2/rows/
+
 # Lean build artifacts; the Lean sources live in lean/ and their toolchain is
 # pinned by lean/lean-toolchain
 lean/.lake/

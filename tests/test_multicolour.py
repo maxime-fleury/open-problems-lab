@@ -576,3 +576,135 @@ def test_a_sweep_row_that_timed_out_still_knows_which_family_it_was(tmp_path):
         assert "subgroup_order" in row
         if row["status"] == "unknown":
             assert row.get("budget_expired") is True, row
+
+
+# --------------------------------------------------------------------------
+# the Kissat engine: a real binary behind the wheel's name
+# --------------------------------------------------------------------------
+def _has_kissat_binary() -> bool:
+    """Whether this machine can run a real Kissat (:data:`oplab.tools`)."""
+    from oplab import tools
+
+    return tools.kissat_command() is not None
+
+
+needs_kissat_binary = pytest.mark.skipif(
+    not _has_kissat_binary(),
+    reason="no Kissat binary (set OPLAB_KISSAT, or build ~/kissat/build/kissat under WSL)")
+
+
+def test_the_binary_engine_answers_the_instances_that_kill_the_wheel():
+    """The engine named ``kissat404`` is only repaired if it survives *these*.
+
+    The bundled 4.0.4 wheel on Windows dies with an access violation on
+    ``[[1], [-1]]`` and on ``[[1, 2], [-1]]``, and on the four-clause
+    contradiction answers ``sat`` with a model that satisfies no clause.  So the
+    bar for the binary replacement is not "it starts": it has to answer every one
+    of those correctly, with a model this repository can check, and it has to
+    accept assumptions — the cubes of a cube-and-conquer run — as units.
+    """
+    from oplab.multicolour import KissatBinary
+
+    satisfiable = ([[1]], [[1], [2]], [[1, 2], [-1]])
+    unsatisfiable = ([[1], [-1]], [[1], [2], [-1, -2]],
+                     [[1, 2], [-1, 2], [1, -2], [-1, -2]])
+    for clauses in satisfiable:
+        with KissatBinary(bootstrap_with=clauses) as solver:
+            assert solver.solve() is True, (clauses, solver.note)
+            model = solver.get_model()
+            assert all(any(lit in model for lit in clause) for clause in clauses), (clauses, model)
+            assert solver.time() >= 0.0
+            assert solver.note == ""
+    for clauses in unsatisfiable:
+        with KissatBinary(bootstrap_with=clauses) as solver:
+            assert solver.solve() is False, (clauses, solver.note)
+            assert solver.note == ""
+
+    # assumptions, which the binary protocol does not have: units, and only for
+    # the run — the solver's own clauses are untouched
+    with KissatBinary(bootstrap_with=[[1, 2]]) as solver:
+        assert solver.solve(assumptions=[-1]) is True
+        assert 2 in solver.get_model()
+        assert solver.solve(assumptions=[-1, -2]) is False
+        assert solver.nof_clauses() == 1 and solver.nof_vars() == 2
+
+
+def test_the_binary_engine_refuses_a_proof_and_never_invents_a_verdict(monkeypatch, tmp_path):
+    """Three ways an engine interface can lie, and what this one does instead.
+
+    Kissat emits no DRAT trace, so a proof-carrying question is refused at
+    construction rather than answered without one.  A model that does not satisfy
+    the clauses raises instead of becoming a witness.  And silence — a signal, an
+    empty output, a parse error — is ``unknown`` with the reason kept, never a
+    verdict.  The stub commands make all three deterministic, on any platform.
+    """
+    from oplab import tools
+    from oplab.multicolour import KissatBinary
+
+    with pytest.raises(NotImplementedError, match="cadical195"):
+        KissatBinary(bootstrap_with=[[1]], with_proof=True)
+    with pytest.raises(NotImplementedError, match="DRAT"):
+        KissatBinary(bootstrap_with=[[1]]).get_proof()
+
+    def stub(text: str) -> list[str]:
+        path = tmp_path / "kissat_stub.py"
+        path.write_text(text, encoding="utf-8")
+        return [sys.executable, str(path)]
+
+    # a wrong verdict with a model that satisfies nothing: the wheel's failure mode
+    monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: stub(
+        "print('s SATISFIABLE')\nprint('v 2 0')\n"))
+    with pytest.raises(RuntimeError, match="unsatisfied"):
+        KissatBinary(bootstrap_with=[[1, -2]]).solve()
+
+    # no verdict line at all, and a non-zero exit: unknown, with the reason
+    monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: stub(
+        "import sys\nsys.exit(3)\n"))
+    engine = KissatBinary(bootstrap_with=[[1]])
+    assert engine.solve() is None
+    assert "exit 3" in engine.note
+    assert engine.get_model() == []
+
+    # ... and an engine that cannot be started says so rather than answering
+    monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: None)
+    with pytest.raises(RuntimeError, match="OPLAB_KISSAT"):
+        KissatBinary(bootstrap_with=[[1]]).solve()
+
+
+def test_the_probe_rejects_a_wrong_verdict_and_names_its_backing(monkeypatch, tmp_path):
+    """The health check has to survive an engine that lies, not just one that dies.
+
+    ``kissat404`` is a *version*: two implementations answer under that name, and
+    the probe reports which one it probed.  A configured binary that answers the
+    satisfiable instance with ``unsat`` is reported ``wrong`` (the verdict exists
+    and is not believed), not ``ok``.
+    """
+    from oplab import multicolour as MC
+
+    lying = tmp_path / "lying_kissat.py"
+    lying.write_text("print('s UNSATISFIABLE')\n", encoding="utf-8")
+    monkeypatch.setenv(MC.tools.KISSAT_ENV, f'"{sys.executable}" "{lying}"')
+    row = MC.probe_solver("kissat404", seconds=60, refresh=True)
+    assert row["status"] == "wrong", row
+    assert row["backend"] == "binary", row
+    assert row["unsat_ok"] is True and row["sat_ok"] is False, row
+
+    absent = MC.probe_solver("not-a-solver", refresh=True)
+    assert absent["backend"] == "absent" and absent["reason"] == "not a bundled engine: not-a-solver"
+
+
+def test_the_engine_name_says_which_implementation_answered(monkeypatch):
+    """A verdict without a backing cannot be reproduced, so the name carries it."""
+    from oplab import multicolour as MC
+    from oplab import tools
+
+    monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: None)
+    assert MC.solver_backing("kissat404") == "wheel"
+    assert MC.solver_backing("cadical195") == "wheel"
+    assert MC.solver_backing("not-a-solver") == "absent"
+
+    monkeypatch.setattr(tools, "kissat_command", lambda refresh=False: ["kissat"])
+    assert MC.solver_backing("kissat404") == "binary"
+    # the binary alone is an engine: the wheels are not needed to offer this name
+    monkeypatch.setitem(sys.modules, "pysat.solvers", None)
+    assert MC.available_solvers() == ["kissat404"]

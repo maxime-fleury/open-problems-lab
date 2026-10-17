@@ -64,6 +64,17 @@ jobs:
       # replayed against the encoding of *that* group, then the solver re-run
       - name: Same for the group store (translation-invariant colourings)
         run: python -m oplab.cli verify certs/cayley --deep
+      # The cube-and-conquer campaign is a run artifact rather than a certificate,
+      # but the claim it makes is committed too: re-reading the two passes, re-running
+      # the cover test and re-reading the rows costs seconds and runs no solver, so a
+      # row, a cube file or a report that drifted fails here by name instead of being
+      # quoted forever.
+      - name: The two committed cube-and-conquer passes must still add up
+        run: |
+          python scripts/cube_conquer.py 97:3,3,3,4 --combine \
+            runs/cube_k97_d12.json runs/cube_k97_d12_pass2.json --out cnc.json
+          python -c "import json; r = json.load(open('cnc.json')); \
+            assert r['verdict'] == 'refuted-cover' and r['counts'] == {'unsat': 4096}, r['verdict']"
 
   drat-trim:
     runs-on: ubuntu-latest

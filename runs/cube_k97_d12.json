@@ -1,0 +1,167 @@
+{
+  "what": "cube-and-conquer over the circulant instance K97 [3, 3, 3, 4]",
+  "produced_by": "scripts/cube_conquer.py 97:3,3,3,4 --depth 12 --budget 60 --workers 10 --engine kissat404",
+  "spec": "97:3,3,3,4",
+  "n": 97,
+  "sizes": [
+    3,
+    3,
+    3,
+    4
+  ],
+  "encoding": {
+    "num_vars": 192,
+    "num_clauses": 21016,
+    "classes": 48
+  },
+  "engine": {
+    "name": "kissat404",
+    "backing": "binary",
+    "command": "wsl.exe -e /home/max/kissat/build/kissat",
+    "budget_seconds": 60.0,
+    "budget_enforced_per_cube": true
+  },
+  "depth": 12,
+  "cnf": "runs\\cube_k97_d12\\k97.cnf",
+  "cubing": {
+    "tool": "C:\\WINDOWS\\system32\\wsl.exe -e /home/max/march-cu/march_cu",
+    "command": "C:\\WINDOWS\\system32\\wsl.exe -e /home/max/march-cu/march_cu /mnt/d/gen/physics/open-problems-lab/runs/cube_k97_d12/k97.cnf -d 12 -o /mnt/d/gen/physics/open-problems-lab/runs/cube_k97_d12/k97_d12.icnf",
+    "exit_code": 0,
+    "seconds": 17.77,
+    "cubes_file": "runs\\cube_k97_d12\\k97_d12.icnf",
+    "verdict": "",
+    "cubes": 4096
+  },
+  "cubes": 4096,
+  "cover": {
+    "complete": true,
+    "cubes": 4096,
+    "leaves": 4096,
+    "depth": 12
+  },
+  "shards": 4783.0,
+  "workers": 10,
+  "rows_dir": "runs\\cube_k97_d12\\rows",
+  "shard_summaries": [
+    {
+      "shard": 0,
+      "cubes": 410,
+      "unsat": 404,
+      "sat": 0,
+      "unknown": 6,
+      "error": 0,
+      "seconds": 3554.418,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 1,
+      "cubes": 410,
+      "unsat": 400,
+      "sat": 0,
+      "unknown": 10,
+      "error": 0,
+      "seconds": 4738.496,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 2,
+      "cubes": 410,
+      "unsat": 399,
+      "sat": 0,
+      "unknown": 11,
+      "error": 0,
+      "seconds": 3763.043,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 3,
+      "cubes": 410,
+      "unsat": 398,
+      "sat": 0,
+      "unknown": 12,
+      "error": 0,
+      "seconds": 4755.186,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 4,
+      "cubes": 410,
+      "unsat": 401,
+      "sat": 0,
+      "unknown": 9,
+      "error": 0,
+      "seconds": 3592.429,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 5,
+      "cubes": 410,
+      "unsat": 398,
+      "sat": 0,
+      "unknown": 12,
+      "error": 0,
+      "seconds": 4698.121,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 6,
+      "cubes": 409,
+      "unsat": 403,
+      "sat": 0,
+      "unknown": 6,
+      "error": 0,
+      "seconds": 3394.477,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 7,
+      "cubes": 409,
+      "unsat": 397,
+      "sat": 0,
+      "unknown": 12,
+      "error": 0,
+      "seconds": 4776.844,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 8,
+      "cubes": 409,
+      "unsat": 404,
+      "sat": 0,
+      "unknown": 5,
+      "error": 0,
+      "seconds": 3533.165,
+      "witness": null,
+      "killed": false
+    },
+    {
+      "shard": 9,
+      "cubes": 409,
+      "unsat": 396,
+      "sat": 0,
+      "unknown": 13,
+      "error": 0,
+      "seconds": 4677.244,
+      "witness": null,
+      "killed": false
+    }
+  ],
+  "counts": {
+    "unsat": 4000,
+    "unknown": 96
+  },
+  "decided": 4096,
+  "errors": 0,
+  "unresolved": 96,
+  "unresolved_file": "runs\\cube_k97_d12\\k97_unresolved.icnf",
+  "verdict": "incomplete",
+  "establishes": "nothing: 96 of 4096 leaves are undecided.  The undecided cubes are written out for a second pass with a larger budget."
+}

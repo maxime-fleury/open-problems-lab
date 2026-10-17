@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "problem": "circulant_multicolour",
+  "title": "circulant sub-family of K538 with forbidden clique sizes [3, 3, 3, 3, 3, 3]: unknown",
+  "payload": {
+    "n": 538,
+    "sizes": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "status": "unknown",
+    "classes": 269,
+    "num_vars": 1614,
+    "num_clauses": 149024,
+    "clique_groups": {
+      "3": 24120
+    },
+    "solver": "kissat404",
+    "seconds": 767.8235983848572
+  },
+  "claims": {
+    "n": 538,
+    "sizes": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "status": "unknown"
+  },
+  "provenance": {
+    "generator": "oplab mc-circulant --n 538 --sizes 3,3,3,3,3,3",
+    "created": "2026-10-17",
+    "tool": "open-problems-lab 0.1.0",
+    "python": "3.14.6",
+    "machine": "DESKTOP-TLVTQ81",
+    "solver": "kissat404"
+  },
+  "payload_sha256": "0bbe156cb4e3088e6baeaf47d67a1e7a9b26d999c60e4f596bfb1131c52d1245"
+}

@@ -79,7 +79,7 @@ with no Mathlib, no solver and no floating point in the trusted base. See
 | SAT on `K42` / `K43` | inconclusive within the budget; measured clause-ingestion cost makes the Python/Z3 path unusable at this size | recorded as inconclusive, never as a verdict; DIMACS export provided for real solvers |
 | Multicolour tabu search, `K50`–`K162` | no witness anywhere: the best colourings still carry 140–17 560 monochromatic cliques, **including at `K50` and `K29`, where witnesses are published and known to exist** | 300 s per target, exact counts re-derived by the verifier; raw log in `runs/hunt_driver.log`, machine-readable rows in `runs/hunt_2026-10-15.jsonl` |
 | Translation-invariant colourings over *groups* of order `n` | 52 group-runs at the four undecided sizes in 5-minute rounds, then **one hour each on the 21 groups those rounds left open: 33 decided empty, 19 without a verdict, no witness and no bound moved**; `K128` `(4,4,4)` is the sharp case — 24 of its 26 groups are empty, and only the cyclic group and `D64` survive an hour each.  A 20 s screen over the **complete** portfolios (all 231 groups of order 96 and all 2 328 of order 128) then **refutes 2 329 of the 2 559, leaves 227 open, and finds three `K96` witnesses** — `R(3,3,3,4) > 96` inside the invariant space, in groups no named family contains — **and no `K128` witness** | every table checked against the group axioms before it is searched; the five stored rows carry the group as data, a DRAT trace for each `unsat` (replayed by [`drat.py`](src/oplab/drat.py), cross-checked by `drat-trim`) and a Lean theorem that the table *is* a group with the class structure its encoding size comes from; the long round's rows are verdicts, and `runs/cayley_sweep.json` keeps the 5-minute rows they replaced under `superseded`, while the two screens are counts keyed to the portfolio by digest (`runs/cayley_full_k96.json`, `runs/cayley_full_k128.json`) |
-| Circulant sub-family of the multicolour frontier | 18 of the 24 instances decided in seconds, per instance: witnesses found (and verified) for `K29`, `K44`, `K54`, `K17`, `K5`; **no** circulant witness for `K18`, `K30`, `K35`, `K36`, `K42`, `K43`, `K45`, `K50`, `K55`; at `3 ∣ n` the all-triangle instances (`K6`, `K51`, `K162`, `K537`) are **obstructed by arithmetic**, no search involved; the other six (`K96`, `K97`, `K127`, `K128`, `K161`, `K538`) returned `unknown` with the budget spent and are recorded as no claim | witnesses re-counted by the Python verifier *and* by the Lean kernel; the obstruction is `diffClass n 0 (n/3) = n/3 ∧ …` proved per instance by `decide`; **all nine `unsat` rows carry a DRAT trace, replayed by [`drat.py`](src/oplab/drat.py) and cross-checked by `drat-trim`** |
+| Circulant sub-family of the multicolour frontier | 18 of the 24 instances decided in seconds, per instance: witnesses found (and verified) for `K29`, `K44`, `K54`, `K17`, `K5`; **no** circulant witness for `K18`, `K30`, `K35`, `K36`, `K42`, `K43`, `K45`, `K50`, `K55`; at `3 ∣ n` the all-triangle instances (`K6`, `K51`, `K162`, `K537`) are **obstructed by arithmetic**, no search involved; the other five (`K96`, `K127`, `K128`, `K161`, `K538`) returned `unknown` with the budget spent and are recorded as no claim, and `K97` — one of them until it was partitioned instead of given a longer budget — is **refuted by cube-and-conquer** (§9b), as a run artifact and not as a stored row | witnesses re-counted by the Python verifier *and* by the Lean kernel; the obstruction is `diffClass n 0 (n/3) = n/3 ∧ …` proved per instance by `decide`; **all nine `unsat` rows carry a DRAT trace, replayed by [`drat.py`](src/oplab/drat.py) and cross-checked by `drat-trim`** |
 
 ---
 
@@ -607,7 +607,13 @@ circulant colouring; `unsat` and `unknown` record the encoding and the solver's
 verdict (never a theorem — see §10).  `--dimacs-only` (or `--dimacs PATH`
 alongside a solve) is the hand-off for the six instances whose encodings
 (20 345–149 024 clauses) exceeded the bundled solver's budget: CaDiCaL and Kissat
-ingest them from the file where the in-process path does not.
+ingest them from the file where the in-process path does not, and
+[`scripts/cube_conquer.py`](scripts/cube_conquer.py) partitions one of those files
+into leaves and refutes them in parallel — writing the export itself unless
+`--dimacs` names an existing one, and refusing an export whose header is not the
+encoding of the instance it was asked to solve.  That is how `K97` at `(3,3,3,4)`
+stopped being an `unknown`: 4 096 leaves at depth 12, refuted in two passes
+([RESULTS.md](RESULTS.md) §9b).
 
 ### Verify and report
 
@@ -788,6 +794,34 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   sub-family in seconds and they did **not** decide the 2-colour `K43` instance
   or the multicolour `3 * C(n,2)`-clause instances within 50 minutes — a
   measured negative, not an excuse.
+* **The bundled Kissat wheel is broken on Windows, and was replaced by the real
+  engine.** `kissat404` dies with an access violation on a two-clause instance
+  (`[[1], [-1]]`, `[[1, 2], [-1]]`) and answers `sat` *with a model that satisfies
+  nothing* on a four-clause contradiction — a wrong verdict, not just a crash.  A
+  binary built from upstream (rel-4.0.4, pinned in `docs/tools.pin`) is driven
+  instead, and the name now reports `ok` with `backing binary`:
+
+  ```
+  engine       status     seconds  backing  detail
+  kissat404    ok           0.859  binary   sat=True unsat=True
+  ```
+
+  `oplab.tools` finds it (`OPLAB_KISSAT`, `PATH`, or `~/kissat/build/kissat`
+  under WSL) and `solver_backing` keeps the two implementations apart, so no row
+  can quietly attribute a verdict to the wrong engine.
+* **A partition decides what a single run could not.** `scripts/cube_conquer.py`
+  cuts an instance with `march_cu`, checks that the leaf list is a *complete
+  decision tree*, refutes the leaves in parallel with a per-leaf budget, and
+  decodes and re-counts any witness before believing it.  `--combine` then reads
+  several passes back as the one claim they add up to — refusing it unless the
+  cover's leaves are exactly the cubes they decided, each one refuted — so a second
+  pass over the undecided leaves is a checked conclusion rather than a pair of
+  reports.  Measured: **`K97` at `(3,3,3,4)`, 4 096 leaves at depth 12, refuted in
+  two passes** (4 000 in 80 minutes at 60 s per leaf, the other 96 at 900 s), after
+  a 768 s single run of the same engine had nothing to say about it — so that instance
+  is now decided inside the circulant family, as verdicts rather than as a proof
+  ([RESULTS.md](RESULTS.md) §9b).  `march_cu` also refutes instances outright while
+  cubing, and that verdict (with its model) is reported as what it is.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The

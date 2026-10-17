@@ -402,23 +402,31 @@ def cmd_circulant(args) -> int:
 
 
 def cmd_solvers(args) -> int:
-    """Report which bundled engines answer, instead of which ones import.
+    """Report which engines answer, instead of which ones import.
 
     A wheel that imports but dies on its first clause is not an available engine:
     it costs a campaign slot and, before the crash path was fixed, wrote a
     `no_verdict` row that looked like a spent budget.  Exit status is non-zero
     when any probed engine failed, so a campaign can check this first.
+
+    The `backing` column says which implementation answered under an engine's
+    name — a real binary, a `python-sat` wheel, or nothing here — because
+    `kissat404` is the version, not the implementation, and only one of the two
+    implementations of it survives a two-clause instance on Windows.
     """
     rows = MC.probe_solvers(seconds=args.seconds, names=args.solver or None)
     width = max(len(row["solver"]) for row in rows)
-    print(f"{'engine'.ljust(width)}  status     seconds  detail")
+    print(f"{'engine'.ljust(width)}  status     seconds  backing  detail")
     for row in rows:
-        detail = row.get("reason") or (
-            f"sat={row.get('sat_ok')} unsat={row.get('unsat_ok')}" if row["status"] == "ok"
-            else f"exit={row.get('exit_code')}" if row.get("exit_code") is not None else ""
-        )
+        if row["status"] == "ok":
+            detail = f"sat={row.get('sat_ok')} unsat={row.get('unsat_ok')}"
+        elif row.get("exit_code") is not None:
+            detail = f"exit={row.get('exit_code')}"
+        else:
+            detail = ""
         print(f"{row['solver'].ljust(width)}  {row['status']:<9}  "
-              f"{row.get('seconds', 0.0):>7.3f}  {detail}")
+              f"{row.get('seconds', 0.0):>7.3f}  {row.get('backend', 'wheel'):<7}  "
+              f"{row.get('reason') or detail}")
     broken = [row["solver"] for row in rows if row["status"] != "ok"]
     if broken:
         print(f"\nnot answering: {', '.join(broken)}", file=sys.stderr)

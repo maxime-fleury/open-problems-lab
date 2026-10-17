@@ -57,6 +57,8 @@ from __future__ import annotations
 import itertools
 import json
 import random
+import subprocess
+import tempfile
 import time
 from math import comb
 from pathlib import Path
@@ -64,6 +66,7 @@ from pathlib import Path
 import numpy as np
 
 from . import drat as DRAT
+from . import tools
 
 __all__ = [
     "RECORDS",
@@ -78,7 +81,10 @@ __all__ = [
     "is_valid",
     "verify_colouring",
     "MulticolourInstance",
+    "KissatBinary",
     "available_solvers",
+    "solver_backing",
+    "solver_class",
     "solve",
     "tabu_search",
     "circulant_solve",
@@ -535,32 +541,243 @@ class MulticolourInstance:
 # --------------------------------------------------------------------------
 # CDCL driver
 # --------------------------------------------------------------------------
-#: Solver classes bundled with ``python-sat``, best-first.  These are native
-#: C++ binaries, so the hand-off cost that made the Z3 route in
-#: :mod:`oplab.sat` hopeless does not apply here.
+#: Engines, best-first.  Five of these are solver classes bundled with
+#: ``python-sat``; ``kissat404`` is either that wheel's Kissat — unusable on
+#: Windows, see :func:`solver_backing` — or a real Kissat 4.0.4 process
+#: (:class:`KissatBinary`), whichever this machine can run.  All of them are
+#: native C++ code driven in a child process, so the hand-off cost that made the
+#: Z3 route in :mod:`oplab.sat` hopeless does not apply here.
 PY_SAT_SOLVERS = ("cadical195", "kissat404", "maplechrono", "maplecm", "glucose4", "minisat22")
 
 
-def available_solvers() -> list[str]:
-    """Bundled SAT solvers this environment can *import*, best-first.
+def solver_backing(name: str) -> str:
+    """Which implementation answers under an engine's name.
 
-    Being listed means the wheel imports, not that it survives a run: the bundled
-    Kissat binary dies with an access violation on Windows/Python 3.14, on a
-    trivial instance as well as a hard one (``kissat404`` on K96 here).  Such a
-    run is reported as :func:`_cdcl_with_budget`'s ``no_verdict`` result carrying
-    the worker's exit code, the CLI refuses to write a certificate for it, and
-    :func:`oplab.verify.verify_circulant_multicolour` refuses to read one — so a
+    ``"binary"`` for a real Kissat process (:data:`oplab.tools.KISSAT_ENV`, or a
+    from-source build under WSL) and ``"wheel"`` for a ``python-sat`` binding —
+    including the bundled Kissat 4.0.4 wheel, which on Windows segfaults on a
+    two-clause instance and answers ``sat`` with an invalid model on a
+    four-clause one — and ``"absent"`` for a name that no implementation here
+    answers.  A verdict that does not say which of the three produced it cannot be
+    reproduced, so every probe row carries this, and ``oplab solvers`` prints it.
+    """
+    if name == "kissat404" and tools.kissat_command() is not None:
+        return "binary"
+    if name not in PY_SAT_SOLVERS:
+        return "absent"
+    try:
+        import pysat.solvers  # noqa: F401
+    except Exception:  # pragma: no cover - depends on the environment
+        return "absent"
+    return "wheel"
+
+
+def available_solvers() -> list[str]:
+    """SAT engines this environment can *start*, best-first.
+
+    Being listed is not evidence of health: a wheel import says nothing about what
+    happens on the first clause.  On Windows the bundled Kissat wheel dies with an
+    access violation on a two-clause instance and answers ``sat`` with an invalid
+    model on a four-clause contradiction — and such a run is reported as
+    :func:`_cdcl_with_budget`'s ``no_verdict`` result carrying the worker's exit
+    code, the CLI refuses to write a certificate for it, and
+    :func:`oplab.verify.verify_circulant_multicolour` refuses to read one, so a
     crash cannot be filed as a budget that expired.
 
-    This function is cheap and tells you nothing about health; use
-    :func:`probe_solvers` (or ``oplab solvers``) to find out which of these
-    engines actually answer.
+    ``kissat404`` is listed when the ``pysat`` wheels import *or* when a real
+    Kissat binary is reachable, because those are two different implementations
+    and either one alone is enough to run it.
+
+    Use :func:`probe_solvers` (or ``oplab solvers``) for health.
     """
     try:
         import pysat.solvers  # noqa: F401
+
+        names = list(PY_SAT_SOLVERS)
     except Exception:
-        return []
-    return list(PY_SAT_SOLVERS)
+        names = []
+    if "kissat404" not in names and tools.kissat_command() is not None:
+        names.insert(1, "kissat404")
+    return names
+
+
+class KissatBinary:
+    """A real Kissat process behind the ``pysat`` solver interface.
+
+    The bundled wheel for the same version (4.0.4) is broken on this platform, and
+    broken in the worst way: on ``[[1], [-1]]`` it dies with an access violation
+    and on the four-clause contradiction it answers ``sat`` with a model that
+    satisfies nothing, so a caller cannot even tell a crash from a verdict.  A
+    binary built from upstream (:func:`oplab.tools.kissat_command`) is the same
+    engine with an interface that works; this class offers the handful of methods
+    the drivers here use — :meth:`add_clause`, :meth:`solve`, :meth:`get_model`,
+    :meth:`time` — by handing the clauses over as DIMACS and reading the answer
+    back.
+
+    Three things it does *not* do, on purpose:
+
+    * it never answers ``unsat`` unless the solver said so: a signal, an empty
+      output or a parse error is ``None`` (unknown) with the reason kept in
+      ``note``, because those are exactly the cases that used to be filed as a
+      verdict;
+    * it re-checks every model against the clauses it was given before answering
+      ``sat``, and raises if the model leaves one unsatisfied — an interface bug
+      here must not be able to invent a witness;
+    * :meth:`get_proof` refuses, and ``with_proof=True`` is refused at
+      construction: Kissat emits no DRAT trace, so a proof-carrying row has to
+      come from an engine that does (``cadical195``).
+
+    ``solve`` also takes ``assumptions``, which the binary protocol does not have
+    natively: they are added as unit clauses, so a caller that fed cubes to a
+    ``pysat`` solver can feed the same cubes here.
+    """
+
+    #: What asking for a trace means for this engine.
+    NO_PROOF = "kissat emits no DRAT trace: use cadical195 for a proof-carrying row"
+
+    def __init__(self, bootstrap_with=(), use_timer: bool = False,
+                 with_proof: bool = False, timeout=None):
+        if with_proof:
+            raise NotImplementedError(self.NO_PROOF)
+        self._clauses = [list(clause) for clause in bootstrap_with]
+        self._model: list[int] = []
+        self._seconds = 0.0
+        self._timeout = timeout
+        #: Why the last run gave no verdict, when it gave none.
+        self.note = ""
+
+    # -- the interface the drivers use -------------------------------------
+    def add_clause(self, clause) -> "KissatBinary":
+        self._clauses.append(list(clause))
+        return self
+
+    def add_clauses(self, clauses) -> "KissatBinary":
+        for clause in clauses:
+            self.add_clause(clause)
+        return self
+
+    def nof_vars(self) -> int:
+        return max((abs(lit) for clause in self._clauses for lit in clause), default=0)
+
+    def nof_clauses(self) -> int:
+        return len(self._clauses)
+
+    def _dimacs(self, clauses) -> str:
+        """The clauses as a DIMACS document, with the header this run needs.
+
+        The header is written from the clauses rather than remembered from the
+        constructor, because ``solve`` may have added assumptions to them: a
+        clause count that disagrees with the body is a parse error, not a
+        suggestion.
+        """
+        header = (f"p cnf {max((abs(lit) for clause in clauses for lit in clause), default=0)} "
+                  f"{len(clauses)}")
+        return "\n".join([header, *(" ".join(map(str, clause)) + " 0" for clause in clauses)]) + "\n"
+
+    @staticmethod
+    def _unsatisfied(clauses, truth) -> int:
+        """How many clauses a model leaves unsatisfied.
+
+        ``truth`` is the model's own literals, signs included — a clause is
+        satisfied when one of its literals appears in it verbatim.  Reading the
+        model as a set of *variables* would call ``[[1, 2], [-1]]`` unsatisfied by
+        ``-1 2``, which is exactly the clause ``-1`` being satisfied.
+        """
+        return sum(1 for clause in clauses if not any(lit in truth for lit in clause))
+
+    def solve(self, assumptions=()):
+        """Run Kissat on the clauses (plus ``assumptions`` as units).
+
+        ``True`` with a model that has been checked against those clauses, ``False``
+        only on the solver's own ``s UNSATISFIABLE``, and ``None`` with ``note``
+        saying why when it gave no verdict at all.
+        """
+        command = tools.kissat_command()
+        if command is None:
+            raise RuntimeError(f"no Kissat binary: set {tools.KISSAT_ENV} "
+                               f"(or build one as ~/{tools.WSL_KISSAT} under WSL)")
+        clauses = [list(clause) for clause in self._clauses]
+        clauses.extend([int(lit)] for lit in assumptions)
+        started = time.time()
+        with tempfile.NamedTemporaryFile("w", suffix=".cnf", encoding="ascii",
+                                        newline="\n", delete=False) as handle:
+            handle.write(self._dimacs(clauses))
+            name = handle.name
+        try:
+            # a WSL command is a Linux process, so it has to be *shown* the file
+            target = tools.wsl_path(name) if tools.is_wsl(command) else name
+            argv = [*command, target]
+            ceiling = self._timeout
+            if ceiling is not None:
+                # under WSL the ceiling is enforced *there*, so the process that is
+                # killed is the solver and not the launcher: a killed launcher leaves
+                # a Kissat running that holds the pipes open (measured: a 20 s budget
+                # took 40 s to come back, per cube, with the orphan still working)
+                wrapped = tools.bounded_wsl(command, ceiling)
+                if wrapped is not None:
+                    argv = [*wrapped, target]
+                    ceiling = ceiling + 15.0  # this side stays the backstop
+            try:
+                done = subprocess.run(argv, capture_output=True, text=True, timeout=ceiling)
+            except subprocess.TimeoutExpired:
+                self.note = "the budget ran out: the run was cut off by its timeout"
+                return None
+        finally:
+            Path(name).unlink(missing_ok=True)
+            self._seconds = time.time() - started
+        status, model = "", []
+        for line in done.stdout.splitlines():
+            if line.startswith("s "):
+                status = line[2:].strip().upper()
+            elif line.startswith("v "):
+                for token in line[2:].split():
+                    try:
+                        model.append(int(token))
+                    except ValueError:  # pragma: no cover - not part of the format
+                        continue
+        if status == "SATISFIABLE":
+            unsatisfied = self._unsatisfied(clauses, set(model))
+            if unsatisfied:
+                raise RuntimeError(
+                    f"kissat answered sat with a model that leaves {unsatisfied} of "
+                    f"{len(clauses)} clauses unsatisfied")
+            self._model = model
+            self.note = ""
+            return True
+        if status == "UNSATISFIABLE":
+            self.note = ""
+            return False
+        if done.returncode == 124:
+            # the ceiling inside WSL reported itself: a spent budget, not a crash
+            self.note = (f"the budget ran out: {tools.describe(argv)} was stopped at "
+                         f"{float(self._timeout):g}s (exit 124)")
+            return None
+        reason = next((line.strip() for line in reversed(done.stderr.splitlines())
+                       if line.strip()), "")
+        self.note = (f"no verdict from {tools.describe(argv)}, exit {done.returncode}"
+                     + (f": {reason}" if reason else ""))
+        return None
+
+    def get_model(self) -> list[int]:
+        return list(self._model)
+
+    def get_proof(self):
+        raise NotImplementedError(self.NO_PROOF)
+
+    def time(self) -> float:
+        """Seconds the last :meth:`solve` took, writing the CNF included."""
+        return self._seconds
+
+    def delete(self) -> None:
+        """Nothing is left open: each run writes its own file and removes it."""
+        self._model = []
+
+    def __enter__(self) -> "KissatBinary":
+        return self
+
+    def __exit__(self, *exception) -> bool:
+        self.delete()
+        return False
 
 
 #: Health-check verdicts, in the order they are reported.
@@ -569,16 +786,18 @@ PROBE_STATUSES = ("ok", "wrong", "crashed", "timeout", "unavailable")
 _solver_health: dict[str, dict] = {}
 
 
-def _probe_worker(conn, name: str) -> None:  # pragma: no cover - child process
+def _probe_worker(conn, name: str, seconds: float | None = None) -> None:  # pragma: no cover
     """Answer two instances whose verdicts are known, or report why not.
 
     ``[1]`` is satisfiable and ``[1],[-1]`` is not, so a solver that answers both
     correctly has shown it starts, parses, decides, and reports.  Anything else —
-    a crash, a wrong verdict, a missing binary — is recorded as such.
+    a crash, a wrong verdict, a missing binary — is recorded as such.  The second
+    of the two is also the instance the bundled Kissat wheel dies on, so a
+    ``kissat404`` row here is a statement about which implementation answered.
     """
-    out: dict = {"solver": name}
+    out: dict = {"solver": name, "backend": solver_backing(name)}
     try:
-        engine = _solver_class(name)
+        _solver_class(name)
     except Exception as exc:
         out.update(status="unavailable", reason=f"{exc.__class__.__name__}: {exc}")
         try:
@@ -587,9 +806,11 @@ def _probe_worker(conn, name: str) -> None:  # pragma: no cover - child process
             conn.close()
         return
     try:
-        with engine(bootstrap_with=[[1]]) as solver:
+        # the probe's own budget is handed to the engine where it can carry one, so
+        # a wedged run finishes as a spent budget instead of leaving a process behind
+        with _open_solver(name, [[1]], timeout=seconds) as solver:
             out["sat_ok"] = solver.solve() is True
-        with engine(bootstrap_with=[[1], [-1]]) as solver:
+        with _open_solver(name, [[1], [-1]], timeout=seconds) as solver:
             out["unsat_ok"] = solver.solve() is False
         out["status"] = "ok" if out["sat_ok"] and out["unsat_ok"] else "wrong"
     except Exception as exc:  # pragma: no cover - diagnostic path
@@ -618,13 +839,13 @@ def probe_solver(name: str, seconds: float = 10.0, refresh: bool = False) -> dic
     if not refresh and name in _solver_health:
         return _solver_health[name]
     if name not in PY_SAT_SOLVERS:
-        verdict = {"solver": name, "status": "unavailable",
+        verdict = {"solver": name, "status": "unavailable", "backend": solver_backing(name),
                    "reason": f"not a bundled engine: {name}"}
         _solver_health[name] = verdict
         return verdict
     ctx = mp.get_context("spawn")
     parent, child = ctx.Pipe(duplex=False)
-    proc = ctx.Process(target=_probe_worker, args=(child, name), daemon=True)
+    proc = ctx.Process(target=_probe_worker, args=(child, name, float(seconds)), daemon=True)
     started = time.time()
     proc.start()
     proc.join(max(0.0, float(seconds)))
@@ -661,6 +882,20 @@ def working_solvers(seconds: float = 10.0, refresh: bool = False) -> list[str]:
             if row["status"] == "ok"]
 
 
+def _open_solver(name: str, clauses, with_proof: bool = False, timeout=None):
+    """Build an engine, handing it the budget when that engine can carry one.
+
+    Only the binary Kissat can: the wheels take no timeout, because a solver holds
+    the interpreter for its whole run.  Where the engine *can* carry one, giving it
+    the budget is better than being killed — the child gets to report an expired
+    budget instead of dying, and (under WSL) the process that is stopped is the
+    solver, not the launcher, so nothing is left running behind it.
+    """
+    if name == "kissat404" and solver_backing(name) == "binary":
+        return KissatBinary(bootstrap_with=clauses, with_proof=with_proof, timeout=timeout)
+    return _solver_class(name)(bootstrap_with=clauses, use_timer=True, with_proof=with_proof)
+
+
 def _cdcl_worker(conn, payload: dict) -> None:
     """Solve one instance in a child process and send the verdict back.
 
@@ -668,19 +903,22 @@ def _cdcl_worker(conn, payload: dict) -> None:
     for the whole run, so a `threading.Timer` never fires and an unresponsive
     instance would run forever (measured: a 10 s budget on the `K97` circulant
     instance was still running 90 s later).  A process that the parent can kill is
-    the only mechanism that actually bounds the time.
+    the only mechanism that actually bounds the time — and an engine that can carry
+    the budget itself is given a slightly smaller one, so it reports an expired
+    budget instead of being killed mid-sentence.
     """
     try:
         n = int(payload["n"])
         sizes = tuple(payload["sizes"])
         proof_path = payload.get("proof_path")
+        seconds = payload.get("seconds")
         if payload["kind"] == "circulant":
             instance = CirculantInstance(n, sizes)
         else:
             instance = MulticolourInstance(n, sizes, int(payload.get("symmetry", 0)))
-        with _solver_class(payload["solver"])(bootstrap_with=instance.clauses(),
-                                              use_timer=True,
-                                              with_proof=bool(proof_path)) as solver:
+        engine_budget = None if not seconds else max(1.0, float(seconds) * 0.85)
+        with _open_solver(payload["solver"], instance.clauses(),
+                          with_proof=bool(proof_path), timeout=engine_budget) as solver:
             verdict = solver.solve()
             solver_time = solver.time()
             out: dict = {"solver_time": solver_time}
@@ -713,7 +951,7 @@ def _cdcl_with_budget(n: int, sizes, solver: str, seconds: float, kind: str,
     parent, child = ctx.Pipe(duplex=False)
     proc = ctx.Process(target=_cdcl_worker,
                        args=(child, {"n": n, "sizes": list(sizes), "solver": solver,
-                                     "kind": kind, "symmetry": symmetry,
+                                     "kind": kind, "symmetry": symmetry, "seconds": seconds,
                                      "proof_path": str(proof_path) if proof_path else None}),
                        daemon=True)
     started = time.time()
@@ -737,7 +975,26 @@ def _cdcl_with_budget(n: int, sizes, solver: str, seconds: float, kind: str,
             "seconds": time.time() - started}
 
 
+def solver_class(name: str):
+    """The class that answers under an engine's name, for a driver to build.
+
+    ``solve`` and ``circulant_solve`` pick their engine themselves; a script that
+    drives an engine directly — a cube-and-conquer run, say — needs the same
+    choice, and :func:`solver_backing` is what says which of the two
+    implementations of ``kissat404`` it is about to use.
+    """
+    return _solver_class(name)
+
+
 def _solver_class(name: str):
+    """The implementation behind an engine name.
+
+    ``kissat404`` is backed by a real binary when there is one and by the bundled
+    wheel otherwise — see :func:`solver_backing`, which is what tells the two
+    apart in a report.
+    """
+    if name == "kissat404" and tools.kissat_command() is not None:
+        return KissatBinary
     from pysat import solvers as ps
 
     table = {

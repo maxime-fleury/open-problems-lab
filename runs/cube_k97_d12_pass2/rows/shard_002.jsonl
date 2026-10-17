@@ -1,0 +1,10 @@
+{"index": 3, "cube": [192, -180, 28, -164, -44, -120, -60, -104, -16, 148, -76, 88], "solver_seconds": 76.444, "status": "unsat", "seconds": 76.458}
+{"index": 13, "cube": [-192, -191, -189, 96, -4, -3, 8, -104, -88, -108, -84, -20], "solver_seconds": 73.293, "status": "unsat", "seconds": 73.306}
+{"index": 23, "cube": [-192, -191, -189, -96, -95, -4, 1, -100, 98, -91, -188, -185], "solver_seconds": 67.695, "status": "unsat", "seconds": 67.708}
+{"index": 33, "cube": [192, -180, -28, 152, -44, -72, -136, 116, -108, -36, 144, -64], "solver_seconds": 119.736, "status": "unsat", "seconds": 119.75}
+{"index": 43, "cube": [192, -180, -28, -152, -56, -124, -84, -96, -112, -68, 140, 40], "solver_seconds": 53.991, "status": "unsat", "seconds": 54.034}
+{"index": 53, "cube": [-192, -191, -189, 96, 4, -92, -104, -12, -180, 116, -88, -120], "solver_seconds": 80.102, "status": "unsat", "seconds": 80.117}
+{"index": 63, "cube": [192, -180, -28, -152, 56, -136, -72, -108, -100, -36, 144, 80], "solver_seconds": 58.197, "status": "unsat", "seconds": 58.215}
+{"index": 73, "cube": [192, -180, -28, -152, 56, -136, 72, -16, -120, -32, -148, -60], "solver_seconds": 75.384, "status": "unsat", "seconds": 75.399}
+{"index": 83, "cube": [-192, -191, 189, -96, 95, 4, 48, -52, -44, -140, -152, 184], "solver_seconds": 51.929, "status": "unsat", "seconds": 51.943}
+{"index": 93, "cube": [-192, -191, -189, -96, -95, 4, 48, -52, -44, -140, -152, -184], "solver_seconds": 75.707, "status": "unsat", "seconds": 75.72}

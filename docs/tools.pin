@@ -1,0 +1,46 @@
+# The external tools this repository drives, pinned.
+#
+# Two jobs are done by a binary rather than by a Python binding: refuting the
+# leaves of a cube-and-conquer partition (Kissat — the bundled 4.0.4 wheel is
+# broken on Windows, see docs/methodology.md), and building that partition
+# (march_cu, which has no Python package at all).  The revisions below are what the
+# measurements in RESULTS.md were produced with; `oplab.tools` finds the binaries
+# and `oplab solvers` reports which implementation answered.
+#
+# The digest is of `git archive <revision>`, so it pins the *sources* and not the
+# compiler: a gcc version or a flag changes the binary, which is why the advisory
+# `binary_sha256` is separate and stays advisory.
+#
+# To move a pin: check the new revision out, build it with the line below, re-run
+# `oplab solvers --solver kissat404` and one `scripts/cube_conquer.py` case, and
+# only then edit these lines.
+
+name kissat
+source https://github.com/arminbiere/kissat
+revision rel-4.0.4 (commit 8af8e56f174b778aef3aa45af9f739b2a5f492c2)
+archive_sha256 4b1ba789ef75a831014e5265e69cd76d5e1ec9303a3a4ad424dc29c413b9fd79
+build git clone https://github.com/arminbiere/kissat && cd kissat && git checkout rel-4.0.4 && ./configure && make -j
+binary kissat/build/kissat
+version_check `kissat --version` prints 4.0.4
+binary_sha256 a8b7dfdf5af07d2fcc453b9ccabd1c9f5b935ebc888f1c9185914cc886505092 (advisory: x86-64 Linux, gcc 15)
+
+name march_cu
+source https://github.com/marijnheule/CnC (the march_cu/ directory)
+revision CnC at 705b60c6491ef2b61988b3ce6ac674be1b90571d
+archive_sha256 fbd7c5f7d599138cade24a27cd37eecdf220d3befcd048eb2f36828c4971d393 (of `git archive <rev> -- march_cu`)
+build git clone https://github.com/marijnheule/CnC && cd CnC/march_cu && make CFLAGS="-std=gnu11 -O3 -fno-strict-aliasing -DNDEBUG -fcommon"
+binary march-cu/march_cu
+version_check has no version flag; with no argument it prints its usage line
+note the CFLAGS are not optional on a current gcc: the 2012 sources use `false`,
+note `not` and `first` as identifiers (keywords since C23, hence -std=gnu11) and
+note rely on common symbols (-fcommon, the gcc 10+ default being -fno-common)
+
+# On Windows, build both under WSL and point the variables at them:
+#
+#   OPLAB_KISSAT="wsl -e /home/me/kissat/build/kissat"
+#   OPLAB_MARCH_CU="wsl -e /home/me/march-cu/march_cu"
+#
+# A `wsl` command is a Linux process, so `oplab.tools.wsl_path` converts the file
+# paths handed to it (`D:\gen\x.cnf` becomes `/mnt/d/gen/x.cnf`, a relative path is
+# resolved first); without that, a cube file written on one side is not readable
+# from the other.

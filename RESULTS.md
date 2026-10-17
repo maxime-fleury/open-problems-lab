@@ -265,7 +265,7 @@ that the clause set is satisfiable exactly when the expansion is clean.
 | `K54`, `(3,4,4)` | `sat` | yes — a verified witness | 27 classes, 6 399 clauses | 0.37 s | — |
 | `K55`, `(3,4,4)` | `unsat` | — no circulant witness for `R(3,4,4) >= 56` | 27 classes, 6 813 clauses | 1.3 s | **173 165 steps**, replay 80 s (`drat-trim`: 0.9 s) |
 | `K96`, `(3,3,3,4)` | `unknown` | — none claimed: budget spent | 48 classes, 20 345 clauses | 120 s | — |
-| `K97`, `(3,3,3,4)` | `unknown` | — none claimed: budget spent | 48 classes, 21 016 clauses | 120 s | — |
+| `K97`, `(3,3,3,4)` | `unknown` — **refuted by cube-and-conquer (§9b)**, which is a run artifact and not a stored row | — none claimed: budget spent | 48 classes, 21 016 clauses | 120 s | — |
 | `K127`, `(4,4,4)` | `unknown` | — none claimed: budget spent | 63 classes, 124 866 clauses | 120 s | — |
 | `K128`, `(4,4,4)` | `unknown` | — none claimed: budget spent | 64 classes, 127 813 clauses | 300 s | — |
 | `K161`, `(3,3,3,3,3)` | `unknown` | — none claimed: budget spent | 80 classes, 11 680 clauses | 300 s | — |
@@ -317,8 +317,10 @@ regenerating the store is a visible diff rather than a silent one.  Two
 regenerations of all nine traces produced byte-identical files, so the manifest
 survived both unchanged, which is the property the check is for.
 
-**Six rows are still `unknown`, and two refinements of them were tried.**
-Nothing here decides `K96`, `K97`, `K127`, `K128`, `K161` or `K538`.  The stored
+**Six rows were still `unknown`, and three refinements of them were tried.**
+The first two, below, decide none of them.  The third one — cutting the instance
+into a decision tree instead of handing one engine a longer budget — is §9b, and it
+decides `K97`.  The stored
 budgets (120 s and 300 s of CaDiCaL) expired — and now say so: those six rows
 record `budget_expired`, which is what distinguishes an exhausted budget from a
 solver that died, a distinction the verifier enforces (the bundled Kissat wheel
@@ -336,7 +338,13 @@ colourings invariant under multiplication by the units of `Z_n`, where the
 instance collapses to one variable per orbit — 21 for `K128`, 15 for `K161`
 (`scripts/orbit_probe.py`).  It is not vacuous (`K8` with sizes `(3,3,3)` is SAT
 there, and the witness re-counts), and it is **empty at all six target sizes**, so
-no structured candidate is hiding at them.  That statement is about that
+no structured candidate is hiding at them.
+
+**And one of the six is now decided, by partitioning it.**  `K97` at `(3,3,3,4)` —
+192 variables, 21 016 clauses, 4 096 leaves at depth 12 — is refuted in the
+circulant family leaf by leaf in §9b, which also says what that is and is not worth:
+the other five (`K96`, `K127`, `K128`, `K161`, `K538`) are still open here, and the
+published witness this sub-family is measured against sits at `K96`.  That statement is about that
 sub-family, and nothing else: the full circulant family and every published bound
 are untouched by it.
 
@@ -603,7 +611,7 @@ Four things are worth stating plainly:
    only *proved* negative in the repository that is not an exhaustive sweep: the
    Lean layer checks `diffClass n 0 (n/3) = n/3 ∧ …` per instance with
    `decide`.
-4. **Six instances are undecided and stay undecided here.** `K96`/`K97`,
+4. **Five instances are undecided and stay undecided here.** `K96`,
    `K127`/`K128`, `K161` and `K538` returned `unknown` when the encoding reached
    20 000–149 000 clauses and the 120 s/300 s budget ran out. They are not one
    budget step away either: a 30-minute round gave each of them to CaDiCaL and to
@@ -617,7 +625,70 @@ Four things are worth stating plainly:
    engine: the DIMACS hand-off is what makes that possible —
    `oplab mc-circulant --n 96 --sizes 3,3,3,4 --dimacs-only --dimacs
    dimacs/k96_3x3x3x4.cnf`, which `scripts/run_full.sh` does for all six, and which
-   the 30-minute round above consumed without a verdict.
+   the 30-minute round above consumed without a verdict.  A sixth instance, `K97`,
+   was on this list until it was decided without a longer budget — by partitioning
+   it, §9b — and the form that decision takes (verdicts, not a proof) is the reason
+   it is a run artifact rather than a row in this store.
+
+## 9b. `K97` at `(3,3,3,4)`: a partition, and the leaves refuted one by one
+
+One of the rows above — the one no longer budget decided — is now refuted *inside
+the circulant family*, by cutting the instance into a complete decision tree and
+refuting every leaf.  The `unknown` row above is left where it is, because what came
+out is a different kind of claim.
+
+`march_cu` (pinned in [`docs/tools.pin`](docs/tools.pin)) cut the 21 016-clause
+instance at depth 12 in **17.8 s** into **4 096 cubes**, and the trie test on that
+list — every internal node branching on one variable, both ways — says it is a
+**complete decision tree**: 4 096 leaves, all of them at depth 12, is exactly
+`2^12`.  Kissat 4.0.4, the binary built from upstream, then refuted the leaves, one
+process per leaf and ten at a time:
+
+| pass | leaves | budget per leaf | result | leaf time | wall clock |
+|---|---|---|---|---|---|
+| 1 | 4 096 | 60 s | **4 000 refuted** (median 3.5 s, 3 997 of them inside the minute); 96 with no verdict, each one a budget that expired | 41 483 s | 4 783 s |
+| 2 | those 96 | 900 s | **96 refuted** (median 70 s, longest 186 s) | 7 285 s | 818 s |
+
+Pass 1's refutations are cheap and the 96 that outlived the minute are the hard
+leaves, which is what a partition is for: 41 483 s of leaf time inside 4 783 s of
+wall clock, a 8.7× speed-up on ten workers.  Most of the survivors fell just past
+the minute they were given — pass 2's median is 70 s — so the second budget did not
+have to be fourteen times the first: the leaves it inherited were the ones *near*
+the boundary, not a different order of difficulty.  Neither report may
+claim the refutation on its own: pass 1's cube list closes but has 96 holes in it,
+and pass 2's list is a fragment.  The step that may claim it is `--combine`, and it
+*checks* rather than adds up: it re-reads the reports, re-runs the cover test, and
+refuses the claim unless the cover's leaves are exactly the cubes the passes decided
+and every one of them was refuted (a leaf no pass decided, a cube that is not a leaf,
+and two passes returning *different verdicts* for one leaf are each their own
+refusal — a budget that ran out is not a disagreement, it is what pass 2 is for).
+It accepts here:
+
+```
+runs/cube_k97_cnc.json   refuted-cover   4 096/4 096 leaves, cover complete at depth 12, 2 passes
+```
+
+**What it says, and what it does not.**  It says no *circulant* colouring of `K97`
+avoids a monochromatic triangle in each of the three triangle-colours and a
+monochromatic `K4` in the fourth.  It does not touch `K96`, the size the published
+bound is measured at (`R(3,3,3,4) >= 97` is a colouring of `K96`, whose circulant
+question this repository still records as open), and it moves no published bound in
+either direction.  It is also a refutation resting on 4 096 solver **verdicts** rather than
+on a proof: the nine `unsat` rows of §9 are proof-carrying and this is not one of
+them, which is why it lives in `runs/` — where the report, the cover it was worked
+on and the second pass's rows all are — instead of in `certs/`.  Turning it into a
+theorem is the step §9 already sets out for the long rounds: refute the same leaves
+with an engine that writes a DRAT trace, replay each one against that leaf's CNF,
+and the cover check is what makes the collection a statement about the instance.
+The two rounds above are the size of that job rather than an argument against it:
+given a leaf whose refutation took 186 s, the trace is the thing that costs the
+bytes, and the store's own measurement is 7.7 bytes per step.
+
+For scale, the same binary given the whole `K96` instance — the neighbour, 20 345
+clauses, 192 variables — spent **768 s** and returned `unknown`
+(`runs/rerun_kissat/k96_3x3x3x4.json`, as did `K97`, `K127`, `K128`, `K161` and
+`K538` in the same round).  The partition did in 93 minutes of wall clock what a
+768 s single run could not, which is the measurement this section exists for.
 
 ## Limitations, stated plainly
 
@@ -642,7 +713,10 @@ Four things are worth stating plainly:
   a ~400-line checker *and* on a checker that shares no code with it, plus the
   encoding rather than on CaDiCaL — still a claim about the circulant sub-family
   only, and still one whose trusted base is two programs rather than none.  The
-  `sat` rows are witnesses re-counted by the verifier *and* by Lean.
+  `sat` rows are witnesses re-counted by the verifier *and* by Lean.  One `unsat`
+  verdict in this repository is deliberately not in that class: the `K97`
+  refutation of §9b, which is a solver verdict per leaf of a checked cover and no
+  trace at all, and is reported as a measured negative about the sub-family.
 * **The multicolour heuristic was beaten by the encoding.** 300 s of tabu search
   could not find the *published* witnesses at `K50` and `K29`, while the
   circulant decision found clean witnesses at `K29` and `K44` in milliseconds.
