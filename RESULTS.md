@@ -838,13 +838,84 @@ python scripts/gpu_tabu.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 1200 \
     --walks 4096 --pick-every 8
 ```
 
+## 9e. A guided annealing, and the gate it fails
+
+The batched walk of §9d was never short of steps: 264 million class moves, and it still
+stopped two cliques away from a witness that exists.  That leaves two readings — the
+instance is beyond local search in this encoding, or the walk was tuned badly — and only
+a second, differently steered search can tell them apart.  `oplab.anneal` is that second
+search: penalty weights (guided local search) so a set that stays violated keeps getting
+expensive, Metropolis acceptance with a cooling-and-reheating schedule, Kempe chains so a
+whole cluster can be recoloured in one step, and the same recount discipline (every
+2 000 steps, against a full recount, reported in `recount_drift`).
+
+**The gate was written before the target, and it held.**  The campaign rule was that
+this search may not speak about `K51` until it has rediscovered the *known* `K50`
+witness, in the family where that witness lives, from a random start — the same
+instance, the same encoding, no seeded hint.  `scripts/anneal_hunt.py` enforces it as
+code: any spec other than the calibration refuses to run without a stored pass.
+
+Four seeds, 120 s each, on `K50` 3×`Z_2^4`+2 (190 classes, 13 540 class sets):
+
+| seed | steps | steps/s | best | Kempe swaps | drift |
+|---|---|---|---|---|---|
+| 0 | 441 451 | 3 679 | **3** | 2 175 | 0 |
+| 1 | 447 092 | 3 726 | **3** | 2 250 | 0 |
+| 2 | 447 734 | 3 731 | **3** | 2 270 | 0 |
+| 3 | 454 881 | 3 791 | **2** | 2 239 | 0 |
+
+Every run is at three by its **second** ten-second report (six at the first) and never
+moves again: the walk reaches the plateau almost immediately and then spends two minutes
+failing to leave it.  Four hundred and forty thousand class moves per seed, and the
+answer stays two or three cliques away from a colouring that Kissat produced in 527 s.
+
+**What the tuning did and did not buy.**  Measured on the same instance, seed 0,
+twenty-second runs of `oplab.anneal` directly — the flags are the CLI's, and the CLI
+refuses them without a passed gate, which is the gate doing its job: always-move
+with weights leaves **2**; the same rule with Kempe chains at `0.005` leaves **3**; the
+Metropolis rule at `T = 0.35` leaves **6**, because at that temperature most steps are
+refusals and the walk freezes — which is why `reject=False` is the shipped default and
+the cooling schedule is kept as an option the report records; Kempe at `0.05` leaves
+**15**, where swaps drown the fine moves.  The spread between the first two is one or
+two cliques out of 13 540 sets — **noise, not a finding**: the honest statement is that
+chains do not rescue this instance, not that they help.  None of the four configurations
+reaches zero, and the two-minute runs do not either.
+
+**It is not broken; it is calibrated, and it fails.**  The same code finds what exists
+elsewhere: `K8` 2×`Z_4` at `(3,3,3)` in two steps, `K29` general in 1 543 steps, both
+with witnesses the ordinary verifier accepts — and on `K17` `(3,3,3)`, where
+`R(3,3,3) = 17` says there is nothing to find, it ends one clique short and reports
+`best-effort`, which is exactly what a search may say.  What it cannot do is close
+`K50`.
+
+So the two readings are now one: two independent searches, one buying multiplicity
+(GPU tabu, 4 096 walks) and one buying steering (weights, chains, 4.4 × 10⁵ steps per
+seed), both stall at two or three on the same instance where a witness is known to
+exist.  **The plateau is a property of `K50` in this encoding, not of one walk's luck** —
+and a plateau that survives two methods and four seeds is not evidence about `K51`
+either, in the direction of absence or of existence.
+
+**No `K51` run was made with this tool**, because the gate refused.  That is the point
+of having one: §9d spent eighty minutes on four shapes with a search that had never
+found a witness it knew to exist.  The question for `K51` is now explicitly a question
+about *method*, not about budget — more walks, more steps and more seeds have all been
+measured to buy nothing on the calibration instance.
+
+```bash
+python scripts/anneal_hunt.py --gate --seconds 120 --seed 0   # writes runs/anneal/gate_k50.json
+python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900
+# -> refused with exit code 2 while the gate file does not record a verified K50 witness
+```
+
 ## Limitations, stated plainly
 
 * **Only the circulant sweeps are exhaustive.** Everything else is a heuristic
-  with a seed and a time budget — including the GPU tabu search of §9d, which is a
-  search for witnesses that never refutes anything: its `best-effort` rows are
-  statements about the walk, and its own calibration instance (`K50`, where a witness
-  exists) ends at two monochromatic cliques.
+  with a seed and a time budget — including the GPU tabu search of §9d and the guided
+  annealing of §9e, both of which search for witnesses and never refute anything: their
+  `best-effort` rows are statements about the walk, and their own calibration instance
+  (`K50`, where a witness exists) ends at two or three monochromatic cliques.  The
+  annealing has not passed its gate, so it has said nothing at all about `K51`; that is
+  a limitation of the tool, and §9e reports it as one.
 * **No record was broken.** The best Tammes configurations found are 0.03°–0.13°
   short of the published values, and no kissing configuration with 41 points in
   dimension 5 was found.

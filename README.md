@@ -836,6 +836,13 @@ skipped automatically when Z3 is not installed (`pytest.importorskip`).
   `K29` come back with verified witnesses in seconds, `K50` inside the family stalls at
   2 monochromatic cliques where Kissat found one in 527 s, and no `best-effort` row is
   ever a refutation.  CDCL gains nothing from the card, and the section measures why.
+* **A gated second search, and the gate it fails.**  `oplab.anneal` steers instead of
+  multiplying: penalty weights, Metropolis acceptance and Kempe chains, on a CPU, with
+  the same recount discipline.  `scripts/anneal_hunt.py` refuses any target until the
+  search has rediscovered the *known* `K50` witness from a random start — and it has
+  not: four seeds, 440 k class moves each, still 2–3 cliques away.  Two independent
+  methods plateauing on a known-satisfiable instance is the useful result, and no `K51`
+  run was made: [RESULTS.md](RESULTS.md) §9e.
 * **The multicolour frontier was not moved.** 300 s per target on 12 cores left
   140–17 560 monochromatic cliques in the best colourings found, and the general
   engines failed even on `K50` and `K29`, where published witnesses exist.  The

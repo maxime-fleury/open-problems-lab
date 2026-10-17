@@ -1,0 +1,116 @@
+{
+  "n": 50,
+  "sizes": [
+    3,
+    3,
+    3,
+    3
+  ],
+  "classes": 190,
+  "class_sets": 13540,
+  "steps": 441451,
+  "seconds": 120.0,
+  "steps_per_second": 3678.8,
+  "violations": 3,
+  "history": [
+    {
+      "t": 10.0,
+      "best": 6,
+      "steps": 38896,
+      "violations": 66
+    },
+    {
+      "t": 20.0,
+      "best": 3,
+      "steps": 75602,
+      "violations": 13
+    },
+    {
+      "t": 30.0,
+      "best": 3,
+      "steps": 112002,
+      "violations": 48
+    },
+    {
+      "t": 40.0,
+      "best": 3,
+      "steps": 146358,
+      "violations": 33
+    },
+    {
+      "t": 50.0,
+      "best": 3,
+      "steps": 183037,
+      "violations": 19
+    },
+    {
+      "t": 60.0,
+      "best": 3,
+      "steps": 221043,
+      "violations": 12
+    },
+    {
+      "t": 70.0,
+      "best": 3,
+      "steps": 259042,
+      "violations": 24
+    },
+    {
+      "t": 80.0,
+      "best": 3,
+      "steps": 296974,
+      "violations": 8
+    },
+    {
+      "t": 90.0,
+      "best": 3,
+      "steps": 334227,
+      "violations": 58
+    },
+    {
+      "t": 100.0,
+      "best": 3,
+      "steps": 371451,
+      "violations": 18
+    },
+    {
+      "t": 110.0,
+      "best": 3,
+      "steps": 405718,
+      "violations": 22
+    }
+  ],
+  "seed": 0,
+  "search_only": true,
+  "recount_drift": 0,
+  "kempe_steps": 2175,
+  "lam": 2.0,
+  "noise": 0.05,
+  "reject": false,
+  "t0": 1.0,
+  "kempe": 0.005,
+  "fan": 1,
+  "stuck": 200,
+  "what": "guided annealing over K_50 [3, 3, 3, 3]: 190 classes, 13540 class sets \u2014 a search, not a decision: 'best-effort' says nothing about whether the family is empty",
+  "status": "best-effort",
+  "gate": "K50 in the block-Cayley family, from a random start",
+  "gate_spec": {
+    "n": 50,
+    "sizes": [
+      3,
+      3,
+      3,
+      3
+    ],
+    "blocks": 3,
+    "group": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "extras": 2
+  },
+  "passed": false,
+  "produced_by": "scripts/anneal_hunt.py --gate --seconds 120 --seed 0 --out runs/anneal/gate_k50_s0.json"
+}

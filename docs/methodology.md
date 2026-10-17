@@ -461,6 +461,43 @@ python scripts/gpu_tabu.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 1200 \
 python scripts/gpu_tabu.py 51:3,3,3,3 --general --seconds 1200
 ```
 
+### Steering instead of multiplicity: `oplab.anneal`, and the gate
+
+A second search exists because the first one's failure has two readings — the instance
+is beyond local search here, or the walk was tuned badly — and one instrument cannot
+tell them apart.  `oplab.anneal` runs on a CPU, over the same class-set instances (it
+imports `gputabu.Problem`, so it cannot disagree about what a clause is), and changes
+the three things a plateau responds to: **weights** on the violated sets, so guided
+local search forces the walk off the sets it keeps re-attacking; **Metropolis
+acceptance** with a geometric cooling and a reheat on stagnation (kept, measured, and
+not the default: at `T` around 0.3 the walk mostly refuses to move); and **Kempe
+chains**, which swap two colours on a connected component of the classes carrying them
+and so recolour a cluster in one step.
+
+The counter discipline is the same and is what a new move set usually breaks.  A Kempe
+swap recounts every set it touches instead of carrying a delta, and single moves are
+checked by a full recount every 2 000 steps (`recount_drift`, zero in every run).  One
+invariant is asserted rather than assumed: a stored class set never repeats a class,
+because the encoder dedupes the class multiset of a clique, so the isoceles triangle
+`{x, x+d, x+2d}` of `Z_17` is the two-element set `{d, 2d}` with `set_need = 2`.  A
+delta of two there — which is what the multiplicity suggests — is wrong, and the test
+pins it.
+
+**The gate is the method, not a formality.**  `scripts/anneal_hunt.py` refuses every
+spec except the calibration until a stored pass exists, and the pass is a real one: the
+search must rediscover the *known* `K50` witness from a random start, on the same
+instance and encoding.  A report for another instance is not a pass, a `sat` whose
+verification failed is not a pass, and a missing file is a refusal with exit code 2.
+The gate **failed**: four seeds, 120 s, 441–455 k class moves each, best 2–3
+monochromatic cliques, flat from the second ten-second report.  So no `K51` run was made
+with this tool, and `RESULTS.md` §9e says so instead of reporting a plateau as if it
+were a measurement of the family.
+
+```bash
+python scripts/anneal_hunt.py --gate --seconds 120 --seed 0
+python scripts/anneal_hunt.py 51:3,3,3,3 --blocks 3 --group 17 --seconds 900  # refused
+```
+
 ## 7. Reproducing and extending
 
 ```bash
